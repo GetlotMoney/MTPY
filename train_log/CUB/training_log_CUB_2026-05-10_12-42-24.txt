@@ -1,0 +1,203 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-10_12-42-24.txt
+  Device    : cuda:0
+  Epochs    : 10
+  Batch size: 64
+  Adapter r : 0.2
+============================================================
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[3/5] Encoding class name text features...
+      class_text_embeds: torch.Size([200, 768])
+
+[4/5] Loading & encoding GPT-4 descriptions...
+      200 classes × 7 descriptions/class
+      GPT hit: 200 classes | fallback: 0 classes
+      gpt_text_embeds: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 448,513
+      Trainable params: 294,913
+
+============================================================
+  Start Training: 10 epochs × 110 iters/epoch = 1100 iters
+============================================================
+
+────────────────────────────────────────────────────────────
+  Epoch [1/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.5493 | Avg Loss: 2.9388
+  Step [ 40/110] | Loss: 2.3301 | Avg Loss: 2.6630
+  Step [ 60/110] | Loss: 2.0263 | Avg Loss: 2.4640
+  Step [ 80/110] | Loss: 1.7595 | Avg Loss: 2.3301
+  Step [100/110] | Loss: 1.7317 | Avg Loss: 2.2232
+  Step [110/110] | Loss: 1.6104 | Avg Loss: 2.1745
+
+  >> Epoch [1/10] Train Summary
+     Avg Loss : 2.1745
+     LR       : 0.000976
+
+  >> Epoch [1/10] Evaluating GZSL...
+
+  ┌─ Epoch [1/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 48.20%
+  │  GZSL-S (Seen Acc)   : 67.81%
+  │  GZSL-H (Harmonic)   : 56.35%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.7506 | Avg Loss: 1.6370
+  Step [ 40/110] | Loss: 1.4807 | Avg Loss: 1.6020
+  Step [ 60/110] | Loss: 1.2997 | Avg Loss: 1.5491
+  Step [ 80/110] | Loss: 1.4851 | Avg Loss: 1.5156
+  Step [100/110] | Loss: 1.2285 | Avg Loss: 1.4872
+  Step [110/110] | Loss: 1.2849 | Avg Loss: 1.4693
+
+  >> Epoch [2/10] Train Summary
+     Avg Loss : 1.4693
+     LR       : 0.000905
+
+  >> Epoch [2/10] Evaluating GZSL...
+
+  ┌─ Epoch [2/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 59.23%
+  │  GZSL-S (Seen Acc)   : 70.16%
+  │  GZSL-H (Harmonic)   : 64.23%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.2703 | Avg Loss: 1.2398
+  Step [ 40/110] | Loss: 1.1820 | Avg Loss: 1.2320
+  Step [ 60/110] | Loss: 1.2396 | Avg Loss: 1.2193
+  Step [ 80/110] | Loss: 1.0926 | Avg Loss: 1.1995
+  Step [100/110] | Loss: 0.9735 | Avg Loss: 1.1734
+  Step [110/110] | Loss: 1.0545 | Avg Loss: 1.1634
+
+  >> Epoch [3/10] Train Summary
+     Avg Loss : 1.1634
+     LR       : 0.000794
+
+  >> Epoch [3/10] Evaluating GZSL...
+
+  ┌─ Epoch [3/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 59.16%
+  │  GZSL-S (Seen Acc)   : 72.77%
+  │  GZSL-H (Harmonic)   : 65.26%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9569 | Avg Loss: 1.0057
+  Step [ 40/110] | Loss: 0.9609 | Avg Loss: 1.0057
+  Step [ 60/110] | Loss: 0.9813 | Avg Loss: 0.9931
+  Step [ 80/110] | Loss: 1.1137 | Avg Loss: 0.9821
+  Step [100/110] | Loss: 0.8529 | Avg Loss: 0.9654
+  Step [110/110] | Loss: 0.8293 | Avg Loss: 0.9610
+
+  >> Epoch [4/10] Train Summary
+     Avg Loss : 0.9610
+     LR       : 0.000655
+
+  >> Epoch [4/10] Evaluating GZSL...
+
+  ┌─ Epoch [4/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 48.87%
+  │  GZSL-S (Seen Acc)   : 77.87%
+  │  GZSL-H (Harmonic)   : 60.05%  
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [5/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9525 | Avg Loss: 0.8830
+  Step [ 40/110] | Loss: 0.7698 | Avg Loss: 0.8643
+  Step [ 60/110] | Loss: 0.8377 | Avg Loss: 0.8518
+  Step [ 80/110] | Loss: 0.8434 | Avg Loss: 0.8481
+  Step [100/110] | Loss: 0.7574 | Avg Loss: 0.8386
+  Step [110/110] | Loss: 0.7933 | Avg Loss: 0.8320
+
+  >> Epoch [5/10] Train Summary
+     Avg Loss : 0.8320
+     LR       : 0.000500
+
+  >> Epoch [5/10] Evaluating GZSL...
+
+  ┌─ Epoch [5/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 60.44%
+  │  GZSL-S (Seen Acc)   : 75.96%
+  │  GZSL-H (Harmonic)   : 67.32%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [6/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7220 | Avg Loss: 0.7605
+  Step [ 40/110] | Loss: 0.7477 | Avg Loss: 0.7629
+  Step [ 60/110] | Loss: 0.7618 | Avg Loss: 0.7582
+  Step [ 80/110] | Loss: 0.7647 | Avg Loss: 0.7506
+  Step [100/110] | Loss: 0.7499 | Avg Loss: 0.7424
+  Step [110/110] | Loss: 0.6927 | Avg Loss: 0.7389
+
+  >> Epoch [6/10] Train Summary
+     Avg Loss : 0.7389
+     LR       : 0.000345
+
+  >> Epoch [6/10] Evaluating GZSL...
+
+  ┌─ Epoch [6/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 64.53%
+  │  GZSL-S (Seen Acc)   : 73.29%
+  │  GZSL-H (Harmonic)   : 68.63%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [7/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7221 | Avg Loss: 0.7035
+  Step [ 40/110] | Loss: 0.6624 | Avg Loss: 0.7049
+  Step [ 60/110] | Loss: 0.7639 | Avg Loss: 0.6969
+  Step [ 80/110] | Loss: 0.6456 | Avg Loss: 0.6949
+  Step [100/110] | Loss: 0.6948 | Avg Loss: 0.6812
+  Step [110/110] | Loss: 0.6912 | Avg Loss: 0.6804
+
+  >> Epoch [7/10] Train Summary
+     Avg Loss : 0.6804
+     LR       : 0.000206
+
+  >> Epoch [7/10] Evaluating GZSL...
+
+  ┌─ Epoch [7/10] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 59.84%
+  │  GZSL-S (Seen Acc)   : 77.49%
+  │  GZSL-H (Harmonic)   : 67.53%  
+  │  ZSL    (ZS Acc)     : 79.60%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [8/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7320 | Avg Loss: 0.6381
+  Step [ 40/110] | Loss: 0.6191 | Avg Loss: 0.6479
+  Step [ 60/110] | Loss: 0.5867 | Avg Loss: 0.6438

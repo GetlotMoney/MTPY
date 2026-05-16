@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "保存对话摘要",
+  "description": "在每次 agent 对话结束时，自动生成本次对话的摘要（包括讨论了什么、做了哪些修改、待办事项），追加到 .kiro/docs/conversation_log.md 文件中",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "请回顾本次对话内容，生成一段简洁的中文摘要，包含以下信息：\n1. 日期时间\n2. 讨论的主题\n3. 做出的关键决策或修改\n4. 未完成的待办事项\n\n然后将摘要追加到 .kiro/docs/conversation_log.md 文件末尾。格式如下：\n\n## [日期时间]\n\n**主题**: ...\n\n**关键内容**:\n- ...\n\n**修改的文件**:\n- ...\n\n**待办事项**:\n- ...\n\n---"
+  }
+}

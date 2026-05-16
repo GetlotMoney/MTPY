@@ -1,0 +1,43 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-10_10-28-45.txt
+  Device    : cuda:0
+  Epochs    : 10
+  Batch size: 64
+  Adapter r : 0.2
+============================================================
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[3/5] Encoding class name text features...
+      class_text_embeds: torch.Size([200, 768])
+
+[4/5] Loading & encoding GPT-4 descriptions...
+      200 classes × 7 descriptions/class
+      GPT hit: 200 classes | fallback: 0 classes
+      gpt_text_embeds: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 602,314
+      Trainable params: 294,913
+
+============================================================
+  Start Training: 10 epochs × 110 iters/epoch = 1100 iters
+============================================================
+
+────────────────────────────────────────────────────────────
+  Epoch [1/10]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 3.6971 | Avg Loss: 4.1715
+  Step [ 40/110] | Loss: 3.3674 | Avg Loss: 3.8129
+  Step [ 60/110] | Loss: 2.9882 | Avg Loss: 3.5519
+  Step [ 80/110] | Loss: 2.5399 | Avg Loss: 3.3573

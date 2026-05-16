@@ -1,0 +1,54 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ===== 虚拟环境 =====
+venv/
+env/
+ENV/
+.env
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== 数据集（大文件，需自行下载） =====
+data/cache/
+data/CUB/images/
+data/xlsa17/
+xlsa17/
+data/clip_att/*.pkl
+data/gpt4_data/*.pt
+
+# ===== 训练产物 =====
+train_log/**/*.pth
+train_log/**/best_model_*.pth
+*.pth
+*.pt
+*.ckpt
+
+# ===== 日志（保留示例日志可选） =====
+# train_log/  # 如果不想上传任何日志，取消注释
+
+# ===== Kiro 内部状态 =====
+.kiro/docs/conversation_log.md
+.kiro/docs/history_summary.md
+
+# ===== 临时文件 =====
+*.tmp
+*.bak
+*.log
+.DS_Store
+Thumbs.db
+
+# ===== 大型 PDF/二进制 =====
+*.pdf

@@ -1,0 +1,110 @@
+dataset:
+  value: CUB
+num_class:
+  value: 200
+num_attribute:
+  value: 312
+img_size:
+  value: 448
+resnet_region:
+  value: 196
+dim_f_clip:
+  value: 768
+dim_v_clip:
+  value: 768
+device:
+  value: cuda:0
+batch_size:
+  value: 64
+epochs:
+  value: 20
+use_unzip:
+  value: True
+random_seed:
+  value: 5
+
+# === Loss 权重 ===
+#lambda_cal:
+#  value: 0.1
+#lambda_reg:
+#  value: 0.5
+#lambda_con:
+#  value: 0.7
+
+# === Loss 权重 (公共参数值设置测试) ===
+lambda_cal:
+  value: 0.05
+lambda_reg:
+  value: 0.3
+lambda_con:
+  value: 0.2
+
+# === 模型细节 ===
+normalize_V:
+  value: False
+tf_SAtt:
+  value: True
+tf_ec_layer:
+  value: 1
+tf_dc_layer:
+  value: 1
+tf_heads:
+  value: 4
+tf_clip_common_dim:
+  value: 300
+tf_aux_embed:
+  value: True
+tf_dim_feedforward:
+  value: 512
+tf_dropout:
+  value: 0.4
+
+# === [新增关键参数] ===
+# CUB 必须使用 'dot'，否则会强制归一化导致精度下降
+classifier_metric:
+  value: dot
+
+is_bias:
+  value: False
+
+# === [VDT-TransZero 模块参数] ===
+# Adapter 残差比例: adapted = ratio * Adapter(text) + (1-ratio) * text
+# 较小的值(0.1~0.3)表示以原始特征为主，Adapter 做微调
+adapter_ratio:
+  value: 0.2
+# 是否使用 GPT-4 描述 (需要 data/gpt4_data/cub.pt 文件)
+use_gpt:
+  value: True
+
+# === [TransZero++ 双向 Transformer 参数] ===
+# 公共投影维度 (768 → dim_com 降维)
+tf_common_dim:
+  value: 512
+# 多头注意力头数
+tf_heads:
+  value: 4
+# Dropout 比例
+tf_dropout:
+  value: 0.1
+# s2v 和 v2s 两路 logits 融合权重: logits = w*s2v + (1-w)*v2s
+weight_s2v:
+  value: 0.5
+# v2s 路文本残差系数 (方向C中不再使用, 保留兼容)
+text_residual:
+  value: 0.05
+# s2v 路视觉残差系数 (方向C中不再使用, 保留兼容)
+visual_residual:
+  value: 0.05
+# 局部注意力加分系数: logits = base_logits + β × local_score
+# β 越小越保守, 越接近基线; β=0 等价于纯基线
+local_weight:
+  value: 0.5
+# GZSL 评估偏置: 给 unseen 类 logits 加固定值，平衡 seen/unseen 竞争
+# 在验证集上选定后固定，不在测试集上搜索
+# 0 = 不加偏置；正值 = 给 unseen 加分
+gzsl_bias:
+  value: 0.0
+# Self-calibration loss 权重: 给 unseen 类保留概率, 防止 seen bias
+# λ=0 关闭, λ=0.01 轻量保护
+lambda_cal:
+  value: 0.0

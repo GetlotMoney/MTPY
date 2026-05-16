@@ -1,0 +1,70 @@
+dataset:
+  value: SUN
+num_class:
+  value: 717
+num_attribute:
+  value: 102
+img_size:
+  value: 448
+resnet_region:
+  value: 196
+dim_f_clip:
+  value: 768
+dim_v_clip:
+  value: 768
+device:
+  value: cuda:0
+batch_size:
+  value: 50
+epochs:
+  value: 80
+use_unzip:
+  value: True
+random_seed:
+  value: 6
+
+# === [核心修改] Loss 权重 ===
+# 建议改为 0.05，与代码中逻辑保持一致，避免过度校准
+#lambda_cal:
+#  value: 0.005
+#lambda_reg:
+#  value: 0.1
+#lambda_con:
+#  value: 0.3
+
+# === Loss 权重 (公共参数值设置测试) ===
+lambda_cal:
+  value: 0.05
+lambda_reg:
+  value: 0.3
+lambda_con:
+  value: 0.2
+
+# === 模型细节 ===
+normalize_V:
+  value: True
+tf_SAtt:
+  value: True
+tf_ec_layer:
+  value: 1
+tf_dc_layer:
+  value: 1
+tf_heads:
+  value: 4
+
+tf_clip_common_dim:
+  value: 128
+tf_aux_embed:
+  value: True
+tf_dim_feedforward:
+  value: 2048
+tf_dropout:
+  value: 0.3
+
+# === [新增关键参数] ===
+# SUN 和 CUB 一样，建议使用 'dot' (点积)，保留特征模长信息
+classifier_metric:
+  value: dot
+
+is_bias:
+  value: False
