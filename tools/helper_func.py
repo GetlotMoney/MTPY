@@ -4,28 +4,52 @@ import os
 
 # 测试集特征缓存路径
 _CACHE_DIR = './data/cache'
-_CACHE_TEST_SEEN_FEAT   = os.path.join(_CACHE_DIR, 'CUB_test_seen_features.pt')
-_CACHE_TEST_SEEN_LABEL  = os.path.join(_CACHE_DIR, 'CUB_test_seen_labels.pt')
-_CACHE_TEST_UNSEEN_FEAT = os.path.join(_CACHE_DIR, 'CUB_test_unseen_features.pt')
-_CACHE_TEST_UNSEEN_LABEL= os.path.join(_CACHE_DIR, 'CUB_test_unseen_labels.pt')
+_CACHE_TEST_SEEN_FEAT     = os.path.join(_CACHE_DIR, 'CUB_test_seen_features.pt')
+_CACHE_TEST_SEEN_LABEL    = os.path.join(_CACHE_DIR, 'CUB_test_seen_labels.pt')
+_CACHE_TEST_SEEN_PATCH    = os.path.join(_CACHE_DIR, 'CUB_test_seen_patch_features.pt')
+_CACHE_TEST_UNSEEN_FEAT   = os.path.join(_CACHE_DIR, 'CUB_test_unseen_features.pt')
+_CACHE_TEST_UNSEEN_LABEL  = os.path.join(_CACHE_DIR, 'CUB_test_unseen_labels.pt')
+_CACHE_TEST_UNSEEN_PATCH  = os.path.join(_CACHE_DIR, 'CUB_test_unseen_patch_features.pt')
 
 # 全局缓存（只加载一次）
 _test_cache = {}
 
 def _load_test_cache(device):
-    """加载测试集特征缓存到内存（只执行一次）"""
+    """加载测试集特征缓存到内存（只执行一次）
+
+    优先加载 patch 缓存（让 FAE 能用到真实空间信息）；
+    若缺失则回退为 CLS-only（FAE 看到 576 个相同 token，等价于关闭空间信息）。
+    """
     global _test_cache
     if _test_cache:
         return True
     has_seen   = os.path.exists(_CACHE_TEST_SEEN_FEAT)   and os.path.exists(_CACHE_TEST_SEEN_LABEL)
     has_unseen = os.path.exists(_CACHE_TEST_UNSEEN_FEAT) and os.path.exists(_CACHE_TEST_UNSEEN_LABEL)
-    if has_seen and has_unseen:
-        _test_cache['seen_feat']    = torch.load(_CACHE_TEST_SEEN_FEAT,   map_location=device)
-        _test_cache['seen_label']   = torch.load(_CACHE_TEST_SEEN_LABEL,  map_location=device)
-        _test_cache['unseen_feat']  = torch.load(_CACHE_TEST_UNSEEN_FEAT, map_location=device)
-        _test_cache['unseen_label'] = torch.load(_CACHE_TEST_UNSEEN_LABEL,map_location=device)
-        return True
-    return False
+    if not (has_seen and has_unseen):
+        return False
+
+    _test_cache['seen_feat']    = torch.load(_CACHE_TEST_SEEN_FEAT,   map_location='cpu', weights_only=True)
+    _test_cache['seen_label']   = torch.load(_CACHE_TEST_SEEN_LABEL,  map_location=device, weights_only=True)
+    _test_cache['unseen_feat']  = torch.load(_CACHE_TEST_UNSEEN_FEAT, map_location='cpu', weights_only=True)
+    _test_cache['unseen_label'] = torch.load(_CACHE_TEST_UNSEEN_LABEL,map_location=device, weights_only=True)
+
+    # patch 缓存（可选）
+    has_seen_patch   = os.path.exists(_CACHE_TEST_SEEN_PATCH)
+    has_unseen_patch = os.path.exists(_CACHE_TEST_UNSEEN_PATCH)
+    if has_seen_patch and has_unseen_patch:
+        # patch 用 float16 存盘，放在 CPU，按 batch 切片再上 GPU 转 float32
+        _test_cache['seen_patch']   = torch.load(_CACHE_TEST_SEEN_PATCH,   map_location='cpu', weights_only=True)
+        _test_cache['unseen_patch'] = torch.load(_CACHE_TEST_UNSEEN_PATCH, map_location='cpu', weights_only=True)
+        _test_cache['has_patch']    = True
+        print(f"[cache] Test patch features loaded: "
+              f"seen={tuple(_test_cache['seen_patch'].shape)} "
+              f"unseen={tuple(_test_cache['unseen_patch'].shape)}")
+    else:
+        _test_cache['has_patch'] = False
+        print("[cache] Test patch features NOT found, falling back to CLS-only "
+              "(FAE will see 576 identical tokens — spatial signal is lost).")
+
+    return True
 
 def get_clip_spatial_features(clip_model, images):
     with torch.no_grad():
@@ -108,14 +132,16 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
 
     with torch.no_grad():
         if use_cache:
+            seen_patch   = _test_cache.get('seen_patch')   if _test_cache.get('has_patch') else None
+            unseen_patch = _test_cache.get('unseen_patch') if _test_cache.get('has_patch') else None
             acc_seen  = _eval_from_cache(
                 _test_cache['seen_feat'], _test_cache['seen_label'],
                 model, seenclasses, in_package, device,
-                bias_unseen=bias_unseen)
+                bias_unseen=bias_unseen, patches_cache=seen_patch)
             acc_novel, acc_zs = _eval_unseen_from_cache(
                 _test_cache['unseen_feat'], _test_cache['unseen_label'],
                 model, unseenclasses, in_package, device,
-                bias_unseen=bias_unseen)
+                bias_unseen=bias_unseen, patches_cache=unseen_patch)
         else:
             acc_seen  = val_gzsl_online(dataloader.test_seen_loader, clip_model, model,
                                         seenclasses, in_package, bias=bias_seen)
@@ -126,16 +152,26 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
     return acc_seen, acc_novel, H, acc_zs
 
 
-def _eval_from_cache(feat, labels, model, target_classes, in_package, device, batch_size=128, bias_unseen=0.0):
-    """用缓存特征评估 GZSL seen 准确率（完整模型，包含 local_score）"""
+def _eval_from_cache(feat, labels, model, target_classes, in_package, device, batch_size=128,
+                     bias_unseen=0.0, patches_cache=None):
+    """用缓存特征评估 GZSL seen 准确率（完整模型，包含 local_score）
+
+    patches_cache: 可选 [N, 576, 768]（float16 on CPU）。若提供则用真实空间 patch；
+                   否则用 CLS 复制 576 份（FAE 看到全相同 token，空间信号丢失）。
+    """
     all_pred = []
     N = feat.size(0)
     model.eval()
     with torch.no_grad():
         for i in range(0, N, batch_size):
-            batch_feat = feat[i:i+batch_size]                    # [B, 768]
+            batch_feat = feat[i:i+batch_size].to(device)         # [B, 768]
             cls = batch_feat.unsqueeze(1)                        # [B, 1, 768]
-            patches = batch_feat.unsqueeze(1).expand(-1, 576, -1).contiguous()  # [B, 576, 768]
+            if patches_cache is not None:
+                # 真实 spatial patch（float16 → float32 on GPU）
+                patches = patches_cache[i:i+batch_size].to(device).float()  # [B, 576, 768]
+            else:
+                # 兼容旧缓存：CLS 复制
+                patches = cls.expand(-1, 576, -1).contiguous()   # [B, 576, 768]
             clip_input = torch.cat([cls, patches], dim=1)        # [B, 577, 768]
             out = model(clip_input, is_train=False)
             logits = out['clip_S_pp'].clone()                    # [B, 200]
@@ -147,17 +183,24 @@ def _eval_from_cache(feat, labels, model, target_classes, in_package, device, ba
     return compute_per_class_acc_gzsl(labels, predicted, target_classes, in_package)
 
 
-def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, device, batch_size=128, bias_unseen=0.0):
-    """用缓存特征评估 GZSL unseen + ZSL 准确率（完整模型）"""
+def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, device, batch_size=128,
+                            bias_unseen=0.0, patches_cache=None):
+    """用缓存特征评估 GZSL unseen + ZSL 准确率（完整模型）
+
+    patches_cache: 可选 [N, 576, 768]（float16 on CPU）。
+    """
     all_pred_gzsl = []
     all_pred_zsl  = []
     N = feat.size(0)
     model.eval()
     with torch.no_grad():
         for i in range(0, N, batch_size):
-            batch_feat = feat[i:i+batch_size]
+            batch_feat = feat[i:i+batch_size].to(device)
             cls = batch_feat.unsqueeze(1)
-            patches = batch_feat.unsqueeze(1).expand(-1, 576, -1).contiguous()
+            if patches_cache is not None:
+                patches = patches_cache[i:i+batch_size].to(device).float()
+            else:
+                patches = cls.expand(-1, 576, -1).contiguous()
             clip_input = torch.cat([cls, patches], dim=1)
             out = model(clip_input, is_train=False)
             logits = out['clip_S_pp'].clone()                    # [B, 200]

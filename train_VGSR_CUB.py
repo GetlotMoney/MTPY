@@ -15,6 +15,10 @@ CACHE_DIR = './data/cache'
 CACHE_TRAIN_FEAT   = os.path.join(CACHE_DIR, 'CUB_train_features.pt')
 CACHE_TRAIN_LABEL  = os.path.join(CACHE_DIR, 'CUB_train_labels.pt')
 CACHE_TRAIN_PATCH  = os.path.join(CACHE_DIR, 'CUB_train_patch_features.pt')  # [N, 576, 768] float16
+# ★ 多视角增强缓存 (可选, 由 extract_features.py [K] 生成)
+CACHE_TRAIN_FEAT_AUG  = os.path.join(CACHE_DIR, 'CUB_train_features_aug.pt')        # [K, N, 768]
+CACHE_TRAIN_PATCH_AUG = os.path.join(CACHE_DIR, 'CUB_train_patch_features_aug.pt')  # [K, N, 576, 768] f16
+CACHE_TRAIN_VIEWS     = os.path.join(CACHE_DIR, 'CUB_train_views.pt')
 
 # ==========================================
 #   日志
@@ -82,20 +86,43 @@ np.random.seed(seed)
 # ==========================================
 #   加载/提取训练集图像特征缓存
 # ==========================================
-# 优先级: patch 缓存 (完整 576) > CLS 缓存 (仅 CLS) > 实时提取
+# 优先级:
+#   1) 多视角增强缓存 (use_aug_cache=True 且文件存在) — K 个增强视角
+#   2) 单视角 patch 缓存 — 完整 576 token 但无增强
+#   3) 单视角 CLS 缓存   — 仅 CLS, 兼容旧逻辑
+#   4) 实时提取
+USE_AUG = bool(getattr(config, 'use_aug_cache', False))
+HAS_AUG_CACHE = (USE_AUG
+                 and os.path.exists(CACHE_TRAIN_PATCH_AUG)
+                 and os.path.exists(CACHE_TRAIN_FEAT_AUG)
+                 and os.path.exists(CACHE_TRAIN_LABEL))
 HAS_PATCH_CACHE = os.path.exists(CACHE_TRAIN_PATCH) and os.path.exists(CACHE_TRAIN_LABEL)
 HAS_CLS_CACHE   = os.path.exists(CACHE_TRAIN_FEAT)  and os.path.exists(CACHE_TRAIN_LABEL)
 
-train_patches  = None   # [N, 576, 768] float16 存 CPU (节省GPU显存)
-train_features = None   # [N, 768]      float32 (仅向后兼容)
+train_patches  = None   # [N, 576, 768] float16 存 CPU
+train_features = None   # [N, 768] float32 (legacy)
 train_labels   = None
+train_cls      = None
+train_patches_aug = None   # [K, N, 576, 768] float16 多视角
+train_cls_aug     = None   # [K, N, 768] float32 多视角
+NUM_VIEWS_CACHE   = 1
 
-if HAS_PATCH_CACHE:
-    print_log("\n[★] Loading train PATCH + CLS features from cache (fast mode)...")
-    train_patches = torch.load(CACHE_TRAIN_PATCH, map_location='cpu')    # [N, 576, 768] float16
-    train_labels  = torch.load(CACHE_TRAIN_LABEL, map_location=config.device)
-    # 同时加载 CLS token (必须, 作为 CrossModalTransformer 的 cls_base 残差基础)
-    train_cls = torch.load(CACHE_TRAIN_FEAT, map_location='cpu') if HAS_CLS_CACHE else None
+if HAS_AUG_CACHE:
+    print_log("\n[★] Loading MULTI-VIEW augmented cache (best mode)...")
+    train_patches_aug = torch.load(CACHE_TRAIN_PATCH_AUG, map_location='cpu', weights_only=True)
+    train_cls_aug     = torch.load(CACHE_TRAIN_FEAT_AUG,  map_location='cpu', weights_only=True)
+    train_labels      = torch.load(CACHE_TRAIN_LABEL,     map_location=config.device, weights_only=True)
+    NUM_VIEWS_CACHE   = train_patches_aug.shape[0]
+    print_log(f"      Views K        : {NUM_VIEWS_CACHE}")
+    print_log(f"      train_cls_aug    : {train_cls_aug.shape}  dtype={train_cls_aug.dtype}")
+    print_log(f"      train_patches_aug: {train_patches_aug.shape}  dtype={train_patches_aug.dtype}")
+    print_log(f"      train_labels     : {train_labels.shape}")
+    USE_CACHE = 'aug'
+elif HAS_PATCH_CACHE:
+    print_log("\n[★] Loading train PATCH + CLS features from cache (single-view)...")
+    train_patches = torch.load(CACHE_TRAIN_PATCH, map_location='cpu', weights_only=True)
+    train_labels  = torch.load(CACHE_TRAIN_LABEL, map_location=config.device, weights_only=True)
+    train_cls = torch.load(CACHE_TRAIN_FEAT, map_location='cpu', weights_only=True) if HAS_CLS_CACHE else None
     if train_cls is None:
         print_log("      WARNING: CLS cache missing, fallback to patch.mean()")
     else:
@@ -105,15 +132,13 @@ if HAS_PATCH_CACHE:
     USE_CACHE = 'patch'
 elif HAS_CLS_CACHE:
     print_log("\n[★] Loading train CLS features from cache (legacy mode)...")
-    train_features = torch.load(CACHE_TRAIN_FEAT,  map_location=config.device)
-    train_labels   = torch.load(CACHE_TRAIN_LABEL, map_location=config.device)
-    train_cls = None
+    train_features = torch.load(CACHE_TRAIN_FEAT,  map_location=config.device, weights_only=True)
+    train_labels   = torch.load(CACHE_TRAIN_LABEL, map_location=config.device, weights_only=True)
     print_log(f"      train_features: {train_features.shape}  train_labels: {train_labels.shape}")
     USE_CACHE = 'cls'
 else:
     print_log("\n[!] Cache not found. Will extract features on-the-fly (slow).")
     print_log("    Run: python tools/extract_features.py  to generate cache.")
-    train_cls = None
     USE_CACHE = None
 
 # ==========================================
@@ -131,36 +156,71 @@ print_log(f"      class_text_embeds: {class_text_embeds.shape}")
 #   加载 GPT-4 描述并编码
 # ==========================================
 gpt_text_embeds = None
-gpt4_data_path = os.path.join('.', 'data', 'gpt4_data', 'cub.pt')
+# 文本数据来源切换:
+#   'gpt4'     → cub.pt          (GPT-4, 7 句/类)
+#   'claude'   → cub_claude.pt   (Claude, 7 句/类)
+#   'merge'    → cub_merge.pt    (GPT-4 + Claude 拼接, 14 句/类)
+#   'weighted' → α × Claude_emb + (1-α) × GPT_emb (各自编码再加权融合)
+text_source = getattr(config, 'text_source', 'gpt4')
 
-if os.path.exists(gpt4_data_path):
-    print_log("\n[4/5] Loading & encoding GPT-4 descriptions...")
-    gpt4_sentences = torch.load(gpt4_data_path, map_location='cpu', weights_only=False)
-    n_cls = len(gpt4_sentences)
-    n_desc = len(list(gpt4_sentences.values())[0])
-    print_log(f"      {n_cls} classes × {n_desc} descriptions/class")
 
-    gpt_text_embeds_list = []
-    hit, miss = 0, 0
+def _encode_descriptions(file_path, dataloader, clip_model, device, class_text_embeds):
+    """加载并 CLIP 编码描述文件 → 返回 [200, 768] 嵌入"""
+    sentences_dict = torch.load(file_path, map_location='cpu', weights_only=False)
+    embeds_list = []
+    hit = 0
     for cls_name in dataloader.class_names:
         gpt_key = '.'.join(cls_name.split('.')[1:]).lower()
-        if gpt_key in gpt4_sentences:
-            sentences = gpt4_sentences[gpt_key]
-            tokens = torch.cat([clip.tokenize(s) for s in sentences]).to(config.device)
+        if gpt_key in sentences_dict:
+            sentences = sentences_dict[gpt_key]
+            tokens = torch.cat([clip.tokenize(s) for s in sentences]).to(device)
             with torch.no_grad():
                 feats = clip_model.encode_text(tokens).float()
-            gpt_text_embeds_list.append(feats.mean(dim=0))
+            embeds_list.append(feats.mean(dim=0))
             hit += 1
         else:
             idx = dataloader.class_names.index(cls_name)
-            gpt_text_embeds_list.append(class_text_embeds[idx])
-            miss += 1
+            embeds_list.append(class_text_embeds[idx])
+    return torch.stack(embeds_list), hit, len(sentences_dict)
 
-    gpt_text_embeds = torch.stack(gpt_text_embeds_list)  # [200, 768]
-    print_log(f"      GPT hit: {hit} classes | fallback: {miss} classes")
-    print_log(f"      gpt_text_embeds: {gpt_text_embeds.shape}")
+
+if text_source == 'weighted':
+    text_alpha = getattr(config, 'text_alpha', 1.0)
+    gpt_path    = os.path.join('.', 'data', 'gpt4_data', 'cub.pt')
+    claude_path = os.path.join('.', 'data', 'gpt4_data', 'cub_claude.pt')
+    print_log(f"\n[4/5] Using Weighted fusion: α={text_alpha} × Claude + {1-text_alpha:.2f} × GPT-4")
+
+    print_log(f"      Encoding GPT-4 descriptions...")
+    gpt_embeds, gpt_hit, _    = _encode_descriptions(gpt_path,    dataloader, clip_model,
+                                                      config.device, class_text_embeds)
+    print_log(f"      Encoding Claude descriptions...")
+    claude_embeds, claude_hit, _ = _encode_descriptions(claude_path, dataloader, clip_model,
+                                                         config.device, class_text_embeds)
+    gpt_text_embeds = text_alpha * claude_embeds + (1.0 - text_alpha) * gpt_embeds
+    print_log(f"      GPT hit: {gpt_hit} | Claude hit: {claude_hit} classes")
+    print_log(f"      gpt_text_embeds: {gpt_text_embeds.shape} (α={text_alpha})")
 else:
-    print_log(f"\n[4/5] WARNING: GPT-4 data not found at {gpt4_data_path}, using class name only")
+    if text_source == 'merge':
+        gpt4_data_path = os.path.join('.', 'data', 'gpt4_data', 'cub_merge.pt')
+        print_log(f"\n[4/5] Using Merge (GPT-4 + Claude) descriptions: {gpt4_data_path}")
+    elif text_source == 'claude':
+        gpt4_data_path = os.path.join('.', 'data', 'gpt4_data', 'cub_claude.pt')
+        print_log(f"\n[4/5] Using Claude descriptions: {gpt4_data_path}")
+    else:
+        gpt4_data_path = os.path.join('.', 'data', 'gpt4_data', 'cub.pt')
+        print_log(f"\n[4/5] Using GPT-4 descriptions: {gpt4_data_path}")
+
+    if os.path.exists(gpt4_data_path):
+        print_log(f"      Loading text descriptions from {gpt4_data_path}...")
+        gpt_text_embeds, hit, n_cls = _encode_descriptions(
+            gpt4_data_path, dataloader, clip_model, config.device, class_text_embeds)
+        n_desc = len(list(torch.load(gpt4_data_path, map_location='cpu',
+                                     weights_only=False).values())[0])
+        print_log(f"      {n_cls} classes × {n_desc} descriptions/class")
+        print_log(f"      GPT hit: {hit} classes | fallback: {n_cls - hit} classes")
+        print_log(f"      gpt_text_embeds: {gpt_text_embeds.shape}")
+    else:
+        print_log(f"      WARNING: text data not found at {gpt4_data_path}, using class name only")
 
 # ==========================================
 #   初始化模型
@@ -226,7 +286,15 @@ for epoch in range(1, config.epochs + 1):
     for step in range(iters_per_epoch):
         optimizer.zero_grad()
 
-        if USE_CACHE == 'patch':
+        if USE_CACHE == 'aug':
+            # ── 多视角增强缓存: 每张图随机抽 1 个视角 ──
+            idx = torch.randperm(train_patches_aug.shape[1])[:config.batch_size]
+            view_idx = torch.randint(0, NUM_VIEWS_CACHE, (config.batch_size,))
+            batch_label = train_labels[idx]
+            patch_batch = train_patches_aug[view_idx, idx].to(config.device).float()  # [B, 576, 768]
+            cls_batch   = train_cls_aug[view_idx, idx].to(config.device).float().unsqueeze(1)  # [B, 1, 768]
+            clip_features = torch.cat([cls_batch, patch_batch], dim=1)                # [B, 577, 768]
+        elif USE_CACHE == 'patch':
             # ── 随机采样：每步随机取 batch ──
             idx = torch.randperm(len(train_patches))[:config.batch_size]
             batch_label = train_labels[idx]
@@ -263,8 +331,12 @@ for epoch in range(1, config.epochs + 1):
         # 每 20 步打印一次进度
         if (step + 1) % 20 == 0 or (step + 1) == iters_per_epoch:
             avg_loss = epoch_loss / epoch_iters
+            ce_v   = loss_pack.get('loss_CE',      torch.tensor(0.)).item()
+            cons_v = loss_pack.get('loss_consist', torch.tensor(0.)).item()
+            l2_v   = loss_pack.get('loss_l2sp',    torch.tensor(0.)).item()
             print_log(f"  Step [{step+1:3d}/{iters_per_epoch}] | "
-                      f"Loss: {loss.item():.4f} | Avg Loss: {avg_loss:.4f}")
+                      f"Loss: {loss.item():.4f} | Avg: {avg_loss:.4f} | "
+                      f"CE: {ce_v:.3f}  Cons: {cons_v:.3f}  L2SP: {l2_v:.4f}")
 
     # 更新学习率
     scheduler.step()
@@ -291,9 +363,18 @@ for epoch in range(1, config.epochs + 1):
             'ZS': acc_zs,
             'epoch': epoch
         }
-        # 保存最佳模型权重
-        torch.save(model.state_dict(), BEST_MODEL_PATH)
-        print_log(f"  [★] Best model saved → {BEST_MODEL_PATH}")
+        # 保存最佳模型权重（写盘失败不影响训练继续）
+        try:
+            torch.save(model.state_dict(), BEST_MODEL_PATH)
+            print_log(f"  [★] Best model saved → {BEST_MODEL_PATH}")
+        except Exception as e:
+            print_log(f"  [!] Best model save failed (training continues): {e}")
+            # 删除可能产生的损坏文件
+            if os.path.exists(BEST_MODEL_PATH):
+                try:
+                    os.remove(BEST_MODEL_PATH)
+                except Exception:
+                    pass
 
     # 打印当前 epoch 结果
     print_log(f"\n  ┌─ Epoch [{epoch}/{config.epochs}] Results ─────────────────────")

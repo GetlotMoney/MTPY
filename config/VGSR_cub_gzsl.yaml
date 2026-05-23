@@ -17,7 +17,7 @@ device:
 batch_size:
   value: 64
 epochs:
-  value: 20
+  value: 50
 use_unzip:
   value: True
 random_seed:
@@ -32,8 +32,8 @@ random_seed:
 #  value: 0.7
 
 # === Loss 权重 (公共参数值设置测试) ===
-lambda_cal:
-  value: 0.05
+#lambda_cal:
+#  value: 0.05
 lambda_reg:
   value: 0.3
 lambda_con:
@@ -76,6 +76,21 @@ adapter_ratio:
 use_gpt:
   value: True
 
+# === [文本数据来源] ===
+# 'gpt4'   → 用原 GPT-4 数据 data/gpt4_data/cub.pt (7 句/类)
+# 'claude' → 用 Claude 生成的细节描述 data/gpt4_data/cub_claude.pt (7 句/类, 第7句为 CLIP 风格 caption)
+# 'merge'  → GPT-4 + Claude 拼接 data/gpt4_data/cub_merge.pt (14 句/类)
+text_source:
+  value: claude
+
+# === [加权融合 α 参数, 仅 text_source='weighted' 时生效] ===
+# fused = α × Claude_emb + (1-α) × GPT_emb
+# α=0.0 → 纯 GPT-4   (基线 71.00%)
+# α=1.0 → 纯 Claude  (基线 72.20%)
+# 实验结论：α-grid search 全部失败，纯 Claude (α=1.0) 是最优
+text_alpha:
+  value: 1.0
+
 # === [TransZero++ 双向 Transformer 参数] ===
 # 公共投影维度 (768 → dim_com 降维)
 tf_common_dim:
@@ -89,22 +104,60 @@ tf_dropout:
 # s2v 和 v2s 两路 logits 融合权重: logits = w*s2v + (1-w)*v2s
 weight_s2v:
   value: 0.5
-# v2s 路文本残差系数 (方向C中不再使用, 保留兼容)
+# v2s 路文本残差系数 (cosine_only 模式: 保护 unseen 文本)
+# 1.0 = 全用 CLIP 原始文本 (最保守); 0.0 = 全用增强文本
 text_residual:
-  value: 0.05
-# s2v 路视觉残差系数 (方向C中不再使用, 保留兼容)
+  value: 0.5
+# s2v 路视觉残差系数 (cosine_only 模式: 保护 CLIP 原始 CLS)
+# 1.0 = 全用 CLIP CLS (最保守); 0.0 = 全用增强视觉
 visual_residual:
-  value: 0.05
+  value: 0.5
 # 局部注意力加分系数: logits = base_logits + β × local_score
 # β 越小越保守, 越接近基线; β=0 等价于纯基线
 local_weight:
   value: 0.5
+
+# === [计分模式开关] ===
+# 'add'         → logits = base_logits + β × local_score  (当前默认, 向后兼容)
+# 'cosine_only' → logits = cos(v_enh, t_enh) × scale     (新方案: 双分支唯一决定)
+# 切到 cosine_only 后, visual_residual 和 text_residual 起作用
+score_mode:
+  value: add
+
+# === [FAE 消融开关] ===
+# True  → 启用 FAE (Feature Augmentation Encoder + 几何位置解耦)
+# False → 跳过 FAE，patches 直接进 cross-attention（双向结构保留）
+# 注意：双向并不依赖 FAE，去掉后梯度仍在 embed_cv / embed_text 处汇聚
+use_fae:
+  value: True
 # GZSL 评估偏置: 给 unseen 类 logits 加固定值，平衡 seen/unseen 竞争
 # 在验证集上选定后固定，不在测试集上搜索
 # 0 = 不加偏置；正值 = 给 unseen 加分
 gzsl_bias:
   value: 0.0
 # Self-calibration loss 权重: 给 unseen 类保留概率, 防止 seen bias
-# λ=0 关闭, λ=0.01 轻量保护
+# λ=0 关闭 (实验证明 0.001 中性, 0.01 过强, 不适用本架构)
 lambda_cal:
   value: 0.0
+
+# === [新增 Loss 项] ===
+# 一致性 Loss (KL between base_logits and local_score on seen, with temperature)
+# 防止 local_score 学出和 CLIP base 矛盾的反向信号
+# 推荐值: 0.05~0.2, 风险极低
+lambda_consist:
+  value: 0.1
+consist_temp:
+  value: 2.0
+
+# Adapter L2-SP: 让 adapter 输出 delta 别离 0 太远
+# adapter_ratio=0.2 已经做了部分残差混合, 这里加直接 L2 约束
+# 推荐值: 0.0001~0.001, 风险低
+lambda_l2sp:
+  value: 0.0005
+
+# === [多视角增强缓存开关] ===
+# True  → 加载 CUB_train_*_aug.pt (K 个增强视角, 训练时随机抽 1 个)
+# False → 加载单视角缓存 (默认, 无增强)
+# 启用前必须先跑: python tools/extract_features.py 4
+use_aug_cache:
+  value: True
