@@ -1,0 +1,368 @@
+< D C Y E h m > 
+ h m   a g " h C " 
+ h a > 
+ m t   h r e = U F 8 > 
+ t t e D S   验 录 本 / i l > 
+ s y e 
+   o y { f n - a i y   a p e s s e , " e o   I , " i r s f   a e "   a s s r f   a - i t : 1 0 p ; m r i : 2 p   u o   a d n : 0 2 p ; c l r   1 2937; line-height: 1.55; background: #fafafa; }
+  h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 6px; margin-bottom: 8px;}
+  h2 { color: #1e3a8a; margin-top: 28px; padding: 6px 12px; background: linear-gradient(90deg,#dbeafe,transparent); border-left: 4px solid #1e40af; }
+  h3 { color: #0f172a; margin-top: 18px; }
+  .meta { color: #6b7280; font-size: 12.5px; margin-bottom: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; background: #fff; font-size: 12.5px; }
+  th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #1e40af; color: #fff; font-weight: 600; }
+  tr.best td { background: #fef3c7 !important; font-weight: 600; }
+  tr.fail td { background: #fef2f2 !important; color: #6b7280; }
+  tr.todo td { background: #f0fdf4 !important; color: #166534; }
+  tr:nth-child(even):not(.best):not(.fail):not(.todo) { background: #f9fafb; }
+  td.num { text-align: right; font-family: "Consolas", monospace; }
+  code { background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 12px; color: #1e3a8a; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .tag.ok   { background: #dcfce7; color: #166534; }
+  .tag.fail { background: #fee2e2; color: #b91c1c; }
+  .tag.todo { background: #e0e7ff; color: #3730a3; }
+  .tag.warm { background: #fef3c7; color: #92400e; }
+  .tag.strict { background: #dbeafe; color: #1e40af; }
+  .legend { background: #f3f4f6; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; margin: 8px 0; }
+  details { margin: 6px 0; }
+  summary { cursor: pointer; padding: 4px 8px; background: #f3f4f6; border-radius: 4px; font-weight: 600; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; overflow-x: auto; font-size: 11.5px; line-height: 1.4; }
+  .delta-pos { color: #166534; font-weight: 600; }
+  .delta-neg { color: #b91c1c; font-weight: 600; }
+  .note { background: #fffbeb; border-left: 3px solid #f59e0b; padding: 6px 10px; margin: 6px 0; font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<h1>DVSR 实验记录账本</h1>
+<p class="meta">
+  CUB GZSL · CLIP ViT-L/14@336px frozen · 每次实验记录: 框架配置 + 模块开关 + 数据结果<br>
+  生成: 2026-05-25 · 持续更新
+</p>
+
+<div class="legend">
+<strong>标记图例：</strong>
+<span class="tag warm">warm-restart</span>
+<span class="tag strict">strict 严格连续</span>
+<span class="tag ok">work</span>
+<span class="tag fail">不正向</span>
+<span class="tag todo">待跑</span>
+&nbsp;&nbsp;<strong>颜色：</strong>
+黄行=最佳，红行=失败，绿行=待跑
+</div>
+
+<!-- ============================================================ -->
+<h2>一、主结果总表（按时间顺序）</h2>
+
+<table>
+  <tr>
+    <th width="3%">#</th>
+    <th width="14%">实验名</th>
+    <th width="10%">日期</th>
+    <th width="14%">Schedule</th>
+    <th width="20%">关键配置</th>
+    <th width="6%">H</th>
+    <th width="6%">U</th>
+    <th width="6%">S</th>
+    <th width="6%">ZSL</th>
+    <th width="6%">Best ep</th>
+    <th width="9%">vs Baseline</th>
+  </tr>
+
+  <tr class="best">
+    <td>1</td>
+    <td><b>T1 baseline</b><br>(strict 50ep)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>所有 fixed 开关 + G1+G2+G3</td>
+    <td class="num">72.27</td>
+    <td class="num">72.74</td>
+    <td class="num">71.80</td>
+    <td class="num">81.02</td>
+    <td class="num">34</td>
+    <td><b>★ main result</b></td>
+  </tr>
+
+  <tr>
+    <td>2</td>
+    <td>T1 baseline<br>(warm-restart)</td>
+    <td>05-29</td>
+    <td><span class="tag warm">warm</span><br>20+30 best</td>
+    <td>同 #1, ep21 加载 best ckpt</td>
+    <td class="num">73.05</td>
+    <td class="num">69.80</td>
+    <td class="num">76.61</td>
+    <td class="num">81.57</td>
+    <td class="num">22</td>
+    <td><span class="delta-pos">+0.78</span> vs strict</td>
+  </tr>
+
+  <tr class="fail">
+    <td>3</td>
+    <td>T2 score-mlp<br>(strict 50ep)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>gating_dynamic=mlp</code></td>
+    <td class="num">71.65</td>
+    <td class="num">74.50</td>
+    <td class="num">69.02</td>
+    <td class="num">81.81</td>
+    <td class="num">36</td>
+    <td><span class="delta-neg">-0.62</span> vs T1</td>
+  </tr>
+
+  <tr class="todo">
+    <td>4</td>
+    <td>T2 score-mlp<br>(warm-restart)</td>
+    <td>—</td>
+    <td><span class="tag warm">warm</span><br>20+30 best</td>
+    <td>同 #3 + restart_from_best</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>当前任务</td>
+  </tr>
+
+  <tr class="todo">
+    <td>5</td>
+    <td>T3 branch-mlp</td>
+    <td>—</td>
+    <td>待定</td>
+    <td>+ <code>weight_s2v_mode=mlp</code></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>待跑</td>
+  </tr>
+
+  <tr class="todo">
+    <td>6</td>
+    <td>T4 三层联动</td>
+    <td>—</td>
+    <td>待定</td>
+    <td>gating + branch + pool 全 mlp</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>待跑</td>
+  </tr>
+
+  <tr class="todo">
+    <td>7</td>
+    <td>T6 CGC C1-C5</td>
+    <td>—</td>
+    <td>待定</td>
+    <td>反事实增益校准模块</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>论文标题级</td>
+  </tr>
+
+  <tr class="todo">
+    <td>8</td>
+    <td>纯 CLIP baseline</td>
+    <td>—</td>
+    <td>zero-shot</td>
+    <td>无 FAE / 无 Adapter / 无 GPT</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>—</td>
+    <td>论文最底线</td>
+  </tr>
+
+  <tr>
+    <td>9</td>
+    <td>多 seed (42)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>仅 random_seed 变 42</td>
+    <td class="num">72.43</td>
+    <td class="num">73.94</td>
+    <td class="num">70.98</td>
+    <td class="num">—</td>
+    <td class="num">33</td>
+    <td><span class="delta-pos">+0.16</span> vs seed=5</td>
+  </tr>
+
+  <tr class="best">
+    <td>10</td>
+    <td>多 seed (2024) ⭐</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>仅 random_seed 变 2024</td>
+    <td class="num">72.74</td>
+    <td class="num">72.87</td>
+    <td class="num">72.61</td>
+    <td class="num">81.72</td>
+    <td class="num">25</td>
+    <td><span class="delta-pos">+0.47</span> 三 seed 中最高</td>
+  </tr>
+  <tr style="background:#fef3c7;">
+    <td colspan="11" style="text-align:center; font-weight:600; padding:10px;">
+      📊 <b>三 seed 平均</b>: H = <b>72.48 ± 0.20</b>, U = 73.18 ± 0.51, S = 71.80 ± 0.67 ⭐ <b>论文 Main Result</b>
+    </td>
+  </tr>
+  <tr class="fail">
+    <td>11</td>
+    <td>LaSt-CLS 增强<br>(入口 B, r=0.3)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>use_lastvit_cls=True</code><br><code>lastvit_residual=0.3</code></td>
+    <td class="num">71.18</td>
+    <td class="num">74.91</td>
+    <td class="num">67.79</td>
+    <td class="num">81.29</td>
+    <td class="num">41</td>
+    <td><span class="delta-neg">-1.09</span> vs baseline</td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>二、每次实验详细记录</h2>
+
+<!-- ============= 实验 1 ============= -->
+<h3>实验 #1 — T1 strict baseline (main result)</h3>
+<table>
+  <tr><th width="20%">框架</th><td>CLIP frozen + Adapter (768→192→768) + FAE 双分支 + mean pool + add 模式</td></tr>
+  <tr><th>损失</th><td>L_CE + 0.05 L_topo + λ_eff L_consist + 0.05 L_msdn (G1+G2+G3 全开)</td></tr>
+  <tr><th>关键模块</th><td>
+    pool_method=mean, gating=fixed, gating_dynamic=fixed, weight_s2v_mode=fixed, pool_dynamic=fixed,
+    use_conditional_text=True (ratio=0.005), score_mode=add, local_weight=0.3
+  </td></tr>
+  <tr><th>训练</th><td>random_seed=5, batch=64, Adam lr=1e-3 wd=1e-4, lr_stages=[1e-3×20, 1e-4×30] strict 严格连续</td></tr>
+  <tr><th>结果</th><td><b>Best @ ep34: H=72.27 / U=72.74 / S=71.80 / ZSL=81.02</b></td></tr>
+  <tr><th>日志</th><td><code>training_log_CUB_2026-05-30_00-56-54.txt</code></td></tr>
+  <tr><th>ckpt</th><td><code>best_model_CUB_2026-05-30_00-56-54_H7227.pth</code></td></tr>
+  <tr><th>结论</th><td>论文 main result, 后续所有 ablation 都用同一 schedule 保证公平</td></tr>
+</table>
+
+<!-- ============= 实验 2 ============= -->
+<h3>实验 #2 — T1 warm-restart 对照</h3>
+<table>
+  <tr><th width="20%">框架</th><td>同实验 #1</td></tr>
+  <tr><th>差异</th><td>训练流程改为 warm-restart: 第 1 段 20ep 选 best ckpt → 第 2 段加载 best 后 finetune 30ep</td></tr>
+  <tr><th>结果</th><td><b>Best @ ep22: H=73.05 / U=69.80 / S=76.61 / ZSL=81.57</b></td></tr>
+  <tr><th>日志</th><td><code>training_log_CUB_2026-05-29_23-00-51.txt</code> (Stage 2)<br>
+                      <code>training_log_CUB_2026-05-29_22-55-09.txt</code> (Stage 1)</td></tr>
+  <tr><th>ckpt</th><td><code>best_model_CUB_2026-05-29_23-00-51_H7305.pth</code></td></tr>
+  <tr><th>结论</th><td>warm-restart vs strict +0.78 H, 不是 noise 是机制差异. 论文 appendix 对照"best-checkpoint selection effect"</td></tr>
+</table>
+
+<!-- ============= 实验 3 ============= -->
+<h3>实验 #3 — T2 score 级动态门控 (strict)</h3>
+<table>
+  <tr><th width="20%">框架</th><td>同 T1 + alpha_net (768→64→1, ~50K 参数)</td></tr>
+  <tr><th>关键改动</th><td><code>gating_dynamic: fixed → mlp</code></td></tr>
+  <tr><th>forward</th><td>
+    α(x) = sigmoid(alpha_net(cls_token))<br>
+    logits = base_logits + α(x) · local_score
+  </td></tr>
+  <tr><th>训练</th><td>同 T1 strict, 仅多了 alpha_net</td></tr>
+  <tr><th>结果</th><td><b>Best @ ep36: H=71.65 / U=74.50 / S=69.02 / ZSL=81.81</b></td></tr>
+  <tr><th>诊断</th><td>
+    alpha_net 末期 bias=-0.683 (sigmoid≈0.336), 跟 init 0.3 几乎不动. mlp 退化成常数, 没学到逐图差异
+  </td></tr>
+  <tr><th>日志</th><td><code>training_log_CUB_2026-05-30_10-40-38.txt</code></td></tr>
+  <tr><th>结论 <span class="tag fail">不正向</span></th><td>vs T1 strict (-0.62). T2 在 strict schedule 下不显著, 待 warm-restart 验证</td></tr>
+</table>
+
+<!-- ============= 实验 4 (待跑) ============= -->
+<h3>实验 #4 — T2 score 级动态门控 (warm-restart) <span class="tag todo">当前任务</span></h3>
+<table>
+  <tr><th width="20%">框架</th><td>同 T2</td></tr>
+  <tr><th>关键改动</th><td>
+    Stage 2 加 <code>restart_from_best: True</code><br>
+    ep21 自动加载 Stage 1 best ckpt 后切 lr=1e-4 cosine T_max=30
+  </td></tr>
+  <tr><th>新代码</th><td>
+    train_VGSR_CUB.py:715-733 段切换支持 restart_from_best 字段
+  </td></tr>
+  <tr><th>预期</th><td>
+    如果 H ≥ 72.5: 定 warm-restart 为标准 schedule<br>
+    如果 H &lt; 72.27: T2 真不正向, 走 T3
+  </td></tr>
+  <tr><th>启动命令</th><td><code>F:\Anaconda\envs\dassl_clip_v2\python.exe train_VGSR_CUB.py</code></td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>三、当前 yaml 关键开关速查</h2>
+
+<details open>
+<summary>当前实验 (T2 warm-restart) 配置</summary>
+<table>
+  <tr><th width="25%">字段</th><th width="20%">当前值</th><th>说明</th></tr>
+  <tr><td><code>random_seed</code></td><td>5</td><td>seed 固定</td></tr>
+  <tr><td><code>batch_size</code></td><td>64</td><td></td></tr>
+  <tr><td><code>text_source</code></td><td>gpt55</td><td>GPT-5.5 改写描述</td></tr>
+  <tr><td><code>pool_method</code></td><td>mean</td><td></td></tr>
+  <tr><td><code>pool_dynamic</code></td><td>fixed</td><td></td></tr>
+  <tr><td><code>score_mode</code></td><td>add</td><td></td></tr>
+  <tr><td><code>gating</code></td><td>fixed</td><td>(被 gating_dynamic 覆盖)</td></tr>
+  <tr><td style="background:#fef3c7"><code>gating_dynamic</code></td><td style="background:#fef3c7"><b>mlp</b></td><td>★ T2 唯一变化</td></tr>
+  <tr><td><code>weight_s2v_mode</code></td><td>fixed</td><td>T3 候选</td></tr>
+  <tr><td><code>use_conditional_text</code></td><td>True</td><td>G3 启用</td></tr>
+  <tr><td><code>conditional_text_ratio</code></td><td>0.005</td><td></td></tr>
+  <tr><td><code>lambda_topo_pearson</code></td><td>0.05</td><td>G1</td></tr>
+  <tr><td><code>lambda_consist</code></td><td>0.05</td><td>G1</td></tr>
+  <tr><td><code>consist_dynamic</code></td><td>True</td><td>倒数衰减</td></tr>
+  <tr><td><code>lambda_msdn</code></td><td>0.05</td><td>G2</td></tr>
+  <tr><td><code>resume_from</code></td><td>''</td><td>从 0 训</td></tr>
+  <tr><td style="background:#fef3c7"><code>lr_stages</code></td><td style="background:#fef3c7" colspan="2">[{lr:1e-3, ep:20}, {lr:1e-4, ep:30, restart_from_best:True}]</td></tr>
+</table>
+</details>
+
+<!-- ============================================================ -->
+<h2>四、组件可用性 (从 BEST_MODEL_FRAMEWORK_REPORT 摘要)</h2>
+
+<table>
+  <tr>
+    <th width="20%">组件</th>
+    <th width="20%">配置项</th>
+    <th width="14%">当前</th>
+    <th width="46%">可替换 → 实验编号</th>
+  </tr>
+  <tr><td>视觉池化</td><td><code>pool_method</code></td><td>mean</td><td>attention/lastvit/dmp/class_attention 均失败</td></tr>
+  <tr><td>分数级门控</td><td><code>gating_dynamic</code></td><td>fixed</td><td>mlp → T2 strict #3 失败 / T2 warm #4 待跑</td></tr>
+  <tr><td>分支级门控</td><td><code>weight_s2v_mode</code></td><td>fixed</td><td>mlp → T3 #5 待跑</td></tr>
+  <tr><td>池化级门控</td><td><code>pool_dynamic</code></td><td>fixed</td><td>mlp → 仅 dmp 时生效, 已知 71.92 不正向</td></tr>
+  <tr><td>三层联动</td><td>三个 mlp</td><td>未联动</td><td>T4 #6 待跑</td></tr>
+  <tr><td>条件文本</td><td><code>use_conditional_text</code></td><td>True</td><td>关掉 → ablation, 待跑</td></tr>
+  <tr><td>反事实校准</td><td>未实施</td><td>—</td><td>T6 CGC C1-C5 #7 待实施</td></tr>
+  <tr><td>多 seed</td><td><code>random_seed</code></td><td>5</td><td>42 #9 / 2024 #10 待跑</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>五、记录规范（每次实验都要写完）</h2>
+
+<div class="note">
+<strong>每个新实验入账时必须填写：</strong>
+<ol>
+  <li><b>框架</b>：哪些模块开/关，跟上一次比改了什么</li>
+  <li><b>损失</b>：哪几项 loss + 权重</li>
+  <li><b>关键配置</b>：yaml 一行变化（最重要）</li>
+  <li><b>训练流程</b>：seed / lr_stages / warm-restart 与否</li>
+  <li><b>结果</b>：Best H / U / S / ZSL / Best ep（4 个数都要）</li>
+  <li><b>日志文件</b>：训练日志路径</li>
+  <li><b>ckpt 文件</b>：best_model 路径</li>
+  <li><b>结论</b>：work / 不正向 / negative result，跟上一次基线 ΔH</li>
+</ol>
+</div>
+
+<p class="meta" style="text-align:center; margin-top: 30px;">
+— 表格持续更新 —
+</p>
+
+</body>
+</html>

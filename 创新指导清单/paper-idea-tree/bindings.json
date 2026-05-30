@@ -1,0 +1,10 @@
+{
+  "default_project": "DVSR",
+  "projects": {
+    "DVSR": {
+      "project_root": "C:/Users/Administrator/Desktop/项目/DVSR",
+      "tree_root": "C:/Users/Administrator/Desktop/项目/DVSR/创新指导清单/paper-idea-tree",
+      "notes": "DVSR 实验项目的论文创意树；根据论文创新、模块可用性和本地实验效果更新节点权重。"
+    }
+  }
+}

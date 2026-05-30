@@ -36,12 +36,17 @@ def _load_test_cache(device):
     # patch 缓存（可选）
     has_seen_patch   = os.path.exists(_CACHE_TEST_SEEN_PATCH)
     has_unseen_patch = os.path.exists(_CACHE_TEST_UNSEEN_PATCH)
+
     if has_seen_patch and has_unseen_patch:
-        # patch 用 float16 存盘，放在 CPU，按 batch 切片再上 GPU 转 float32
-        _test_cache['seen_patch']   = torch.load(_CACHE_TEST_SEEN_PATCH,   map_location='cpu', weights_only=True)
-        _test_cache['unseen_patch'] = torch.load(_CACHE_TEST_UNSEEN_PATCH, map_location='cpu', weights_only=True)
+        # patch 用 float16 存盘, 放在 CPU, 按 batch 切片再上 GPU 转 float32
+        # ⚠️ 测试 patch GPU 预加载已禁用 (与训练 patch 一起占 10GB+, 留给激活的余量太少, 8s/step)
+        # 训练 patch 6.2GB 优先 (每 step 命中, 收益最大), 测试 patch 走 CPU H2D 切片
+        seen_patch   = torch.load(_CACHE_TEST_SEEN_PATCH,   map_location='cpu', weights_only=True)
+        unseen_patch = torch.load(_CACHE_TEST_UNSEEN_PATCH, map_location='cpu', weights_only=True)
+        _test_cache['seen_patch']   = seen_patch
+        _test_cache['unseen_patch'] = unseen_patch
         _test_cache['has_patch']    = True
-        print(f"[cache] Test patch features loaded: "
+        print(f"[cache] Test patch features loaded (CPU, eval H2D per-batch): "
               f"seen={tuple(_test_cache['seen_patch'].shape)} "
               f"unseen={tuple(_test_cache['unseen_patch'].shape)}")
     else:
@@ -132,8 +137,34 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
 
     with torch.no_grad():
         if use_cache:
-            seen_patch   = _test_cache.get('seen_patch')   if _test_cache.get('has_patch') else None
-            unseen_patch = _test_cache.get('unseen_patch') if _test_cache.get('has_patch') else None
+            seen_patch_cpu   = _test_cache.get('seen_patch')   if _test_cache.get('has_patch') else None
+            unseen_patch_cpu = _test_cache.get('unseen_patch') if _test_cache.get('has_patch') else None
+
+            # ★ 加速优化: eval 时临时把测试 patch 上 GPU
+            # 显存预算严格：系统 2~4 GB + 训练 patch (CPU 模式时 0) + 模型激活 ~2 GB
+            # 在 RTX 5070 Ti (16 GB) 上, eval 时 free 显存 ~10 GB, 4 GB 测试 patch 安全
+            # 用 2.0 倍余量阈值, 不够就走 CPU 老路
+            seen_patch   = None
+            unseen_patch = None
+            try:
+                if seen_patch_cpu is not None and not seen_patch_cpu.is_cuda:
+                    free_gb = torch.cuda.mem_get_info(device)[0] / 1e9
+                    test_size_gb = (seen_patch_cpu.numel() * seen_patch_cpu.element_size()
+                                     + unseen_patch_cpu.numel() * unseen_patch_cpu.element_size()) / 1e9
+                    if free_gb > test_size_gb * 2.0:
+                        seen_patch   = seen_patch_cpu.to(device, non_blocking=True)
+                        unseen_patch = unseen_patch_cpu.to(device, non_blocking=True)
+                        # 一次性传完, 后续 batch 直接索引零 H2D
+                    else:
+                        seen_patch   = seen_patch_cpu
+                        unseen_patch = unseen_patch_cpu
+                else:
+                    seen_patch   = seen_patch_cpu
+                    unseen_patch = unseen_patch_cpu
+            except Exception:
+                seen_patch   = seen_patch_cpu
+                unseen_patch = unseen_patch_cpu
+
             acc_seen  = _eval_from_cache(
                 _test_cache['seen_feat'], _test_cache['seen_label'],
                 model, seenclasses, in_package, device,
@@ -142,6 +173,11 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
                 _test_cache['unseen_feat'], _test_cache['unseen_label'],
                 model, unseenclasses, in_package, device,
                 bias_unseen=bias_unseen, patches_cache=unseen_patch)
+
+            # ★ 释放临时 GPU 张量, 不污染训练 step 显存
+            if seen_patch is not None and seen_patch.is_cuda and not seen_patch_cpu.is_cuda:
+                del seen_patch, unseen_patch
+                torch.cuda.empty_cache()
         else:
             acc_seen  = val_gzsl_online(dataloader.test_seen_loader, clip_model, model,
                                         seenclasses, in_package, bias=bias_seen)
@@ -152,10 +188,11 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
     return acc_seen, acc_novel, H, acc_zs
 
 
-def _eval_from_cache(feat, labels, model, target_classes, in_package, device, batch_size=128,
+def _eval_from_cache(feat, labels, model, target_classes, in_package, device, batch_size=64,
                      bias_unseen=0.0, patches_cache=None):
     """用缓存特征评估 GZSL seen 准确率（完整模型，包含 local_score）
 
+    batch_size=64: FAE 注意力 O(B²), 跟训练一致避免显存峰值翻 4 倍
     patches_cache: 可选 [N, 576, 768]（float16 on CPU）。若提供则用真实空间 patch；
                    否则用 CLS 复制 576 份（FAE 看到全相同 token，空间信号丢失）。
     """
@@ -168,7 +205,12 @@ def _eval_from_cache(feat, labels, model, target_classes, in_package, device, ba
             cls = batch_feat.unsqueeze(1)                        # [B, 1, 768]
             if patches_cache is not None:
                 # 真实 spatial patch（float16 → float32 on GPU）
-                patches = patches_cache[i:i+batch_size].to(device).float()  # [B, 576, 768]
+                # 智能搬运: 已在 GPU 直接索引, 否则上 GPU (★ non_blocking 异步)
+                if patches_cache.is_cuda:
+                    patches = patches_cache[i:i+batch_size].float()
+                else:
+                    patches = patches_cache[i:i+batch_size].to(
+                        device, non_blocking=True).float()
             else:
                 # 兼容旧缓存：CLS 复制
                 patches = cls.expand(-1, 576, -1).contiguous()   # [B, 576, 768]
@@ -183,14 +225,21 @@ def _eval_from_cache(feat, labels, model, target_classes, in_package, device, ba
     return compute_per_class_acc_gzsl(labels, predicted, target_classes, in_package)
 
 
-def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, device, batch_size=128,
+def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, device, batch_size=64,
                             bias_unseen=0.0, patches_cache=None):
     """用缓存特征评估 GZSL unseen + ZSL 准确率（完整模型）
 
+    batch_size=64: 跟训练一致, 避免 FAE O(B²) 显存峰值
     patches_cache: 可选 [N, 576, 768]（float16 on CPU）。
     """
     all_pred_gzsl = []
     all_pred_zsl  = []
+    # ★ G3 诊断: 累计 logits 均值/最大值, 用于排查 seen/unseen logit bias
+    diag_seen_max  = []
+    diag_unseen_max = []
+    diag_seen_mean = []
+    diag_unseen_mean = []
+    seen_classes_idx = model.seenclass if hasattr(model, 'seenclass') else None
     N = feat.size(0)
     model.eval()
     with torch.no_grad():
@@ -198,12 +247,25 @@ def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, dev
             batch_feat = feat[i:i+batch_size].to(device)
             cls = batch_feat.unsqueeze(1)
             if patches_cache is not None:
-                patches = patches_cache[i:i+batch_size].to(device).float()
+                if patches_cache.is_cuda:
+                    patches = patches_cache[i:i+batch_size].float()
+                else:
+                    patches = patches_cache[i:i+batch_size].to(
+                        device, non_blocking=True).float()
             else:
                 patches = cls.expand(-1, 576, -1).contiguous()
             clip_input = torch.cat([cls, patches], dim=1)
             out = model(clip_input, is_train=False)
             logits = out['clip_S_pp'].clone()                    # [B, 200]
+            # ★ G3 诊断: 收集 logits 在 seen / unseen 列上的统计
+            if seen_classes_idx is not None:
+                with torch.no_grad():
+                    seen_l   = logits[:, seen_classes_idx]
+                    unseen_l = logits[:, unseen_classes]
+                    diag_seen_max.append(seen_l.max(dim=1).values.detach())
+                    diag_unseen_max.append(unseen_l.max(dim=1).values.detach())
+                    diag_seen_mean.append(seen_l.mean(dim=1).detach())
+                    diag_unseen_mean.append(unseen_l.mean(dim=1).detach())
             # 给 unseen 类加偏置
             if bias_unseen != 0:
                 logits[:, unseen_classes] = logits[:, unseen_classes] + bias_unseen
@@ -216,6 +278,18 @@ def _eval_unseen_from_cache(feat, labels, model, unseen_classes, in_package, dev
     acc_gzsl = compute_per_class_acc_gzsl(labels, pred_gzsl, unseen_classes, in_package)
     mapped_labels = map_label(labels, unseen_classes)
     acc_zsl  = compute_per_class_acc(mapped_labels, pred_zsl, unseen_classes.size(0))
+
+    # ★ G3 诊断打印 (在 unseen 测试集上, 显眼标记便于排查)
+    if seen_classes_idx is not None and len(diag_seen_max) > 0:
+        s_max  = torch.cat(diag_seen_max).mean().item()
+        u_max  = torch.cat(diag_unseen_max).mean().item()
+        s_mean = torch.cat(diag_seen_mean).mean().item()
+        u_mean = torch.cat(diag_unseen_mean).mean().item()
+        print(f"  >> [G3-DIAG] unseen-set: max_seen={s_max:.3f}  max_unseen={u_max:.3f}  "
+              f"Δmax={s_max-u_max:+.3f} | "
+              f"mean_seen={s_mean:.3f}  mean_unseen={u_mean:.3f}  "
+              f"Δmean={s_mean-u_mean:+.3f}", flush=True)
+
     return acc_gzsl, acc_zsl
 
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Idea Tree"
+  short_description: "Maintain a weighted research idea tree from papers."
+  default_prompt: "Use $paper-idea-tree to summarize this paper into the idea tree and update node weights from my experiment results."
