@@ -1,0 +1,23 @@
+{
+  "name": "claude-code-worker-mcp",
+  "version": "0.1.0",
+  "description": "Codex Desktop MCP server that runs Claude Code as an async code-review worker, optionally against DeepSeek's Anthropic-compatible API.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "claude-code-worker-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

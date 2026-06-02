@@ -1,6 +1,10 @@
-# MTPY: 基于 CLIP + Adapter + GPT 的零样本图像分类
+# DVSR / VGSR: 基于 CLIP + Adapter + GPT 的零样本图像分类
 
 广义零样本学习 (GZSL) 研究项目，基于 VDT-TransZero 思路，使用 CLIP ViT-L/14@336px 作为骨干。
+
+> 当前唯一项目汇报: `DVSR_标准项目汇报.md`
+>
+> 旧的 report / 汇报 / 交接文档已清理。日常接手、开实验、写论文优先读 `DVSR_标准项目汇报.md`。
 
 ## 核心思想
 
@@ -21,24 +25,26 @@
 ```
 
 - **seen 类文本**：经 Adapter 优化（参数可训练）
-- **unseen 类文本**：使用 GPT-4 生成的 7 句描述均值，无 Adapter
+- **unseen 类文本**：使用 GPT 描述均值，无 Adapter
 - **CLIP 主干**：始终冻结，保留原始零样本能力
 
 ## 实验结果（CUB GZSL）
 
-| 实验 | 配置 | U | S | H | ZSL |
-|------|------|---|---|---|-----|
-| 1 基线 | CLIP+Adapter+GPT, 10 轮 | 69.02 | 71.54 | 70.26 | 79.60 |
-| 2 串行双向 | CrossModal, local=0.3, 10 轮 | 66.13 | 74.47 | 70.05 | 79.38 |
-| 3 并行双向 | 独立双分支, local=0.3, 10 轮 | 66.14 | 72.88 | 69.34 | 79.14 |
-| 4 unseen GPT | 并行+unseen GPT, local=0.3, 20 轮 | 71.35 | 70.65 | 71.00 | 80.21 |
-| **5 当前最佳** | **local=0.5, 20 轮** | **71.07** | **71.04** | **71.06** | **80.51** |
+| 口径 | 配置 | U | S | H | ZSL |
+|------|------|---:|---:|---:|---:|
+| 新 main baseline | P3.10 配置, 3 seeds, strict 60ep | 73.07 +/- 0.85 | 72.26 +/- 0.85 | 72.65 +/- 0.19 | 81.54 +/- 0.16 |
+| 单点最高 strict | P3.10 seed=5 | 73.30 | 72.53 | 72.91 | 81.72 |
+| 旧 main baseline | v5+FAE, 3 seeds, strict 50ep | 74.13 +/- 0.62 | 70.99 +/- 0.40 | 72.52 +/- 0.11 | 81.56 +/- 0.18 |
+| 纯 CLIP zero-shot | no train | 60.88 | 61.69 | 61.28 | 78.07 |
+
+注意: `H=73.05` / `H=73.20` 属于 warm-restart 或离群刷分口径，不作为当前 strict main baseline。
 
 ## 项目结构
 
 ```
 .
-├── model/VGSR.py              # 主模型 (Adapter + CrossModalTransformer)
+├── DVSR_标准项目汇报.md        # 当前唯一项目汇报
+├── model/MyModel.py           # 主模型 (Adapter + LaSt v5 + CrossModalTransformer)
 ├── tools/
 │   ├── dataset.py             # CUB / AWA2 / SUN DataLoader
 │   ├── helper_func.py         # CLIP 特征提取 + GZSL 评估
@@ -50,6 +56,7 @@
 ├── train_VGSR_CUB.py          # CUB 训练入口
 ├── train_VGSR_AWA2.py
 ├── train_VGSR_SUN.py
+├── experiments/               # 后续实验管理区：替换模块 / 消融 / 调参 / 跨数据集 / 最终结果
 ├── Guide/                     # 详细代码讲解文档
 └── 创新指导清单/              # 模块创新效果记录
 ```
@@ -85,8 +92,7 @@ python train_VGSR_SUN.py
 
 ## 详细文档
 
-- `Guide/PROJECT_GUIDE.md` — 项目架构总览
-- `Guide/VGSR_CODE_GUIDE.md` — 模型代码逐行讲解
-- `Guide/TRAIN_CUB_CODE_GUIDE.md` — 训练流程讲解
-- `EXPERIMENT_RECORD.md` — 完整实验记录
-- `创新指导清单/INNOVATION_RECORD.md` — 模块创新效果对比
+- `DVSR_标准项目汇报.md` — 当前唯一项目汇报
+- `experiments/README.md` — 后续实验文件夹规范
+- `train_log/CUB/training_log_*.txt` — 原始训练日志证据
+- `Guide/*_CODE_GUIDE.md` / `Guide/*TUTORIAL.md` — 代码学习材料

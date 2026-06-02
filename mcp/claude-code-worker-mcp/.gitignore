@@ -1,0 +1,5 @@
+node_modules/
+dist/
+experiments/.agent-state/
+fixtures/*.claude-review.md
+.env
