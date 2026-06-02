@@ -1,11 +1,14 @@
 """
 VGSR 主模型 (CLIP + Adapter + GPT + 双向 Transformer)
 =========================================================
-模块化说明：本文件内包含三个独立模块，每个模块可单独使用。
-  1. Adapter                    — 文本特征轻量增强 (VDT-TransZero)
-  2. CrossModalTransformer      — 视觉-语义双向 Transformer (TransZero++)
+模块化说明：本文件内包含 VGSR 的核心建模组件与轻量辅助目标。
+  1. LaSt-ViT 工具函数           — 频域池化与 top-K patch 选择
+  2. Adapter                    — 文本特征轻量增强 (VDT-TransZero)
+  3. CrossModalTransformer      — 视觉-语义双向 Transformer (TransZero++)
      包含子组件: BoxRelationalEmbedding, GeometryMultiHeadAttention, FAELayer
-  3. VGSR                       — 主模型, 组合上述模块
+     支持 LaSt-ViT patch 子集选择后再进行几何感知交互
+  4. VGSR                       — 主模型, 组合上述模块
+     可选启用 LaSt-CLS 增强、LaSt patch 选择器与 AG-JEPA 辅助预测损失
 
 接口契约 (不要破坏):
   - forward(clip_features, is_train=False) 返回字典, 必含键 'clip_S_pp'
@@ -99,6 +102,70 @@ def lastvit_pool(F_p, k=1, sigma=None):
 
     # 7. 转回原 dtype (autocast 兼容)
     return pooled.to(orig_dtype) if orig_dtype != torch.float32 else pooled
+
+
+def lastvit_select_patches(F_p, K=64, sigma=None, largest=True, formula='v2_abs_mean'):
+    """
+    LaSt-ViT v5 (路径 C): 用频域显著性选 top-K patch 索引
+
+    第一性原理 (★ 2026-05-31 勘误):
+        报告原文: "比值越高的 Patch 说明在通道内越平稳, 越符合真实前景对象"
+        diff = x / (|x_lp - x| + ε): 比值大 → 高频残差小 → patch 平稳同质
+        topk(largest=True) 选最平稳的 K 个 token (滤掉 high-norm artifact / 背景 lazy token)
+        topk(largest=False) 选最不平稳的 K 个 token (高频/纹理 part-aware token)
+        ★ 反向对照实验用 largest=False 验证机制
+        ★ 'both' 模式: 选 K/2 个最平稳前景 + K/2 个最高频 part, 双通道融合
+
+    Args:
+        F_p:     [B, N, D] patch 特征 (CLIP 原始 patches)
+        K:       选 top-K 个 patch (推荐 64 或 128). both 模式下 K 必须是偶数
+        sigma:   高斯核 σ (None=√D)
+        largest: True=选最平稳前景 (默认), False=选最高频 part, 'both'=K/2 平稳 + K/2 高频
+        formula: 'v1_strict' / 'v2_abs_mean' (默认) / 'v3_norm'
+
+    Returns:
+        topk_indices: [B, K]  long tensor, 每个样本选的 K 个 patch 索引
+        patch_score:  [B, N]  float tensor, 每个 patch 的得分 (供调试)
+    """
+    B, N, D = F_p.shape
+
+    # 强制 fp32 (FFT 不支持 fp16)
+    orig_dtype = F_p.dtype
+    F_p_fp32 = F_p.float() if orig_dtype != torch.float32 else F_p
+
+    # 1. FFT + 高斯低通
+    x_freq = torch.fft.fft(F_p_fp32, dim=-1)
+    if sigma is None:
+        sigma = D ** 0.5
+    gs_k = _gaussian_kernel_1d(D, sigma).to(F_p_fp32.device)
+    x_freq = torch.fft.fftshift(x_freq, dim=-1)
+    x_freq = x_freq * gs_k
+    x_freq = torch.fft.ifftshift(x_freq, dim=-1)
+    x_lp = torch.fft.ifft(x_freq, dim=-1).real
+
+    # 2. 计算 patch 得分 (3 种公式)
+    if formula == 'v1_strict':
+        # 报告原文: S_i = (1/D) Σ_d  x[i,d] / (|x_lp[i,d] - x[i,d]| + ε)
+        diff = F_p_fp32 / (torch.abs(x_lp - F_p_fp32) + 1e-6)   # [B, N, D]
+        patch_score = diff.mean(dim=-1)                          # [B, N]
+    elif formula == 'v3_norm':
+        patch_score = 1.0 / (torch.norm(x_lp - F_p_fp32, dim=-1) + 1e-6)  # [B, N]
+    else:
+        # V2 默认 (P3.x 都用): abs() + mean
+        diff = F_p_fp32 / (torch.abs(x_lp - F_p_fp32) + 1e-6)   # [B, N, D]
+        patch_score = diff.abs().mean(dim=-1)                    # [B, N]
+
+    # 3. 选 top-K patch 索引 (3 种方向)
+    if isinstance(largest, str) and largest.lower() == 'both':
+        # ★ 双向选择: K/2 个最平稳前景 + K/2 个最高频 part
+        K_half = K // 2
+        _, idx_top = torch.topk(patch_score, k=K_half, dim=1, largest=True)   # 平稳前景
+        _, idx_bot = torch.topk(patch_score, k=K-K_half, dim=1, largest=False) # 高频 part
+        topk_indices = torch.cat([idx_top, idx_bot], dim=1)                    # [B, K]
+    else:
+        _, topk_indices = torch.topk(patch_score, k=K, dim=1, largest=bool(largest))
+
+    return topk_indices, patch_score
 
 
 # ==========================================================
@@ -484,7 +551,10 @@ class CrossModalTransformer(nn.Module):
             self.attn_pool = nn.Linear(dim_com, 1)
 
     def forward(self, patches, text, cls_token=None, unseen_idx=None,
-                weight_s2v_dyn=None, pool_lambda_dyn=None):
+                weight_s2v_dyn=None, pool_lambda_dyn=None,
+                lastvit_select_k=0, lastvit_select_sigma=0.0,
+                lastvit_select_largest=True,
+                lastvit_select_formula='v2_abs_mean'):
         """
         Args:
             patches:   [B, 576, 768]  CLIP patch 特征 (不含 CLS)
@@ -493,31 +563,56 @@ class CrossModalTransformer(nn.Module):
             unseen_idx: [N_unseen]    可选; 若提供, t_enh 在 proj_text
                                        前对 unseen 列 detach, 防止 unseen
                                        无监督梯度流入 decoder_v2s/FAE 上层
+            lastvit_select_k: int     ★ v5 路径 C: LaSt patch 选择器 K. 0=不启用
+            lastvit_select_sigma: float  高斯核 σ, 0=自动用 √D
         Returns:
             local_score: [B, N_cls]   双分支产生的额外局部注意力分数
-
-        真正双分支设计 (方向相反，并行独立):
-            v2s 分支: 文本 Query 视觉 → 视觉感知的文本表示
-            s2v 分支: 视觉 Query 文本 → 文本感知的视觉表示
-            两路各自产出分数，加权融合
-            FAE 同时接收两路梯度，被双向约束
-
-        双向体现:
-            v2s 梯度: loss → score_v2s → F_p_v2s → decoder_v2s → memory → FAE
-            s2v 梯度: loss → score_s2v → F_p_s2v → decoder_s2v → memory → FAE
-            FAE 参数同时被两路约束，学到更通用的视觉表示
         """
         B = patches.size(0)
 
+        # ========== ★ v5: LaSt patch 选择器 (路径 C) ==========
+        # 第一性原理: LaSt 在 frozen CLIP 下不能用反向梯度调整 ViT, 改成做 patch 选择器
+        # 让 FAE 仅在 K 个 part-aware patch 上做 cross-modal 交互, 而不是全 576
+        # K=64 / 128 推荐起点, 比 mean pool 信息密度更高
+        topk_indices_v5 = None    # ★ 保存到 FAE 子集 gather 用
+        if lastvit_select_k > 0 and lastvit_select_k < patches.size(1):
+            sigma_sel = lastvit_select_sigma if lastvit_select_sigma > 0 else None
+            with torch.amp.autocast('cuda', enabled=False):
+                topk_indices, _ = lastvit_select_patches(
+                    patches.float(), K=lastvit_select_k, sigma=sigma_sel,
+                    largest=lastvit_select_largest,
+                    formula=lastvit_select_formula)
+            # gather 出 [B, K, 768] 的 part-aware patches
+            # 注意: indices 是 [B, K], 需要 expand 到最后一维
+            idx_exp = topk_indices.unsqueeze(-1).expand(-1, -1, patches.size(-1))
+            patches = torch.gather(patches, dim=1, index=idx_exp)        # [B, K, 768]
+            topk_indices_v5 = topk_indices                                # [B, K] 留给 FAE
+
         # ========== 共享视觉编码 ==========
         # 两路共用同一个 memory，视觉理解一致，节省参数
-        vis    = self.embed_cv(patches)                          # [B, 576, dim_com]
+        vis    = self.embed_cv(patches)                          # [B, N, dim_com]  N=576 或 K
         if self.use_fae:
-            geo_emb = self.box_emb(B)                            # [B, 576, 576, dim_g]
-            memory = self.fae(vis, geo_emb)                      # [B, 576, dim_com]
+            if patches.size(1) == 576:
+                # 标准路径: 全图 FAE
+                geo_emb = self.box_emb(B)                                # [B, 576, 576, dim_g]
+                memory  = self.fae(vis, geo_emb)                         # [B, 576, dim_com]
+            elif topk_indices_v5 is not None:
+                # ★ v5 + FAE 子集 gather (路径 C 修复):
+                #   LaSt 选出的 K 个 patch 仍然是 24×24 grid 上的合法点,
+                #   它们之间两两的相对位置编码 = 全图 [576,576,dim_g] 的子集.
+                #   advanced indexing 出 [B, K, K, dim_g] 给 FAE 做几何感知自注意力.
+                full   = self.box_emb.geometry_embedding                  # [576, 576, dim_g] (fp16)
+                K_sel  = topk_indices_v5.size(1)
+                i_idx  = topk_indices_v5.unsqueeze(-1).expand(-1, -1, K_sel)  # [B, K, K]
+                j_idx  = topk_indices_v5.unsqueeze(-2).expand(-1, K_sel, -1)  # [B, K, K]
+                geo_emb = full[i_idx, j_idx]                              # [B, K, K, dim_g]
+                memory  = self.fae(vis, geo_emb)                          # [B, K, dim_com]
+            else:
+                # patches 异常 (既非 576 也非 v5 选择), 不走 FAE
+                memory = vis
         else:
-            # 消融 FAE：直接用线性投影后的视觉表示
-            memory = vis                                          # [B, 576, dim_com]
+            # 消融 FAE: 直接用线性投影后的视觉表示
+            memory = vis                                                  # [B, N, dim_com]
 
         txt_com   = self.embed_text(text)                        # [N_cls, dim_com]
         txt_batch = txt_com.unsqueeze(0).expand(B, -1, -1)       # [B, N_cls, dim_com]
@@ -731,6 +826,19 @@ class VGSR(nn.Module):
         self.cross_tf.pool_lambda_fixed = float(
             getattr(config, 'pool_lambda_fixed', 0.5))
 
+        # AG-JEPA: predict masked discriminative patch features from context + class text.
+        self.use_ag_jepa = bool(getattr(config, 'use_ag_jepa', False))
+        self.jepa_topk = int(getattr(config, 'jepa_topk', 8))
+        self.jepa_neg_margin = float(getattr(config, 'jepa_neg_margin', 0.2))
+        if self.use_ag_jepa:
+            jepa_hidden = int(getattr(config, 'jepa_hidden', tf_common_dim))
+            self.jepa_predictor = nn.Sequential(
+                nn.Linear(tf_common_dim * 2, jepa_hidden),
+                nn.LayerNorm(jepa_hidden),
+                nn.GELU(),
+                nn.Linear(jepa_hidden, tf_common_dim),
+            )
+
         # ---- 温度系数 (可学习) ----
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
@@ -744,6 +852,22 @@ class VGSR(nn.Module):
         self.lastvit_cls_k     = int(getattr(config, 'lastvit_cls_k', 1))
         self.lastvit_cls_sigma = float(getattr(config, 'lastvit_cls_sigma', 0.0))
         self.lastvit_residual  = float(getattr(config, 'lastvit_residual', 0.5))
+
+        # ★ v5 路径 C: LaSt patch 选择器配置
+        # lastvit_select_k > 0 启用, 推荐 64 或 128
+        # 0 = 关闭 (FAE 看全 576 patches, 跟 baseline 一样)
+        self.lastvit_select_k     = int(getattr(config, 'lastvit_select_k', 0))
+        self.lastvit_select_sigma = float(getattr(config, 'lastvit_select_sigma', 0.0))
+        # ★ 2026-05-31 P3.6 反向对照 + 双向选择:
+        #   True/False = 选平稳前景 / 高频 part
+        #   'both' = K/2 平稳 + K/2 高频, 双通道融合 (P3.9 方案 A)
+        _largest_raw = getattr(config, 'lastvit_select_largest', True)
+        if isinstance(_largest_raw, str) and _largest_raw.lower() == 'both':
+            self.lastvit_select_largest = 'both'
+        else:
+            self.lastvit_select_largest = bool(_largest_raw)
+        # ★ 2026-05-31 公式版本: 'v1_strict' / 'v2_abs_mean' (默认) / 'v3_norm'
+        self.lastvit_select_formula = str(getattr(config, 'lastvit_select_formula', 'v2_abs_mean'))
 
         # ★ 2026-05-25 LaSt-CLS v3 (路径 A): 加可训练投影层
         # 第一性原理: frozen CLIP 下, lastvit_pool 输出是零参数固定特征,
@@ -968,6 +1092,59 @@ class VGSR(nn.Module):
         corr = numerator / denominator
         return (1.0 - corr).mean()
 
+    def _ag_jepa_loss(self, patches, all_text, labels):
+        """
+        AG-JEPA auxiliary objective.
+
+        Select the patches most aligned with the ground-truth class text, hide them from
+        the context summary, then predict their abstract visual feature from the remaining
+        patches plus the class semantic prototype. A negative class text is used as a
+        lightweight counterfactual term.
+        """
+        device = patches.device
+        if (not self.use_ag_jepa) or patches is None or all_text is None:
+            zero = torch.tensor(0.0, device=device if patches is not None else labels.device)
+            return zero, zero
+
+        B, N, _ = patches.shape
+        k = max(1, min(int(self.jepa_topk), N - 1))
+        labels = labels.to(device=device, dtype=torch.long)
+        class_text = all_text[labels].to(device=device, dtype=patches.dtype)
+
+        with torch.no_grad():
+            patch_n = F.normalize(patches.float(), dim=-1)
+            text_n = F.normalize(class_text.float(), dim=-1)
+            patch_score = torch.einsum('bnd,bd->bn', patch_n, text_n)
+            _, masked_idx = torch.topk(patch_score, k=k, dim=1, largest=True)
+
+        mask = torch.zeros(B, N, dtype=torch.bool, device=device)
+        mask.scatter_(1, masked_idx, True)
+        keep = ~mask
+
+        patch_z = self.cross_tf.embed_cv(patches)
+        target = patch_z[mask].view(B, k, -1).mean(dim=1).detach()
+
+        keep_f = keep.unsqueeze(-1).to(patch_z.dtype)
+        context = (patch_z * keep_f).sum(dim=1) / keep_f.sum(dim=1).clamp_min(1.0)
+        text_z = self.cross_tf.embed_text(class_text)
+
+        pred = self.jepa_predictor(torch.cat([context, text_z], dim=-1))
+        pos_sim = F.cosine_similarity(pred, target, dim=-1)
+        loss_jepa = (1.0 - pos_sim).mean()
+
+        seen = self.seenclass.to(device=device)
+        label_pos = torch.zeros_like(labels)
+        for i, cls_idx in enumerate(seen):
+            label_pos[labels == cls_idx] = i
+        neg_pos = (label_pos + 1) % seen.numel()
+        neg_text = all_text[seen[neg_pos]].to(device=device, dtype=patches.dtype)
+        neg_text_z = self.cross_tf.embed_text(neg_text)
+        pred_neg = self.jepa_predictor(torch.cat([context.detach(), neg_text_z], dim=-1))
+        neg_sim = F.cosine_similarity(pred_neg, target, dim=-1)
+        loss_jepa_neg = F.relu(neg_sim - pos_sim.detach() + self.jepa_neg_margin).mean()
+
+        return loss_jepa, loss_jepa_neg
+
     def _prepare_patches(self, clip_features):
         """
         从 CLIP 特征中提取 patch 序列
@@ -1158,7 +1335,11 @@ class VGSR(nn.Module):
             pool_lambda_dyn = torch.sigmoid(self.pool_net(cls_token))  # [B, 1]
         cm_out = self.cross_tf(patches, all_text, cls_token,
                                weight_s2v_dyn=weight_s2v_dyn,
-                               pool_lambda_dyn=pool_lambda_dyn)
+                               pool_lambda_dyn=pool_lambda_dyn,
+                               lastvit_select_k=getattr(self, 'lastvit_select_k', 0),
+                               lastvit_select_sigma=getattr(self, 'lastvit_select_sigma', 0.0),
+                               lastvit_select_largest=getattr(self, 'lastvit_select_largest', True),
+                               lastvit_select_formula=getattr(self, 'lastvit_select_formula', 'v2_abs_mean'))
         local_score = cm_out['local_score']                      # [B, 200]
 
         # ── 计分模式选择 ──
@@ -1291,6 +1472,8 @@ class VGSR(nn.Module):
             # ★ G2 MSDN 互蒸馏 + cosine_only 双分支辅助 CE 用 (add 模式也透传)
             'score_s2v':   cm_out.get('score_s2v'),  # [B, 200]
             'score_v2s':   cm_out.get('score_v2s'),  # [B, 200]
+            'jepa_patches': patches,
+            'all_text':     all_text,
         }
         if self.score_mode == 'cosine_only':
             # 仅 cosine_only 分支才有这些; add 模式下 v_enh/t_enh 不参与最终 logits
@@ -1396,6 +1579,20 @@ class VGSR(nn.Module):
         # L1 v_anchor:        v_enh 不要离 CLIP CLS 太远  (修视觉端漂移)
         # L2 t_unseen_anchor: t_enh[unseen] 不要离原始 CLIP 文本太远 (修 unseen 列共享 proj_text 的间接漂移)
         # L3 distill:         logits_200 全 200 类向 base_logits 蒸馏 (软对齐, 防止 seen-only CE 把全空间拉歪)
+        # ========== [AG-JEPA] masked semantic patch prediction ==========
+        loss_jepa = torch.tensor(0.0, device=logits.device)
+        loss_jepa_neg = torch.tensor(0.0, device=logits.device)
+        lambda_jepa = self.config.__dict__.get('lambda_jepa', 0)
+        lambda_jepa_neg = self.config.__dict__.get('lambda_jepa_neg', 0)
+        if self.use_ag_jepa and (lambda_jepa > 0 or lambda_jepa_neg > 0):
+            jepa_patches = in_package.get('jepa_patches', None)
+            all_text_jepa = in_package.get('all_text', None)
+            if jepa_patches is not None and all_text_jepa is not None:
+                loss_jepa, loss_jepa_neg = self._ag_jepa_loss(
+                    jepa_patches, all_text_jepa, labels)
+                loss = loss + lambda_jepa * loss_jepa
+                loss = loss + lambda_jepa_neg * loss_jepa_neg
+
         loss_v_anchor       = torch.tensor(0.0, device=logits.device)
         loss_t_unseen_anchor = torch.tensor(0.0, device=logits.device)
         loss_distill        = torch.tensor(0.0, device=logits.device)
@@ -1515,4 +1712,6 @@ class VGSR(nn.Module):
             'loss_aux_v2s': loss_aux_v2s,
             'loss_msdn': loss_msdn,
             'loss_bias': loss_bias,
+            'loss_jepa': loss_jepa,
+            'loss_jepa_neg': loss_jepa_neg,
         }

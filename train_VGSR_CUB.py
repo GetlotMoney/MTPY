@@ -692,13 +692,16 @@ for epoch in range(start_epoch, total_epochs + 1):
             av_v   = loss_pack.get('loss_aux_v2s',         torch.tensor(0.)).item()
             ms_v   = loss_pack.get('loss_msdn',            torch.tensor(0.)).item()
             bi_v   = loss_pack.get('loss_bias',            torch.tensor(0.)).item()
+            jp_v   = loss_pack.get('loss_jepa',            torch.tensor(0.)).item()
+            jn_v   = loss_pack.get('loss_jepa_neg',        torch.tensor(0.)).item()
             print_log(f"  Step [{step+1:3d}/{iters_per_epoch}] | "
                       f"Loss: {loss.item():.4f} | Avg: {avg_loss:.4f} | "
                       f"CE: {ce_v:.3f}  Cons: {cons_v:.3f}  "
                       f"L2SP: {l2_v:.4f}  Topo: {topo_v:.4f}  "
                       f"VA: {va_v:.4f}  TA: {ta_v:.4f}  Dist: {di_v:.4f}  "
                       f"AuxS2V: {as_v:.3f}  AuxV2S: {av_v:.3f}  "
-                      f"MSDN: {ms_v:.4f}  Bias: {bi_v:.4f}")
+                      f"MSDN: {ms_v:.4f}  Bias: {bi_v:.4f}  "
+                      f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}")
 
     # 更新学习率
     scheduler.step()

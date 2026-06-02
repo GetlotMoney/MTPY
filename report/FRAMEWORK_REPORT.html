@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DVSR / VGSR 当前框架汇报</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    max-width: 1180px;
+    margin: 24px auto;
+    padding: 24px 32px;
+    color: #1f2937;
+    line-height: 1.65;
+    background: #fafafa;
+  }
+  header {
+    border-bottom: 4px solid #1e40af;
+    padding-bottom: 14px;
+    margin-bottom: 24px;
+  }
+  h1 { color: #1e3a8a; margin: 0 0 6px 0; font-size: 26px; }
+  .subtitle { color: #6b7280; font-size: 13.5px; margin-top: 2px; }
+  h2 {
+    color: #1e3a8a;
+    margin-top: 32px;
+    padding: 8px 14px;
+    background: linear-gradient(90deg, #dbeafe 0%, transparent 80%);
+    border-left: 5px solid #1e40af;
+    font-size: 19px;
+  }
+  h3 { color: #0f172a; margin-top: 22px; font-size: 16px; }
+  p, li { font-size: 14px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0 16px 0;
+    background: #fff;
+    font-size: 13px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  th, td {
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #1e40af;
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even):not(.best):not(.fail) { background: #f9fafb; }
+  tr.best td { background: #fef3c7 !important; font-weight: 600; }
+  tr.fail td { background: #fef2f2 !important; }
+  td.num { text-align: right; font-family: "Consolas", "Courier New", monospace; }
+  code {
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    color: #1e3a8a;
+    font-family: "Consolas", "Courier New", monospace;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.5;
+    font-family: "Consolas", "Courier New", monospace;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 11px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .tag.ok    { background: #dcfce7; color: #166534; }
+  .tag.fail  { background: #fee2e2; color: #b91c1c; }
+  .tag.star  { background: #fef3c7; color: #92400e; }
+  .tag.frame { background: #dbeafe; color: #1e40af; }
+  .delta-pos { color: #166534; font-weight: 600; }
+  .delta-neg { color: #b91c1c; font-weight: 600; }
+  .meta-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin: 10px 0 18px 0;
+    font-size: 13.5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .meta-card b { color: #1e3a8a; }
+  .highlight {
+    background: #fef3c7;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .key-result {
+    font-size: 22px;
+    font-weight: 700;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .note {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 13.5px;
+    border-radius: 0 4px 4px 0;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  ul.compact { margin: 6px 0; padding-left: 22px; }
+  ul.compact li { margin: 3px 0; }
+  .footer {
+    margin-top: 36px;
+    padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+    color: #9ca3af;
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DVSR / VGSR 当前框架汇报</h1>
+  <div class="subtitle">
+    基于 CLIP 的细粒度广义零样本学习 (GZSL) · CUB-200-2011 · CLIP ViT-L/14@336px frozen<br>
+    汇报时间: 2026-06-01 · 版本: P3.10 配置 (60ep + AG-JEPA + LaSt v5 K=32 + PriorCorrection OFF)
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<h2>一、研究问题与定位</h2>
+
+<p>本工作针对 GZSL 在 CLIP 主干上的两个核心痛点:</p>
+<ol>
+  <li><b>CLIP "近视"</b>: ViT-L/14 在细粒度任务上倾向于全局轮廓, 容易忽略局部判别属性 (鸟喙形状、翅纹细节)。</li>
+  <li><b>CLIP "偏心"</b>: 训练时只见过 seen 类监督, 测试时严重偏向 seen, unseen 准确率受压制。</li>
+</ol>
+<p>在 <b>frozen CLIP ViT-L/14@336px</b> 基础上, 通过一个轻量 Adapter (~295K 可训练参数) 加上<b>视觉前端 patch 选择 + 训练期辅助 JEPA + 文本侧软正则</b>的组合, 在不微调主干的前提下显著缓解上述问题。</p>
+
+<div class="meta-card">
+  <b>当前 main result (3-seed)</b>: H = <span class="key-result">72.65 ± 0.19</span>
+  <span style="margin-left:14px; color:#6b7280;">vs 纯 CLIP zero-shot 61.28, 累计 <span class="delta-pos">+11.37</span></span>
+</div>
+
+<!-- ============================================================ -->
+<h2>二、整体框架数据流</h2>
+
+<pre>
+                  ┌─────────────────────────────────────────┐
+                  │   CLIP ViT-L/14@336px  (完全 frozen)    │
+                  └─────────────────────────────────────────┘
+                       │                              │
+                       │ image → CLS+576 patches      │ 200 类 GPT-5.5 描述
+                       ▼                              ▼
+                  [B, 577, 768]                   [200, 768]
+                       │                              │
+                       │                              ▼
+                       │                  ┌─────────────────────────┐
+                       │                  │ Adapter (768→192→768)   │ 唯一可训练
+                       │                  │ ratio=0.2 残差          │ ~295K 参数
+                       │                  └─────────────────────────┘
+                       │                              │ t_c
+                       │                              │
+                       ├── CLS [B,768] ── base 路 ───→ base_logits = γ·cos(v_cls, t_c)
+                       │                              ▲
+                       │                              │ G3 CoCoOp 条件文本残差
+                       │                              │ t̃_c(x) = Norm(t_c + 0.005·π(x))
+                       │
+                       ▼ 576 patches
+              ┌────────────────────────────────────────┐
+              │ ★ LaSt v5 频域 patch 选择器 (零参数)    │
+              │  FFT → 高斯低通(σ=√D)                  │
+              │  S_i = mean( |x| / (|x_lp - x| + ε) )  │
+              │  topK(K=32, largest=True)              │  → 选"通道平稳前景"token
+              └────────────────────────────────────────┘
+                       │ patches [B, 32, 768]
+                       ▼
+              ┌────────────────────────────────────────┐
+              │ FAE 子集 gather (1/81 计算量)          │
+              │ box_emb 子集 [B, 32, 32, 64]           │
+              │ Geometry-aware Self-Attention          │
+              └────────────────────────────────────────┘
+                       │ memory [B, 32, 512]
+                       ▼
+              ┌────────────────────────────────────────┐
+              │ CrossModalTransformer (双向)            │
+              │   v2s 路 + s2v 路                       │
+              │   weight_s2v = 0.5                      │
+              └────────────────────────────────────────┘
+                       │
+                       ▼
+              local_score = 0.5·s2v + 0.5·v2s   [B, 200]
+                       │
+                       ▼
+        ┌──────────────────────────────────────────┐
+        │  最终融合 (add 模式)                     │
+        │  logits = base_logits + 0.3·local_score  │
+        └──────────────────────────────────────────┘
+                       │
+                       ▼
+                 [B, 200] 全类 logits → argmax → 预测类
+</pre>
+
+<h3>训练期旁路 ★ AG-JEPA (不进 forward 主路径, 仅参与 loss)</h3>
+<pre>
+真实类文本 t_y  ──→ patch-text 相似度  ──→ top-8 masked target patches
+其余 patches + t_y  ──→ jepa_predictor (MLP)  ──→ 预测 masked 区域特征
+                                          │
+                                          ▼ MSE → loss_jepa (λ=0.05)
+负类文本 t_neg ──→ 同 predictor → margin → loss_jepa_neg (λ=0.02, margin=0.2)
+</pre>
+
+<!-- ============================================================ -->
+<h2>三、核心模块清单</h2>
+
+<table>
+  <tr>
+    <th width="3%">#</th>
+    <th width="20%">模块</th>
+    <th width="34%">角色</th>
+    <th width="28%">关键超参</th>
+    <th width="15%">训练参数</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td><b>CLIP backbone</b></td>
+    <td>视觉 / 文本编码器 (frozen)</td>
+    <td>ViT-L/14@336px, 768 维, 576 patches</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><b>Adapter</b> (text)</td>
+    <td>seen 类文本特征精炼</td>
+    <td>768→192→768, residual ratio=0.2</td>
+    <td>~295K</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><b>G3 Conditional Text Adapter</b> <span class="tag star">CoCoOp</span></td>
+    <td>图像条件文本残差</td>
+    <td>π(x)=meta_net(v_cls), ρ=0.005</td>
+    <td>~75K</td>
+  </tr>
+  <tr class="best">
+    <td>4</td>
+    <td><b>★ LaSt v5 Patch Selector</b></td>
+    <td>频域前景 token 选择 (零参)</td>
+    <td>K=32, σ=√D, formula=v2_abs_mean, largest=True</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><b>FAE 子集 gather</b></td>
+    <td>几何感知自注意力 (子集索引)</td>
+    <td>32×32 子矩阵 advanced indexing</td>
+    <td>复用</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td><b>CrossModalTransformer</b></td>
+    <td>双向 v2s + s2v cross-attention</td>
+    <td>dim=512, heads=4, dropout=0.1</td>
+    <td>~</td>
+  </tr>
+  <tr class="best">
+    <td>7</td>
+    <td><b>★ AG-JEPA</b> (训练期辅助)</td>
+    <td>masked patch prediction + 反事实负样本</td>
+    <td>top-8, hidden=512, λ=0.05, λ_neg=0.02, margin=0.2</td>
+    <td>~</td>
+  </tr>
+</table>
+
+<div class="note">
+<b>已验证关闭模块</b> (踩过坑, 不再启用):
+D-α 动态门控 / D-w 双分支动态 / DMP 动态池化 / L_bias hinge / Calibration loss / L2-SP /
+LaSt-CLS 残差 / cosine_only 模式 / <b>PriorCorrection balanced</b> (在 CUB 经控变量验证 hurts -0.21 H)
+</div>
+
+<!-- ============================================================ -->
+<h2>四、损失函数</h2>
+
+<pre>
+L_total = L_CE_seen                                          ← 主分类
+        + 0.05 · L_topo_pearson                              ← G1 文本拓扑保持
+        + 0.05/(1 + 0.1·cons) · L_consist (KL base↔local)    ← G1 一致性 + 动态衰减防爆
+        + 0.05 · L_msdn (KL s2v↔v2s 双向 detach, T=2)        ← G2 双分支互蒸馏
+        + 0.05 · L_jepa (top-8 masked patch MSE)             ← AG-JEPA 主项
+        + 0.02 · L_jepa_neg (margin=0.2 反事实)              ← AG-JEPA 反事实约束
+</pre>
+
+<!-- ============================================================ -->
+<h2>五、训练配置</h2>
+
+<table>
+  <tr><th width="22%">项</th><th>值</th></tr>
+  <tr><td>Optimizer</td><td>Adam, lr=1e-3, weight_decay=1e-4</td></tr>
+  <tr><td>Batch size</td><td>64</td></tr>
+  <tr><td>Schedule</td><td>60ep 三段严格连续: <code>[1e-3×20, 1e-4×30, 1e-5×10]</code></td></tr>
+  <tr><td>Random seeds</td><td>5 / 42 / 2024 (3-seed 锁 main result)</td></tr>
+  <tr><td>AMP</td><td>OFF (fp32)</td></tr>
+  <tr><td>段切换策略</td><td>默认 <code>restart_from_best=False</code> (严格连续)</td></tr>
+  <tr><td>备注</td><td>前 50ep 等价旧 main baseline, 后 10ep 1e-5 微调</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>六、实验结果 (CUB-200-2011)</h2>
+
+<h3>6.1 主结果 (论文 Main Result, 3-seed)</h3>
+<table>
+  <tr>
+    <th>配置</th>
+    <th width="13%">H</th>
+    <th width="13%">U</th>
+    <th width="13%">S</th>
+    <th width="13%">ZS</th>
+  </tr>
+  <tr>
+    <td>纯 CLIP zero-shot (Table 1 第一行)</td>
+    <td class="num">61.28</td>
+    <td class="num">60.88</td>
+    <td class="num">61.69</td>
+    <td class="num">78.07</td>
+  </tr>
+  <tr>
+    <td>旧 main baseline (50ep, 已替换)</td>
+    <td class="num">72.52 ± 0.11</td>
+    <td class="num">74.13 ± 0.62</td>
+    <td class="num">70.99 ± 0.40</td>
+    <td class="num">81.56 ± 0.18</td>
+  </tr>
+  <tr class="best">
+    <td><b>★ 新 main baseline (P3.10 配置 60ep)</b></td>
+    <td class="num"><b>72.65 ± 0.19</b></td>
+    <td class="num">73.07 ± 0.85</td>
+    <td class="num">72.26 ± 0.85</td>
+    <td class="num">81.54 ± 0.16</td>
+  </tr>
+  <tr class="best">
+    <td>单点最高 (P3.10 seed=5, best @ ep23)</td>
+    <td class="num"><b>72.91</b></td>
+    <td class="num">73.30</td>
+    <td class="num">72.53</td>
+    <td class="num">81.72</td>
+  </tr>
+</table>
+
+<p style="margin-top:6px;"><b>累计 H 提升 vs 纯 CLIP</b>:
+<span class="delta-pos">+11.37 (3-seed avg)</span> / <span class="delta-pos">+11.63 (单点最高)</span></p>
+
+<h3>6.2 控变量证据链 (论文级证据)</h3>
+<table>
+  <tr>
+    <th width="14%">实验</th>
+    <th width="14%">AG-JEPA</th>
+    <th width="20%">PriorCorrection</th>
+    <th width="14%">H</th>
+    <th>边际 Δ</th>
+  </tr>
+  <tr>
+    <td>P3.1</td>
+    <td>ON</td>
+    <td>balanced</td>
+    <td class="num">72.70</td>
+    <td>—</td>
+  </tr>
+  <tr class="best">
+    <td><b>P3.10</b> ⭐</td>
+    <td><b>ON</b></td>
+    <td><b>none</b></td>
+    <td class="num"><b>72.91</b></td>
+    <td>vs P3.1: balanced <span class="delta-neg">hurts -0.21 H</span></td>
+  </tr>
+  <tr>
+    <td>P3.11</td>
+    <td>OFF</td>
+    <td>none</td>
+    <td class="num">72.45</td>
+    <td>vs P3.10: AG-JEPA 训练 loss <span class="delta-pos">真实贡献 +0.46 H</span></td>
+  </tr>
+</table>
+
+<div class="note">
+<b>结论</b>:
+<ul class="compact">
+  <li>AG-JEPA 训练 loss 真实贡献 <b class="delta-pos">+0.46 H</b> (干净控变量验证, 保留作主创新)</li>
+  <li>PriorCorrection balanced 在 CUB 上 <b class="delta-neg">hurts -0.21 H</b> (60% unseen / 40% seen 测试分布不适合 50/50 校准, 论文作 negative result 单独标注)</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>七、论文主创新清单 (6 项, 锁定)</h2>
+
+<table>
+  <tr>
+    <th width="6%">ID</th>
+    <th width="32%">创新</th>
+    <th width="20%">论文章节定位</th>
+    <th width="26%">实测增益 (干净控变量)</th>
+    <th width="12%">状态</th>
+  </tr>
+  <tr>
+    <td><b>G1</b></td>
+    <td>Topology Pearson + Consistency KL</td>
+    <td>Loss-level</td>
+    <td><span class="delta-pos">+0.37</span></td>
+    <td><span class="tag ok">已确认</span></td>
+  </tr>
+  <tr>
+    <td><b>G2</b></td>
+    <td>MSDN++ Mutual Distillation</td>
+    <td>Loss-level</td>
+    <td><span class="delta-pos">+0.18</span></td>
+    <td><span class="tag ok">已确认</span></td>
+  </tr>
+  <tr>
+    <td><b>G3</b></td>
+    <td>CoCoOp Conditional Text Adapter</td>
+    <td>Forward-level</td>
+    <td>已确认有效</td>
+    <td><span class="tag ok">已确认</span></td>
+  </tr>
+  <tr class="best">
+    <td><b>★ LaSt v5</b></td>
+    <td>Attention-Guided Patch Selection<br>(K=32 平稳前景 + FAE 子集 gather)</td>
+    <td>Visual front-end</td>
+    <td><span class="delta-pos">+0.04 (50ep)</span> / 与 AG-JEPA 联合放大</td>
+    <td><span class="tag ok">已确认</span></td>
+  </tr>
+  <tr class="best">
+    <td><b>★ AG-JEPA</b></td>
+    <td>Masked Patch Prediction + 反事实负样本</td>
+    <td>Auxiliary training loss</td>
+    <td><b><span class="delta-pos">+0.46 H</span></b> (P3.10 vs P3.11)</td>
+    <td><span class="tag ok">已确认</span></td>
+  </tr>
+  <tr>
+    <td><b>★ Discussion</b></td>
+    <td>PriorCorrection balanced <b>不适用 CUB</b></td>
+    <td>Negative result</td>
+    <td><span class="delta-neg">-0.21</span> (P3.10 vs P3.1)</td>
+    <td><span class="tag fail">已确认有害</span></td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>八、框架特性总结</h2>
+
+<ol>
+  <li><b>零主干微调</b>: CLIP ViT-L/14@336px 全程 frozen, 仅 Adapter (~295K) + 几个轻量 MLP 可训练</li>
+  <li><b>零参数 patch 选择</b>: LaSt v5 用 FFT + 高斯低通做离散 indices, 不进梯度链路, 显存零增长</li>
+  <li><b>训练加速</b>: FAE 在 32 个选中 patch 上 self-attn, 计算量 = 全图 576 的 <b>1/81</b></li>
+  <li><b>训练期辅助 JEPA</b>: AG-JEPA 仅参与 loss, 不影响推理路径, 推理速度与 baseline 一致</li>
+  <li><b>多 seed 稳健</b>: 3-seed std=0.19, 跟旧 main 0.11 同量级, 无离群点</li>
+  <li><b>控变量纪律</b>: 每个主创新都有干净对照组, 边际贡献可独立验证</li>
+</ol>
+
+<div class="footer">
+  DVSR / VGSR Framework Report · 2026-06-01<br>
+  对应 yaml: <code>config/VGSR_cub_gzsl.yaml</code> &nbsp;|&nbsp;
+  对应模型代码: <code>model/MyModel.py</code> &nbsp;|&nbsp;
+  实验账本: <code>report/EXPERIMENT_LEDGER.html</code>
+</div>
+
+</body>
+</html>

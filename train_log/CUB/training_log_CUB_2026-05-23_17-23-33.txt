@@ -1,0 +1,59 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-23_17-23-33.txt
+  Device    : cuda:0
+  Epochs    : 50
+  Batch size: 64
+  Adapter r : 0.2
+============================================================
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading MULTI-VIEW augmented cache (best mode)...
+      Views K        : 2
+      train_cls_aug    : torch.Size([2, 7057, 768])  dtype=torch.float32
+      train_patches_aug: torch.Size([2, 7057, 576, 768])  dtype=torch.float16
+      train_labels     : torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      class_text_embeds: torch.Size([200, 768])
+
+[4/5] Using Claude descriptions: .\data\gpt4_data\cub_claude.pt
+      Loading text descriptions from .\data\gpt4_data\cub_claude.pt...
+      200 classes × 7 descriptions/class
+      GPT hit: 200 classes | fallback: 0 classes
+      gpt_text_embeds: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,436,360
+      Trainable params: 10,282,760
+
+============================================================
+  Start Training: 50 epochs × 110 iters/epoch = 5500 iters
+============================================================
+
+  ★ Model mode: clip_only
+
+[CLIP-Only Baseline] Skipping training, evaluating zero-shot CLIP...
+  (Adapter / FAE / CrossModalTransformer all bypassed)
+
+============================================================
+  Zero-Shot CLIP Baseline Results (no training)
+============================================================
+  ┌─────────────────────────────────────
+  │  GZSL-U : 65.55%
+  │  GZSL-S : 64.13%
+  │  GZSL-H : 64.83%
+  │  ZSL    : 81.86%
+  └─────────────────────────────────────
+
+  Log saved to: ./train_log/CUB/training_log_CUB_2026-05-23_17-23-33.txt

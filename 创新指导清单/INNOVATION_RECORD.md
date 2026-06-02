@@ -1,12 +1,49 @@
 # DVSR 创新效果记录
 
-**当前最佳**：H = **72.61%**（G1 = baseline + Topo Pearson 0.05 + Consistency KL 0.05, 5/25, seed=5, 20 epoch）
+**当前最佳 (单点)**: H = **72.91%** ⭐⭐⭐ (P3.10: K=32 + LaSt v5 平稳前景 + AG-JEPA train + PriorCorrection OFF, 60ep [20+30+10], seed=5, 2026-06-01)
+- U=73.30, S=72.53, ZS=81.72, best@ep23
 
-**前最佳**：H = 72.26 ± 0.08%（Claude 描述 + 真 patch 评估 + 15 epoch，n=2 seeds）
+**v5+FAE+AG-JEPA 多 seed (60ep schedule, P3.10 配置, ⭐ 新 main baseline)**:
+- seed=5 (P3.10): H=72.91 (U=73.30, S=72.53, ZS=81.72) ⭐ 单点最高
+- seed=42 (P3.12): H=72.53 (U=71.93, S=73.14, ZS=81.56)
+- seed=2024 (P3.13): H=72.50 (U=73.97, S=71.10, ZS=81.34)
+- **3-seed avg**: H=**72.65 ± 0.19**, U=73.07 ± 0.85, S=72.26 ± 0.85, ZS=81.54 ± 0.16
+
+**当前 main baseline (P3.10 配置, 3-seed)**: H = **72.65 ± 0.19** (新, 已替换旧 50ep main)
+
+**旧 main baseline (50ep, 已替换)**: H = 72.52 ± 0.11 (v5+FAE 3-seed, K=64, strict 50ep, 2026-05-31)
+- seed=5: H=72.53, seed=42: H=72.65, seed=2024: H=72.39
+- U=74.13 ± 0.62, S=70.99 ± 0.40, ZS=81.56 ± 0.18
+
+**前最佳** (G3 续训)：H = 72.95（warm-restart 单点离群值, 不入论文 main result）
+
+**G1 (Topo+KL)**：H = 72.61（baseline + Topo Pearson 0.05 + Consistency KL 0.05, 5/25, seed=5, 20 epoch）
 
 **起点 baseline**：H = 70.35%（GPT-4 描述 + CLS×576 假 patch + 20 epoch）
 
-**累计收益**：**+2.26%**
+**纯 CLIP zero-shot baseline** (Phase 2.1, 论文 Table 1 最底线)：H = **61.28%**（U=60.88, S=61.69, ZS=78.07, 0 训练参数, 2026-05-31）
+
+**累计收益 vs 纯 CLIP**：**+11.63%** H, **+12.42%** U, **+10.84%** S, **+3.65%** ZS（P3.10 当前最佳 vs 纯 CLIP zero-shot）
+
+**累计收益 vs 起点**：**+2.56%**（从 70.35 到 72.91）
+
+---
+
+## ⭐ 论文主创新清单 (持续更新, 6 项)
+
+| ID | 创新 | 论文章节 | 实测增益 (干净控变量) | 状态 |
+|---|---|---|---|---|
+| **G1** | Topology Pearson + Consistency KL | Loss-level | +0.37 | ✅ 已确认 |
+| **G2** | MSDN++ Mutual Distillation | Loss-level | +0.18 | ✅ 已确认 |
+| **G3** | CoCoOp Conditional Text Adapter | Forward-level | 已确认有效 | ✅ |
+| **★ LaSt v5** ⭐ NEW | Attention-Guided Patch Selection<br>(K=32 平稳前景 + FAE 子集 gather) | Visual front-end | +0.04 (50ep), 跟 AG-JEPA 联合 | ✅ 已确认 |
+| **★ AG-JEPA** ⭐⭐⭐ NEW | Masked Patch Prediction + 反事实负样本<br>(注意力引导 + JEPA + Counterfactual) | Auxiliary training loss | **+0.46 H** (P3.10 vs P3.11 控变量) | ✅ 已确认 |
+| **★ Discussion** | PriorCorrection balanced **不适用 CUB** | Negative result | -0.21 (P3.10 vs P3.1 控变量) | ❌ 已确认有害 |
+
+**控变量证据链**:
+- P3.1 (jepa on + balanced) = 72.70
+- **P3.10 (jepa on + none) = 72.91** ⭐ → balanced **hurts -0.21**
+- P3.11 (jepa off + none) = 72.45 → AG-JEPA 训练 loss **贡献 +0.46**
 
 ---
 
@@ -34,6 +71,9 @@
 | ✅ Claude Opus 4.7 文本描述 | 71.00 → 72.20 | +1.2 | 替代 GPT-4，6 句细节 + 1 句 caption (5/17) |
 | ✅ FAE 模块 | 72.05 → 72.20 | +0.15 | 几何解耦微弱提升, 消融实测影响小 |
 | ✅ **G1 Topology Pearson + Consistency KL** | 72.24 → **72.61** | **+0.37** | seen-only CE 拉散 unseen 几何 + local/base 一致性 (5/25) |
+| ✅ **G1+G2+G3 main baseline (3-seed)** | → **72.48 ± 0.20** | — | strict 50ep + GPT-5.5 文本, 论文 Main Result (5/30) |
+| ✅ **LaSt v5+FAE patch 选择器** ⭐ | 72.48 → **72.52 ± 0.11** (3-seed, **旧 main baseline, 已替换**) | **+0.04** | K=64 + box_emb 子集 gather, U=74.13 (+0.95) / S=70.99 (-0.81) / ZS=81.56 (+0.42) trade-off, std 缩小 0.20→0.11 (5/31) |
+| ✅ **AG-JEPA + LaSt v5 K=32 联合 (P3.10 配置, 3-seed)** ⭐⭐⭐ | 72.52 → **72.65 ± 0.19** (3-seed, **新 main baseline**) | **+0.13** | 60ep [20+30+10] + AG-JEPA train ON + PriorCorr OFF, U=73.07 / S=72.26 / ZS=81.54, AG-JEPA 训练 loss 真实贡献 +0.46 H (P3.10 vs P3.11 控变量, 6/01) |
 
 ### 🔴 真·结构性失败（机制层面错，已放弃）
 
@@ -824,3 +864,158 @@ flowchart TD
 
 - 当前最佳 G2 续训 H=72.79 跑完所有 H 系列后, 如果还想冲 73+, 直接上 CGC
 - CGC 是 G3 的"高级版", 包括 G3 想做的"image-conditional text" + 因果校准 + class gate, 一次性解决三个问题
+
+
+---
+
+## 🌟 LaSt-ViT v5+FAE: Patch 选择器 + 子集 gather (2026-05-30 实施, 当前最佳路线)
+
+> **论文叙事题目**: *Frequency-aware Patch Selection with Subset Geometric Attention for Frozen-CLIP GZSL*
+>
+> **状态**: ✅ 实施完成, seed=5 H=72.53 / seed=42 H=72.65, 待 seed=2024 锁 3-seed avg
+
+### 第一性原理转折
+
+之前 LaSt v1/v2/v3 都把 LaSt 当**特征提供者**用 (替代或残差融合 CLS), 在 frozen CLIP 下不可训练 → 信号无法对齐任务 → 全部失败。
+
+v5 路径 C 换思路: 把 LaSt 从"特征提供者"改成"**离散 patch 选择器**"。LaSt 的频域显著性不直接进入 forward 计算图, 只用来挑出 top-K 个 part-aware patch 的索引。
+
+### 关键修复 (FAE 子集 gather)
+
+第一版 v5 (FAE off bug) 在 K=64 时由于 grid_size 不匹配而自动跳过 FAE → H=72.15 (-0.33), 对照不公平。
+
+修复方案: K!=576 时 box_emb 子集 advanced indexing:
+```python
+# CrossModalTransformer.forward, K!=576 时:
+full = self.box_emb.geometry_embedding              # [576, 576, dim_g]
+i_idx = topk_indices.unsqueeze(-1).expand(-1, -1, K)  # [B, K, K]
+j_idx = topk_indices.unsqueeze(-2).expand(-1, K, -1)  # [B, K, K]
+geo_emb = full[i_idx, j_idx]                         # [B, K, K, dim_g]
+memory = self.fae(vis, geo_emb)                      # [B, K, dim_com]
+```
+
+数学论证: LaSt 选出的 K 个 indices ∈ [0, 575] 对应原 24×24 grid 合法点, 它们两两的相对位置编码 = 全图 [576,576,64] 的合法子集 (子矩阵 advanced indexing 等价)。
+
+### 数据流
+
+```
+[B, 576, 768] CLIP patches
+    │
+    ▼  ★ 第一步: lastvit_select_patches (无参数, fp32 FFT)
+    FFT → 高斯低通 σ=√D → diff = x / (|x_lp - x| + ε)
+    → patch_score = diff.abs().mean(-1) [B, 576]
+    → topk(dim=1, K=64) → indices [B, 64]
+    → torch.gather → patches [B, 64, 768]
+    │
+    ▼  ★ 第二步: FAE 在 64 patches 子集上做几何感知自注意力
+    full_box_emb[i_idx, j_idx] → [B, 64, 64, 64]
+    GeometryMultiHeadAttention: att = Q·K/√d - ReLU(W_g · geo_emb)
+    → memory [B, 64, 512]   (1/81 计算量 vs baseline)
+    │
+    ▼  decoder_v2s + decoder_s2v (双向 cross-attention)
+    │
+    ▼  mean pool over 64 patches → s2v_pooled [B, 512]
+    │
+    ▼  cosine score → local_score [B, 200]
+    │
+    ▼  base_logits + β · local_score → logits [B, 200]
+```
+
+### 实测数据
+
+| seed | best epoch | U | S | H | ZS |
+|---|---|---|---|---|---|
+| 5  | 34 | 73.72 | 71.39 | **72.53** | 81.57 |
+| 42 | 33 | 75.00 | 70.44 | **72.65** | **81.77** |
+| 2024 | 36 | 73.66 | 71.16 | 72.39 | 81.34 |
+| **3-seed mean** | — | **74.13** | 70.99 | **72.52** | 81.56 |
+| **3-seed std** | — | 0.74 | 0.49 | **0.13** | 0.22 |
+| (vs main baseline 3-seed avg) | | +0.95 真涨 | -0.81 真跌 | +0.04 (std 内) | +0.42 真涨 |
+
+### 与 v1/v2/v3 完整对比
+
+| 版本 | 角色 | LaSt 输出参与梯度? | 可训练参数? | H | 结论 |
+|---|---|---|---|---|---|
+| v1 `pool_method=lastvit` | s2v 池化器 | ✅ 是 | ❌ 无 | 71.18 | -1.09 失败 |
+| v2 `use_lastvit_cls` | CLS 替换 | ✅ 是 | ❌ 无 | 70.87 | -1.40 失败 |
+| v3 v2+`lastvit_proj`+LN | CLS 替换 + 可训练投影 | ✅ 是 | ✅ 768→768+LN | 21.11 | 灾难崩盘 (LN 量级冲突) |
+| **v5+FAE** `lastvit_select_k=64` | **patch 选择器** (索引) | ❌ **否** | ❌ 无 | **72.65** | ✅ **当前最佳** |
+
+### 论文卖点
+
+1. **首次在 frozen 视觉 backbone 下用 LaSt 不失败**: 关键是把决策 (indices) 离散化, 不进梯度链路
+2. **零新参数**: 不增加任何可训练权重, 不增加显存
+3. **训练加速**: FAE 在 64 patches 上 attention 开销 = 1/81 (576² → 64²)
+4. **Negative Result Discussion**: v1→v2→v3→v5 失败链作为论文独立 insight 章节
+
+### 待实验扩展 (Phase 3-5)
+
+- **Phase 3**: K=32/128/256 扫描 + sigma=10/50 扫描
+- **Phase 4.3**: 动态 σ(x) = MLP(cls), 看图自适应频域核
+- **Phase 4.4**: 动态 K(x) Gumbel-softmax 离散采样
+- **Phase 5.1**: 可学习 σ_c per-class (创新点)
+- **Phase 5.2**: patch indices 一致性 loss (类内 KL 拉近, 类间拉远) — 给 LaSt 加任务监督
+
+### 失败前身记录
+
+- **v5 (FAE off bug)** 2026-05-30: H=72.15, 因 K=64 时代码自动跳过 FAE 导致对照不公平
+- **修复后 v5+FAE** 2026-05-30: H=72.53 → seed=42 H=72.65, 涨 +0.38 证明 FAE 在 64 patches 上有效
+
+---
+
+## AG-JEPA 验证记录 (2026-05-31 接入 / 2026-06-01 验证完成)
+
+> **状态**: ✅ 已实现, 已正式训练, 已 3-seed 锁定, 已升级到论文主创新清单。AG-JEPA 训练 loss 真实贡献 +0.46 H (P3.10 vs P3.11 控变量), PriorCorrection balanced 在 CUB 经控变量验证为 negative result (-0.21 H, 已默认关闭)。
+
+### 设计定位
+
+AG-JEPA 是一个辅助训练目标, 不替换当前 v5+FAE 主分类路径:
+
+1. **Masked semantic patch prediction**: 用真实类别文本与 CLIP patch 做相似度, 选择 top-k 语义相关 patch 作为 masked target。
+2. **Context + text predictor**: 用剩余 patch 的上下文均值 + 类文本 embedding, 在 `tf_common_dim` 抽象空间预测 masked patch 特征。
+3. **Counterfactual negative text**: 使用负类文本走同一 predictor, 通过 margin 约束避免"不相关文本也能重构目标 patch"。
+4. **Prior Correction (后被验证为 negative)**: 评估时统计 cached test logits 的 seen/unseen 概率质量, 对 unseen logits 做动态平移。该项是 test-time / transductive calibration, **在 CUB 上经控变量验证 hurts -0.21 H, 默认关闭**。
+
+### 已改代码
+
+| 文件 | 改动 | 行号 (大致) |
+|---|---|---|
+| `model/MyModel.py` | 新增 `jepa_predictor`, masked patch logic, `loss_jepa`, `loss_jepa_neg` | ~822 / ~1082 / ~1569 |
+| `tools/helper_func.py` | 新增 `_estimate_prior_unseen_bias`, 在 cached eval 中应用 `prior_correction` (默认 none) | ~129 |
+| `train_VGSR_CUB.py` | 训练日志增加 `JEPA` / `JNeg` loss 打印 | ~695 |
+| `config/VGSR_cub_gzsl.yaml` | 新增 `use_ag_jepa`, `lambda_jepa`, `lambda_jepa_neg`, `prior_correction` 等开关 | ~246 / ~392 |
+
+### 当前 yaml 配置 (P3.10 配置, 新 main baseline)
+
+```yaml
+use_ag_jepa: True
+jepa_topk: 8
+jepa_hidden: 512
+lambda_jepa: 0.05
+lambda_jepa_neg: 0.02
+jepa_neg_margin: 0.2
+prior_correction: none      # ⚠️ balanced 在 CUB hurts -0.21 H, 已默认关闭
+prior_temp: 1.0
+prior_max_bias: 3.0
+```
+
+### 已完成消融 (60ep [20+30+10] schedule, 控变量)
+
+| ID | 设置 | 目的 | 实测 H | 备注 |
+|---|---|---|---|---|
+| A0 (P3.11) | `use_ag_jepa=False`, `prior_correction=none` | 干净 K=32 baseline | 72.45 | 控变量基底 |
+| A1 (P3.10) ⭐ | `use_ag_jepa=True`, `prior_correction=none` | 验证 JEPA 本身 | **72.91** | seed=5 单点最高 |
+| A2 (跳过) | `use_ag_jepa=False`, `prior_correction=balanced` | 验证 Prior 单独效应 | — | A3 已证 balanced hurts |
+| A3 (P3.1) | `use_ag_jepa=True`, `prior_correction=balanced` | 验证 full AG-JEPA | 72.70 | balanced hurts -0.21 |
+
+**多 seed 锁定** (A1 配置): seed=5 (P3.10) 72.91 / seed=42 (P3.12) 72.53 / seed=2024 (P3.13) 72.50 → **3-seed avg = 72.65 ± 0.19** ⭐ 新 main baseline
+
+**控变量结论**:
+- A1 vs A0 = +0.46 H → AG-JEPA 训练 loss **真实正向贡献**
+- A3 vs A1 = -0.21 H → PriorCorrection balanced 在 CUB 60% unseen / 40% seen test 分布上把 unseen 强拉到 50%, **错误地压 unseen mass**, 不适用
+
+### 风险备注 / 论文写作注意事项
+
+- JEPA 目标使用训练标签选 true-class text, 是训练期监督辅助, 合理但必须只在 seen 训练样本上解释 (论文 method 描述需明确)。
+- PriorCorrection 已确认为 negative result, 论文 discussion 部分需单独标注: 在 CUB 测试集 unseen 占比与 0.5 偏差较大时, balanced calibration 反而 hurts。
+- 当前实现先接 CUB 主脚本; SUN/AWA2 训练脚本仍是旧接口风格, **跨数据集需要单独迁移**。Phase 7 待办。

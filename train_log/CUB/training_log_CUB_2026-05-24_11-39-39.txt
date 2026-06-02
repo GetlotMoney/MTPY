@@ -1,0 +1,115 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-24_11-39-39.txt
+  Device    : cuda:0
+  Epochs    : 1
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : claude
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : lastvit
+│  lastvit_k     : 1
+│  lastvit_sigma : 0.0
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : add
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.0
+│  lambda_l2sp   : 0.0
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : 'auto'
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (autocast + GradScaler)
+│  pin_memory    : True (always)  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      [info] Train patches kept on CPU (GPU preload disabled - sm_120 incompat)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using Claude descriptions: .\data\gpt4_data\cub_claude.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,435,847
+      Trainable params: 10,282,247
+
+[Resume] Loading checkpoint: ./train_log/CUB\ckpt_full_CUB_2026-05-24_10-29-46.pth
+  ✓ Loaded model weights
+  ✓ Finetune mode: LR=1e-4
+
+============================================================
+  Start Training: epoch [1/1], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/1]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4101 | Avg: 0.3901 | CE: 0.410  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.4099 | Avg: 0.4050 | CE: 0.410  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.5912 | Avg: 0.3949 | CE: 0.591  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.3978 | Avg: 0.3943 | CE: 0.398  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.4789 | Avg: 0.3922 | CE: 0.479  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.5514 | Avg: 0.3920 | CE: 0.551  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [1/1] Train Summary
+     Avg Loss : 0.3920
+     LR       : 0.000000
+
+  >> Epoch [1/1] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-24_11-39-39_H7154.pth
+
+  ┌─ Epoch [1/1] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 70.20%
+  │  GZSL-S (Seen Acc)   : 72.95%
+  │  GZSL-H (Harmonic)   : 71.54%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.76%
+  └──────────────────────────────────────────────────────
+
+============================================================
+  Training Finished!
+============================================================
+  Best Results @ Epoch 1
+  ┌─────────────────────────────────────
+  │  GZSL-U : 70.20%
+  │  GZSL-S : 72.95%
+  │  GZSL-H : 71.54%
+  │  ZSL    : 81.76%
+  └─────────────────────────────────────
+
+  Log saved to: ./train_log/CUB/training_log_CUB_2026-05-24_11-39-39.txt

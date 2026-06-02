@@ -161,7 +161,7 @@ lastvit_sigma:
 #   pool_method='lastvit': 在 s2v 分支末端池化 (位置错, 实测 -0.5%)
 #   use_lastvit_cls=True:  替代 CLIP CLS (论文真实用法, 影响 base_logits)
 use_lastvit_cls:
-  value: True
+  value: False
 # k=1 (官方默认, per-channel 在 768 channel 上已隐式集成)
 lastvit_cls_k:
   value: 1
@@ -176,6 +176,25 @@ lastvit_cls_sigma:
 #   1.0 = 完全用 LaSt CLS (无 CLIP 兜底, 风险高)
 lastvit_residual:
   value: 0.3
+
+# === [LaSt-ViT v5 路径 C: patch 选择器] ===
+# 第一性原理: LaSt 在 frozen CLIP 下不能用反向梯度调整 ViT, 改成做 patch 选择器
+# 让 FAE 仅在 K 个 part-aware patch 上做 cross-modal, 而不是全 576
+# K=0 关闭 (默认 baseline); K=64/128 启用 v5
+# 注意: K!=576 时会自动关闭 box_emb 几何位置编码
+lastvit_select_k:
+  value: 32
+lastvit_select_sigma:
+  value: 0.0
+# ★ 2026-05-31 P3.6 反向对照 + 双向选择:
+#   True=选最平稳前景 token (默认)
+#   False=选最高频 part-aware token (反向对照)
+#   both=K/2 平稳 + K/2 高频 (双通道融合 P3.9)
+lastvit_select_largest:
+  value: True
+# ★ 2026-05-31 公式版本: v1_strict (报告原文) / v2_abs_mean (P3.x 默认) / v3_norm
+lastvit_select_formula:
+  value: v2_abs_mean
 
 # === [门控模式开关] ===
 # 'fixed' (基线 H=72.26%): logits = base + local_weight × local_score
@@ -226,6 +245,13 @@ gzsl_bias:
   value: 0.0
 # Self-calibration loss 权重: 给 unseen 类保留概率, 防止 seen bias
 # λ=0 关闭 (实验证明 0.001 中性, 0.01 过强, 不适用本架构)
+prior_correction:
+  value: none
+prior_temp:
+  value: 1.0
+prior_max_bias:
+  value: 3.0
+
 lambda_cal:
   value: 0.0
 
@@ -365,6 +391,19 @@ msdn_temp:
 # True  → 加载 CUB_train_*_aug.pt (K 个增强视角, 训练时随机抽 1 个)
 # False → 加载单视角缓存 (默认, 无增强)
 # 启用前必须先跑: python tools/extract_features.py 4
+use_ag_jepa:
+  value: True
+jepa_topk:
+  value: 8
+jepa_hidden:
+  value: 512
+lambda_jepa:
+  value: 0.05
+lambda_jepa_neg:
+  value: 0.02
+jepa_neg_margin:
+  value: 0.2
+
 use_aug_cache:
   value: False
 
@@ -422,8 +461,9 @@ finetune_lr:
 #       - {lr: 0.00001, epochs: 30}
 lr_stages:
   value:
-    - {lr: 0.001,  epochs: 20}
-    - {lr: 0.0001, epochs: 30}
+    - {lr: 0.001,   epochs: 20}
+    - {lr: 0.0001,  epochs: 30, restart_from_best: True}
+    - {lr: 0.00001, epochs: 10, restart_from_best: True}
 
 # === [CGC C5] Seen-Unseen Margin Loss (反事实校准最小可行版) ==========
 # ★ 2026-05-25 失败记录: lambda_bias=0.05 跑 50ep, ep1 H=40.47 直接崩盘

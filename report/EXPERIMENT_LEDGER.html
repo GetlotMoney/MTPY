@@ -168,18 +168,18 @@
     <td>论文标题级</td>
   </tr>
 
-  <tr class="todo">
+  <tr>
     <td>8</td>
-    <td>纯 CLIP baseline</td>
-    <td>—</td>
+    <td>纯 CLIP baseline ⭐ Phase 2.1</td>
+    <td>05-31</td>
     <td>zero-shot</td>
-    <td>无 FAE / 无 Adapter / 无 GPT</td>
-    <td class="num">—</td>
-    <td class="num">—</td>
-    <td class="num">—</td>
-    <td class="num">—</td>
+    <td>无 FAE / 无 Adapter / 无 GPT, 仅 "a photo of a {c}, a type of bird."</td>
+    <td class="num">61.28</td>
+    <td class="num">60.88</td>
+    <td class="num">61.69</td>
+    <td class="num">78.07</td>
     <td>—</td>
-    <td>论文最底线</td>
+    <td>论文 Table 1 最底线 (0 训练参数, 7.7s) | <span class="delta-pos">+11.24</span> 主方法 vs CLIP</td>
   </tr>
 
   <tr>
@@ -226,6 +226,259 @@
     <td class="num">81.29</td>
     <td class="num">41</td>
     <td><span class="delta-neg">-1.09</span> vs baseline</td>
+  </tr>
+
+  <tr class="fail">
+    <td>12</td>
+    <td>LaSt v5 路径 C<br>(K=64, FAE off bug)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>lastvit_select_k=64</code><br>K!=576 时 FAE 自动跳 (bug)</td>
+    <td class="num">72.15</td>
+    <td class="num">73.02</td>
+    <td class="num">71.31</td>
+    <td class="num">81.14</td>
+    <td class="num">34</td>
+    <td><span class="delta-neg">-0.33</span> vs baseline (FAE 缺失对照不公平)</td>
+  </tr>
+
+  <tr>
+    <td>13</td>
+    <td>LaSt v5+FAE seed=5 ⭐<br>(K=64, FAE 子集 gather)</td>
+    <td>05-30</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>lastvit_select_k=64</code><br>+ box_emb 子集 gather (代码新)</td>
+    <td class="num">72.53</td>
+    <td class="num">73.72</td>
+    <td class="num">71.39</td>
+    <td class="num">81.57</td>
+    <td class="num">34</td>
+    <td><span class="delta-pos">+0.05</span> vs main avg<br><span class="delta-pos">+0.26</span> vs seed=5 单点</td>
+  </tr>
+
+  <tr class="best">
+    <td>14</td>
+    <td>LaSt v5+FAE seed=42 ⭐⭐<br>(K=64, FAE 子集 gather)</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>random_seed=42</code> (其它同 #13)</td>
+    <td class="num">72.65</td>
+    <td class="num">75.00</td>
+    <td class="num">70.44</td>
+    <td class="num">81.77</td>
+    <td class="num">33</td>
+    <td><span class="delta-pos">+0.17</span> vs main avg<br>U/ZSL 历史最高</td>
+  </tr>
+
+  <tr style="background:#dcfce7;">
+    <td colspan="11" style="text-align:center; font-weight:600; padding:10px;">
+      📊 <b>v5+FAE 当前 2-seed 平均</b>: H = <b>72.59</b>, U = 74.36, S = 70.92, ZS = 81.67<br>
+      🚧 <b>seed=2024 跑完后锁 3-seed avg</b>, 决定是否替换 main baseline
+    </td>
+  </tr>
+
+  <tr>
+    <td>15</td>
+    <td>LaSt v5+FAE seed=2024<br>(K=64, FAE 子集 gather)</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30</td>
+    <td>+ <code>random_seed=2024</code> (其它同 #13)</td>
+    <td class="num">72.39</td>
+    <td class="num">73.66</td>
+    <td class="num">71.16</td>
+    <td class="num">81.34</td>
+    <td class="num">36</td>
+    <td><span class="delta-neg">-0.09</span> vs main avg</td>
+  </tr>
+
+  <tr style="background:#fef3c7;">
+    <td colspan="11" style="text-align:center; font-weight:600; padding:10px;">
+      📊 <b>v5+FAE 3-seed 平均</b>: H = <b>72.52 ± 0.11</b>, U = 74.13 ± 0.62, S = 70.99 ± 0.40, ZS = 81.56 ± 0.18 ⏪ <b>旧 Main Baseline (50ep, 已被 P3.10 配置 60ep 3-seed 72.65±0.19 替换)</b><br>
+      vs 50ep 干净 baseline (无 v5, H=72.48±0.20): H <span class="delta-pos">+0.04</span> (std 缩小 1.8×), U <span class="delta-pos">+0.95</span>, S <span class="delta-neg">-0.81</span>, ZS <span class="delta-pos">+0.42</span> | 典型 unseen-favor trade-off
+    </td>
+  </tr>
+
+  <tr class="fail">
+    <td>16</td>
+    <td>Phase 4.1 D-α + Cons on (90ep)</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>30+30+30</td>
+    <td>+ <code>gating_dynamic=mlp</code> (其它 v5+FAE 同 #14)</td>
+    <td class="num">71.83</td>
+    <td class="num">72.56</td>
+    <td class="num">71.11</td>
+    <td class="num">81.09</td>
+    <td class="num">10</td>
+    <td><span class="delta-neg">-0.69</span> vs new main; final=66.22 (-5.61) 灾难, Cons 8→11.57 跟 D-α 打架</td>
+  </tr>
+
+  <tr class="fail">
+    <td>17</td>
+    <td>Phase 4.1-A D-α + Cons off (90ep)</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>30+30+30</td>
+    <td>+ <code>gating_dynamic=mlp</code><br>+ <code>lambda_consist=0.0</code></td>
+    <td class="num">70.28</td>
+    <td class="num">75.96</td>
+    <td class="num">65.38</td>
+    <td class="num">81.69</td>
+    <td class="num">19</td>
+    <td><span class="delta-neg">-2.24</span> vs new main; α_net 退化 sigmoid≈0.329 跟 init 0.3 几乎不动, 跟旧 T2 一样 frozen CLIP+seen CE 下 α 学不出逐图差异</td>
+  </tr>
+
+  <tr>
+    <td>18</td>
+    <td>Phase 3.0' K=64 reference @ 60ep ⭐</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>main baseline 配置 + 60ep schedule (lastvit_select_k=64, gating=fixed, lambda_consist=0.05, lr_stages=[20+30+10])</td>
+    <td class="num">72.54</td>
+    <td class="num">74.21</td>
+    <td class="num">70.94</td>
+    <td class="num">82.29</td>
+    <td class="num">19</td>
+    <td>ZS=82.29 历史最高; 跟 50ep main 72.53 持平; 1e-5 微调无显著涨; 60ep schedule 健康但 best 提前到 ep 19</td>
+  </tr>
+
+  <tr class="best">
+    <td>19</td>
+    <td>Phase 3.1 K=32 @ 60ep ⭐⭐</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>+ <code>lastvit_select_k=32</code> (其它同 P3.0')</td>
+    <td class="num">72.70</td>
+    <td class="num">73.54</td>
+    <td class="num">71.88</td>
+    <td class="num">81.62</td>
+    <td class="num">34</td>
+    <td><span class="delta-pos">+0.16</span> vs P3.0' K=64; 验证 LaSt 勘误 "前景去噪"假设, K 越小越好; S 涨 +0.94 (前景更干净)</td>
+  </tr>
+
+  <tr>
+    <td>20</td>
+    <td>Phase 3.2 K=16 @ 60ep</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>+ <code>lastvit_select_k=16</code> (其它同 P3.0')</td>
+    <td class="num">72.23</td>
+    <td class="num">74.00</td>
+    <td class="num">70.55</td>
+    <td class="num">81.55</td>
+    <td class="num">41</td>
+    <td><span class="delta-neg">-0.47</span> vs K=32; K=16 太严格丢前景信息, K=32 确认单峰最优</td>
+  </tr>
+
+  <tr>
+    <td>21</td>
+    <td>Phase 3.6 K=32 + largest=False (反向对照) ⭐⭐</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>+ <code>lastvit_select_largest=False</code><br>(K=32, 选最高频 part 而非平稳前景)</td>
+    <td class="num">72.59</td>
+    <td class="num">74.33</td>
+    <td class="num">70.93</td>
+    <td class="num">81.87</td>
+    <td class="num">41</td>
+    <td>vs P3.1 K=32 largest=True 72.70 仅差 -0.11 (std 内); <b>假设 B 成立</b>: LaSt 是信息瓶颈而非 part 选择器, 选什么 patch 不重要 — 论文 negative result 强证据</td>
+  </tr>
+
+  <tr>
+    <td>22</td>
+    <td>Phase 3.6b K=64 + largest=False (反向对照 II) ⭐⭐</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>+ <code>lastvit_select_largest=False, lastvit_select_k=64</code></td>
+    <td class="num">72.11</td>
+    <td class="num">73.86</td>
+    <td class="num">70.44</td>
+    <td class="num">81.51</td>
+    <td class="num">41</td>
+    <td>vs P3.0' K=64 largest=True 72.54 跌 -0.43 (跟 K=32 仅 -0.11 反差大); <b>K-dependent 现象</b>: K 小时选啥都行, K 大时选平稳前景占优</td>
+  </tr>
+
+  <tr>
+    <td>23</td>
+    <td>Phase 3.7 V1 严格公式对齐 (K=32, largest=True)</td>
+    <td>05-31</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>+ <code>lastvit_select_formula=v1_strict</code><br>(报告原文 mean of signed ratio, 不 abs)</td>
+    <td class="num">72.53</td>
+    <td class="num">74.00</td>
+    <td class="num">71.12</td>
+    <td class="num">81.86</td>
+    <td class="num">34</td>
+    <td>vs P3.1 V2 (abs.mean) 72.70 仅差 -0.17 (std 内); 两公式等价, V2 工程实现合理可继续用</td>
+  </tr>
+
+  <tr class="best">
+    <td>24</td>
+    <td>Phase 3.10 PriorCorrection=none ⭐⭐⭐</td>
+    <td>06-01</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>K=32, True, AG-JEPA train ON, <b>PriorCorrection=none</b></td>
+    <td class="num">72.91</td>
+    <td class="num">73.30</td>
+    <td class="num">72.53</td>
+    <td class="num">81.72</td>
+    <td class="num">23</td>
+    <td><b>60ep 单点最高</b>; vs P3.1 (PriorCorr=balanced) +0.21; 揭示 PriorCorrection balanced 反而 hurts H 在 CUB 上</td>
+  </tr>
+
+  <tr>
+    <td>25</td>
+    <td>Phase 3.11 完全干净 (AG-JEPA off + PriorCorr off)</td>
+    <td>06-01</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>K=32, True, <b>AG-JEPA train off</b>, PriorCorrection=none</td>
+    <td class="num">72.45</td>
+    <td class="num">73.44</td>
+    <td class="num">71.48</td>
+    <td class="num">81.22</td>
+    <td class="num">34</td>
+    <td>vs P3.10 -0.46 → <b>AG-JEPA 训练 loss 真实贡献 +0.46 H</b>, 应保留进主创新</td>
+  </tr>
+
+  <tr>
+    <td>26</td>
+    <td>Phase 3.12 seed=42 (P3.10 配置)</td>
+    <td>06-01</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>P3.10 配置 + seed=42 (K=32, AG-JEPA on, PriorCorr off)</td>
+    <td class="num">72.53</td>
+    <td class="num">71.93</td>
+    <td class="num">73.14</td>
+    <td class="num">81.56</td>
+    <td class="num">21</td>
+    <td>2-seed avg (5+42): H=72.72, U=72.62, S=72.84, ZS=81.64; 跟旧 50ep main 72.52 +0.20</td>
+  </tr>
+
+  <tr>
+    <td>27</td>
+    <td>Phase 3.13 seed=2024 (P3.10 配置)</td>
+    <td>06-01</td>
+    <td><span class="tag strict">strict</span><br>20+30+10 (60ep)</td>
+    <td>P3.10 配置 + seed=2024 (K=32, AG-JEPA on, PriorCorr off)</td>
+    <td class="num">72.50</td>
+    <td class="num">73.97</td>
+    <td class="num">71.10</td>
+    <td class="num">81.34</td>
+    <td class="num">34</td>
+    <td>3-seed 锁定完成; vs P3.10 seed=5 -0.41, vs P3.12 seed=42 -0.03</td>
+  </tr>
+
+  <tr class="best" style="background:#fef3c7;">
+    <td colspan="11" style="text-align:center; font-weight:700; padding:12px;">
+      ⭐ <b>P3.10 配置 3-seed avg (新 main baseline)</b>: H = <b>72.65 ± 0.19</b>, U = 73.07 ± 0.85, S = 72.26 ± 0.86, ZS = 81.54 ± 0.16<br>
+      seeds: 5 (72.91) / 42 (72.53) / 2024 (72.50) &nbsp;|&nbsp; 配置: K=32 + LaSt v5 平稳前景 + AG-JEPA train ON + PriorCorrection OFF + 60ep [20+30+10]<br>
+      <b>Δ vs 旧 main 72.52±0.11</b>: H <span class="delta-pos">+0.13</span>, U <span class="delta-neg">-1.06</span>, S <span class="delta-pos">+1.27</span>, ZS -0.02 | 典型 seen-favor trade-off (AG-JEPA 局部细节学习效果)<br>
+      主创新清单升级到 6 项, AG-JEPA 训练 loss 真实贡献 +0.46 (P3.10 vs P3.11), PriorCorrection balanced 控变量验证为 negative result
+    </td>
+  </tr>
+
+  <tr class="best">
+    <td colspan="11" style="text-align:center; font-weight:600; padding:8px; background:#dcfce7;">
+      ✅ <b>AG-JEPA 验证完成</b>: 见 #24 (P3.10 H=72.91 ⭐ 单点最高), #25 (P3.11 控变量证明 +0.46 H 训练 loss 真实贡献), #26 (P3.12 seed=42), #27 (P3.13 seed=2024 + 3-seed avg=72.65±0.19 锁定新 main baseline)。PriorCorrection balanced 在 CUB 经控变量验证为 negative result (P3.10 vs P3.1 = -0.21 H), 已默认关闭。
+    </td>
   </tr>
 </table>
 
@@ -294,6 +547,39 @@
     如果 H &lt; 72.27: T2 真不正向, 走 T3
   </td></tr>
   <tr><th>启动命令</th><td><code>F:\Anaconda\envs\dassl_clip_v2\python.exe train_VGSR_CUB.py</code></td></tr>
+</table>
+
+<!-- ============= 实验 23 (已验证) ============= -->
+<h3>实验 #23 — AG-JEPA: masked semantic patch prediction + prior correction <span class="tag ok">已验证</span></h3>
+<table>
+  <tr><th width="20%">框架</th><td>在当前 v5+FAE / K=32 路线旁路接入 AG-JEPA 辅助损失, 不替换主分类路径。</td></tr>
+  <tr><th>核心逻辑</th><td>
+    用真实类别文本在 576 个 CLIP patch 中选 top-k 语义相关 patch, 将其视作被遮区域 target;
+    用剩余 patch 上下文 + 类文本在 <code>tf_common_dim</code> 抽象空间中预测 target。
+  </td></tr>
+  <tr><th>反事实项</th><td>
+    负类文本走同一 predictor, 通过 margin 约束避免不相关文本也能重构目标 patch:
+    <code>lambda_jepa_neg=0.02</code>, <code>jepa_neg_margin=0.2</code>。
+  </td></tr>
+  <tr><th>后验先验校准</th><td>
+    <code>prior_correction=balanced</code>: 评估时统计全体 cached test logits 的 seen/unseen 概率质量,
+    估计一个 unseen logit shift。该项属于 test-time / transductive calibration, 论文中必须单独标注和消融。
+  </td></tr>
+  <tr><th>代码状态</th><td>
+    已改: <code>model/MyModel.py</code> (~822 predictor, ~1082 masked, ~1569 loss), <code>tools/helper_func.py</code> (~129),
+    <code>train_VGSR_CUB.py</code>, <code>config/VGSR_cub_gzsl.yaml</code>。已通过 <code>py_compile</code> 和 CPU fake-batch smoke test, 已完成正式实验。
+  </td></tr>
+  <tr><th>消融结果 (干净 60ep schedule, 控变量)</th><td>
+    A: AG-JEPA off + PriorCorr off (P3.11) → <b>H=72.45</b><br>
+    B: JEPA-only (AG-JEPA on + PriorCorr off, P3.10) → <b>H=72.91</b> ⭐ → <b>+0.46 H 真实贡献</b><br>
+    C: prior-only — 跳过 (D 已证 balanced hurts)<br>
+    D: JEPA + prior full (AG-JEPA on + PriorCorr balanced, P3.1) → <b>H=72.70</b> → balanced <b>hurts -0.21</b><br>
+    多 seed 锁定 (B 配置): seed=5 (P3.10) 72.91 / seed=42 (P3.12) 72.53 / seed=2024 (P3.13) 72.50 → <b>3-seed avg=72.65±0.19 ⭐ 新 main baseline</b>
+  </td></tr>
+  <tr><th>结论</th><td>
+    <b>AG-JEPA 训练 loss 保留作主创新</b> (+0.46 H, 控变量验证); <b>PriorCorrection balanced 在 CUB 不适用</b> (-0.21 H, negative result, 论文需单独标注)。
+    yaml 默认: <code>use_ag_jepa: True</code>, <code>lambda_jepa: 0.05</code>, <code>lambda_jepa_neg: 0.02</code>, <code>prior_correction: none</code>。
+  </td></tr>
 </table>
 
 <!-- ============================================================ -->

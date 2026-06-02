@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DVSR 框架图 v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+    padding: 28px 20px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 3px solid #1e40af;
+  }
+  h1 { font-size: 26px; color: #1e3a8a; }
+  .sub { color: #6b7280; font-size: 13px; margin-top: 4px; }
+
+  /* 顶部最佳数据卡片 */
+  .best-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    padding: 16px 22px;
+    margin: 0 auto 26px;
+    max-width: 980px;
+    box-shadow: 0 2px 6px rgba(245,158,11,0.18);
+  }
+  .best-card h2 {
+    font-size: 17px;
+    color: #92400e;
+    margin-bottom: 10px;
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .metric {
+    background: #fff;
+    border-radius: 7px;
+    padding: 10px 12px;
+    text-align: center;
+    border: 1px solid #fbbf24;
+  }
+  .metric .label { font-size: 11.5px; color: #6b7280; letter-spacing: 0.5px; }
+  .metric .value {
+    font-size: 22px;
+    color: #b45309;
+    font-weight: 700;
+    font-family: "Consolas", monospace;
+    margin-top: 2px;
+  }
+  .metric .std { font-size: 11px; color: #9ca3af; font-weight: 400; }
+  .metric.h .value { color: #b45309; font-size: 24px; }
+
+  .compare-line {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #78350f;
+    text-align: center;
+    border-top: 1px dashed #fbbf24;
+    padding-top: 10px;
+  }
+  .compare-line b { color: #b45309; font-size: 15px; }
+
+  /* SVG 框架图 */
+  .diagram-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow-x: auto;
+  }
+  .diagram-box h2 {
+    font-size: 17px;
+    color: #1e3a8a;
+    margin-bottom: 12px;
+    padding-left: 8px;
+    border-left: 4px solid #1e40af;
+  }
+  svg { display: block; margin: 0 auto; max-width: 100%; }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-box {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* Loss 表 */
+  .loss-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 22px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .loss-box h2 {
+    font-size: 17px;
+    color: #166534;
+    margin-bottom: 10px;
+    padding-left: 8px;
+    border-left: 4px solid #16a34a;
+  }
+  .loss-formula {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: "Consolas", monospace;
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: #166534;
+    margin-bottom: 12px;
+  }
+  .loss-formula .term-main { color: #1e3a8a; font-weight: 700; }
+  .loss-formula .term-soft { color: #16a34a; }
+  .loss-formula .term-jepa { color: #b45309; font-weight: 700; }
+  .loss-formula .lambda { color: #6b7280; }
+
+  table.loss-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  table.loss-table th,
+  table.loss-table td {
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  table.loss-table th {
+    background: #16a34a;
+    color: #fff;
+    font-weight: 600;
+  }
+  table.loss-table tr:nth-child(even) { background: #f9fafb; }
+  table.loss-table code {
+    background: #f3f4f6;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11.5px;
+    color: #1e3a8a;
+  }
+  table.loss-table .star-row td:first-child { color: #b45309; font-weight: 700; }
+
+  /* 模块说明 */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .module {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 4px solid #6b7280;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .module.frozen { border-left-color: #6b7280; }
+  .module.train { border-left-color: #2563eb; }
+  .module.star { border-left-color: #f59e0b; background: #fffbeb; }
+
+  .mod-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 4px;
+  }
+  .module.star .mod-title { color: #b45309; }
+  .mod-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 5px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .mod-tag.frozen { background: #f3f4f6; color: #6b7280; }
+  .mod-tag.train { background: #dbeafe; color: #1e40af; }
+  .mod-tag.star { background: #fef3c7; color: #92400e; }
+
+  .mod-desc {
+    font-size: 12.5px;
+    color: #4b5563;
+    line-height: 1.55;
+  }
+  .mod-desc code {
+    background: #f3f4f6;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11.5px;
+    color: #1e3a8a;
+  }
+
+  footer {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 12px;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>DVSR / VGSR 框架图</h1>
+  <div class="sub">CLIP frozen + Adapter + Patch Selector + AG-JEPA · CUB-200-2011 GZSL · 2026-06-01</div>
+</header>
+
+<!-- ============================================================ -->
+<!-- 最佳数据 -->
+<!-- ============================================================ -->
+<div class="best-card">
+  <h2>★ 当前最佳数据 (CUB-200-2011)</h2>
+  <div class="metrics">
+    <div class="metric h">
+      <div class="label">H · 调和均值</div>
+      <div class="value">72.65</div>
+      <div class="std">± 0.19 (3-seed)</div>
+    </div>
+    <div class="metric">
+      <div class="label">U · Unseen Acc</div>
+      <div class="value">73.07</div>
+      <div class="std">± 0.85</div>
+    </div>
+    <div class="metric">
+      <div class="label">S · Seen Acc</div>
+      <div class="value">72.26</div>
+      <div class="std">± 0.85</div>
+    </div>
+    <div class="metric">
+      <div class="label">ZS · Zero-Shot</div>
+      <div class="value">81.54</div>
+      <div class="std">± 0.16</div>
+    </div>
+  </div>
+  <div class="compare-line">
+    单点最高 (P3.10 seed=5): <b>H = 72.91</b> · vs 纯 CLIP zero-shot (61.28): <b style="color:#16a34a;">+11.37 H</b>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SVG 框架图 (纯 forward, 无 loss) -->
+<!-- ============================================================ -->
+<div class="diagram-box">
+  <h2>整体数据流 (Forward Pipeline + Training Loss)</h2>
+  <svg viewBox="0 0 1180 880" width="1180" height="880" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+      </marker>
+      <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+      </marker>
+    </defs>
+
+    <!-- 顶部分组标题 -->
+    <text x="190" y="28" font-size="13" font-weight="600" fill="#1e3a8a" text-anchor="middle">视觉输入</text>
+    <text x="990" y="28" font-size="13" font-weight="600" fill="#1e3a8a" text-anchor="middle">文本输入</text>
+
+    <!-- 输入图片 -->
+    <rect x="100" y="40" width="180" height="42" rx="6" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="190" y="58" font-size="13" text-anchor="middle" fill="#1f2937">image  336×336</text>
+    <text x="190" y="74" font-size="11" text-anchor="middle" fill="#6b7280">[B, 3, 336, 336]</text>
+
+    <!-- 文本输入 -->
+    <rect x="900" y="40" width="180" height="42" rx="6" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="990" y="58" font-size="13" text-anchor="middle" fill="#1f2937">200 类 GPT-5.5 描述</text>
+    <text x="990" y="74" font-size="11" text-anchor="middle" fill="#6b7280">7 句/类 · cub_gpt55.pt</text>
+
+    <!-- CLIP backbone -->
+    <rect x="100" y="105" width="980" height="55" rx="8" fill="#e5e7eb" stroke="#6b7280" stroke-width="2"/>
+    <text x="590" y="128" font-size="15" font-weight="600" text-anchor="middle" fill="#374151">
+      CLIP ViT-L/14 @ 336px  (完全 frozen, 0 训练参数)
+    </text>
+    <text x="590" y="148" font-size="11.5" text-anchor="middle" fill="#6b7280">
+      visual encoder · text encoder · 768 维特征
+    </text>
+
+    <!-- 视觉输出 -->
+    <rect x="100" y="180" width="200" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="200" y="201" font-size="12" text-anchor="middle" fill="#1e40af">CLS + 576 patches  [B,577,768]</text>
+
+    <!-- 文本输出 -->
+    <rect x="890" y="180" width="200" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="990" y="201" font-size="12" text-anchor="middle" fill="#1e40af">t_c  [200, 768]</text>
+
+    <!-- 箭头: CLIP 到子部分 -->
+    <line x1="190" y1="82" x2="190" y2="103" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="990" y1="82" x2="990" y2="103" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="200" y1="160" x2="200" y2="178" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="990" y1="160" x2="990" y2="178" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- ============= 视觉路 (左) ============= -->
+
+    <!-- LaSt v5 patch 选择器 ★ -->
+    <rect x="70" y="240" width="260" height="60" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+    <text x="200" y="260" font-size="13" font-weight="700" text-anchor="middle" fill="#b45309">★ LaSt v5 Patch Selector</text>
+    <text x="200" y="278" font-size="11" text-anchor="middle" fill="#92400e">FFT + 高斯低通 → topK=32 平稳前景</text>
+    <text x="200" y="293" font-size="10.5" text-anchor="middle" fill="#a16207">零参数 · 不进梯度 · K=32</text>
+
+    <!-- FAE 子集 gather -->
+    <rect x="70" y="320" width="260" height="50" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+    <text x="200" y="340" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">FAE 子集 gather</text>
+    <text x="200" y="358" font-size="11" text-anchor="middle" fill="#3b82f6">几何感知自注意力 · 1/81 计算量</text>
+
+    <!-- CrossModalTransformer -->
+    <rect x="70" y="390" width="260" height="60" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+    <text x="200" y="410" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">Cross-Modal Transformer</text>
+    <text x="200" y="427" font-size="11" text-anchor="middle" fill="#3b82f6">双向 v2s + s2v cross-attention</text>
+    <text x="200" y="442" font-size="10.5" text-anchor="middle" fill="#3b82f6">dim=512, heads=4</text>
+
+    <!-- s2v + v2s 输出 -->
+    <rect x="70" y="470" width="260" height="40" rx="6" fill="#f0f9ff" stroke="#3b82f6"/>
+    <text x="200" y="488" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1e40af">local_score = 0.5·s2v + 0.5·v2s</text>
+    <text x="200" y="503" font-size="10.5" text-anchor="middle" fill="#3b82f6">[B, 200] 局部分类分数</text>
+
+    <!-- 视觉路箭头 -->
+    <line x1="200" y1="214" x2="200" y2="238" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="200" y1="300" x2="200" y2="318" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="200" y1="370" x2="200" y2="388" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="200" y1="450" x2="200" y2="468" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- ============= 文本路 (右) ============= -->
+
+    <!-- Adapter -->
+    <rect x="850" y="240" width="280" height="60" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="990" y="260" font-size="13" font-weight="700" text-anchor="middle" fill="#1e40af">Adapter (text)</text>
+    <text x="990" y="278" font-size="11" text-anchor="middle" fill="#2563eb">768 → 192 → 768 · ratio=0.2</text>
+    <text x="990" y="293" font-size="10.5" text-anchor="middle" fill="#1e40af">~ 295K 可训练参数</text>
+
+    <!-- G3 Conditional Text -->
+    <rect x="850" y="320" width="280" height="60" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="990" y="340" font-size="13" font-weight="700" text-anchor="middle" fill="#b45309">★ G3 CoCoOp Conditional</text>
+    <text x="990" y="358" font-size="11" text-anchor="middle" fill="#92400e">π(x) = meta_net(v_cls)</text>
+    <text x="990" y="373" font-size="10.5" text-anchor="middle" fill="#a16207">t̃_c(x) = Norm(t_c + 0.005·π(x))</text>
+
+    <!-- base 路 -->
+    <rect x="850" y="400" width="280" height="50" rx="7" fill="#f0f9ff" stroke="#3b82f6"/>
+    <text x="990" y="420" font-size="12" font-weight="600" text-anchor="middle" fill="#1e40af">base_logits = γ · cos(v_cls, t̃_c)</text>
+    <text x="990" y="437" font-size="10.5" text-anchor="middle" fill="#3b82f6">[B, 200] · 全局 cosine 分类</text>
+
+    <!-- 文本路箭头 -->
+    <line x1="990" y1="214" x2="990" y2="238" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="990" y1="300" x2="990" y2="318" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="990" y1="380" x2="990" y2="398" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- v_cls 横向喂给 G3 (顶部走线, 不挡主路径) -->
+    <path d="M 300 197 L 580 197 L 580 350 L 848 350"
+          fill="none" stroke="#3b82f6" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+    <text x="430" y="190" font-size="10.5" fill="#1e40af">v_cls 喂给 G3</text>
+
+    <!-- ============= AG-JEPA 旁路 (单独右侧外延, 不挡主路径) ============= -->
+    <rect x="370" y="245" width="450" height="55" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="595" y="265" font-size="13" font-weight="700" text-anchor="middle" fill="#b45309">★ AG-JEPA (训练期辅助 · 仅参与 loss · 不进 forward 主路径)</text>
+    <text x="595" y="282" font-size="11" text-anchor="middle" fill="#92400e">真实类文本 → 选 top-8 patch 作 mask 目标 → predictor 用其余 patch + 类文本预测</text>
+    <text x="595" y="295" font-size="10.5" text-anchor="middle" fill="#a16207">+ 反事实负类文本 margin=0.2</text>
+
+    <!-- 576 patches 喂给 JEPA (虚线, 仅取数据不影响主路径) -->
+    <path d="M 330 210 L 350 210 L 350 270 L 368 270"
+          fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrowOrange)"/>
+    <text x="338" y="240" font-size="10" fill="#a16207">576 patches</text>
+
+    <!-- t_c 喂给 JEPA -->
+    <path d="M 890 197 L 850 197 L 850 270 L 822 270"
+          fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrowOrange)"/>
+
+    <!-- ============= 融合 ============= -->
+    <rect x="385" y="540" width="410" height="60" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2.5"/>
+    <text x="590" y="562" font-size="14" font-weight="700" text-anchor="middle" fill="#b45309">最终融合 (add 模式)</text>
+    <text x="590" y="580" font-size="13" text-anchor="middle" fill="#92400e" font-family="Consolas,monospace">logits = base_logits + 0.3 · local_score</text>
+    <text x="590" y="595" font-size="11" text-anchor="middle" fill="#a16207">local_weight β=0.3 · score_mode=add</text>
+
+    <!-- 输出 -->
+    <rect x="450" y="640" width="280" height="42" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="590" y="658" font-size="13" font-weight="700" text-anchor="middle" fill="#166534">[B, 200] 全类 logits</text>
+    <text x="590" y="675" font-size="11" text-anchor="middle" fill="#16a34a">argmax → 预测类 (含 50 unseen)</text>
+
+    <!-- 融合箭头 -->
+    <path d="M 200 510 L 200 570 L 383 570" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M 990 450 L 990 570 L 797 570" fill="none" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="590" y1="600" x2="590" y2="638" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- ============= Loss 模块 (独立块, 不嵌入 forward 主路径) ============= -->
+    <!-- 分隔线 -->
+    <line x1="60" y1="710" x2="1120" y2="710" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="60" y="704" font-size="12" fill="#9ca3af" font-style="italic">↓ 训练阶段 (反向传播)</text>
+
+    <!-- Loss 大框 -->
+    <rect x="60" y="725" width="1060" height="135" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+    <text x="590" y="748" font-size="15" font-weight="700" text-anchor="middle" fill="#166534">★ 训练损失函数 L_total (6 项)</text>
+
+    <!-- 6 个 loss 项 -->
+    <!-- L_CE_seen (主) -->
+    <rect x="80" y="765" width="155" height="55" rx="6" fill="#dbeafe" stroke="#1e40af" stroke-width="2"/>
+    <text x="157" y="784" font-size="12" font-weight="700" text-anchor="middle" fill="#1e40af">L_CE_seen</text>
+    <text x="157" y="800" font-size="10.5" text-anchor="middle" fill="#1e40af">主分类损失</text>
+    <text x="157" y="813" font-size="9.5" text-anchor="middle" fill="#3b82f6">权重 1.0</text>
+
+    <!-- L_topo_pearson (G1) -->
+    <rect x="250" y="765" width="155" height="55" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="327" y="784" font-size="12" font-weight="600" text-anchor="middle" fill="#166534">L_topo_pearson</text>
+    <text x="327" y="800" font-size="10.5" text-anchor="middle" fill="#15803d">G1 文本拓扑保持</text>
+    <text x="327" y="813" font-size="9.5" text-anchor="middle" fill="#16a34a">权重 0.05</text>
+
+    <!-- L_consist (G1) -->
+    <rect x="420" y="765" width="155" height="55" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="497" y="784" font-size="12" font-weight="600" text-anchor="middle" fill="#166534">L_consist</text>
+    <text x="497" y="800" font-size="10.5" text-anchor="middle" fill="#15803d">G1 一致性 KL (动态)</text>
+    <text x="497" y="813" font-size="9.5" text-anchor="middle" fill="#16a34a">权重 λ_eff</text>
+
+    <!-- L_msdn (G2) -->
+    <rect x="590" y="765" width="155" height="55" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="667" y="784" font-size="12" font-weight="600" text-anchor="middle" fill="#166534">L_msdn</text>
+    <text x="667" y="800" font-size="10.5" text-anchor="middle" fill="#15803d">G2 双向互蒸馏</text>
+    <text x="667" y="813" font-size="9.5" text-anchor="middle" fill="#16a34a">权重 0.05</text>
+
+    <!-- L_jepa ★ -->
+    <rect x="760" y="765" width="155" height="55" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="837" y="784" font-size="12" font-weight="700" text-anchor="middle" fill="#b45309">★ L_jepa</text>
+    <text x="837" y="800" font-size="10.5" text-anchor="middle" fill="#92400e">AG-JEPA masked MSE</text>
+    <text x="837" y="813" font-size="9.5" text-anchor="middle" fill="#a16207">权重 0.05</text>
+
+    <!-- L_jepa_neg ★ -->
+    <rect x="930" y="765" width="170" height="55" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="1015" y="784" font-size="12" font-weight="700" text-anchor="middle" fill="#b45309">★ L_jepa_neg</text>
+    <text x="1015" y="800" font-size="10.5" text-anchor="middle" fill="#92400e">反事实负类 margin</text>
+    <text x="1015" y="813" font-size="9.5" text-anchor="middle" fill="#a16207">权重 0.02 · m=0.2</text>
+
+    <!-- 求和 -->
+    <text x="590" y="843" font-size="13" font-weight="700" text-anchor="middle" fill="#166534" font-family="Consolas,monospace">
+      L_total = L_CE_seen + 0.05·L_topo + λ_eff·L_consist + 0.05·L_msdn + 0.05·L_jepa + 0.02·L_jepa_neg
+    </text>
+
+  </svg>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-box" style="background:#e5e7eb;"></span>frozen 不训练</div>
+    <div class="legend-item"><span class="legend-box" style="background:#dbeafe;"></span>可训练模块</div>
+    <div class="legend-item"><span class="legend-box" style="background:#fef3c7;"></span>★ 主创新</div>
+    <div class="legend-item"><span class="legend-box" style="background:#dcfce7;"></span>训练损失 / 输出</div>
+    <div class="legend-item"><span class="legend-box" style="background:#fff; border:1px dashed #f59e0b;"></span>训练期辅助 (不进 forward)</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 损失函数 (单独面板, 不混进 SVG) -->
+<!-- ============================================================ -->
+<div class="loss-box">
+  <h2>损失函数 L_total</h2>
+
+  <div class="loss-formula">
+    L_total = <span class="term-main">L_CE_seen</span> &nbsp;<span style="color:#9ca3af;">(主分类损失, 基于 [B,200] logits 选 seen 列)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="lambda">0.05</span> · <span class="term-soft">L_topo_pearson</span> &nbsp;<span style="color:#9ca3af;">(G1: Adapter 输出 ↔ 原 CLIP 文本 拓扑保持)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="lambda">λ_eff</span> · <span class="term-soft">L_consist</span> &nbsp;<span style="color:#9ca3af;">(G1: KL(base ↔ local), 动态衰减 λ_eff = 0.05/(1+0.1·cons))</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="lambda">0.05</span> · <span class="term-soft">L_msdn</span> &nbsp;<span style="color:#9ca3af;">(G2: 双向 KL(s2v ↔ v2s), 双向 detach, T=2)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="lambda">0.05</span> · <span class="term-jepa">L_jepa</span> &nbsp;<span style="color:#9ca3af;">(★ AG-JEPA 主项, top-8 masked patch MSE)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="lambda">0.02</span> · <span class="term-jepa">L_jepa_neg</span> &nbsp;<span style="color:#9ca3af;">(★ AG-JEPA 反事实, 负类文本 margin=0.2)</span>
+  </div>
+
+  <table class="loss-table">
+    <tr>
+      <th width="22%">损失项</th>
+      <th width="10%">权重</th>
+      <th width="14%">作用模块</th>
+      <th width="20%">数学形式</th>
+      <th>物理含义</th>
+    </tr>
+    <tr>
+      <td><b>L_CE_seen</b></td>
+      <td>1.0</td>
+      <td>最终融合 logits</td>
+      <td><code>CE(logits[seen], y)</code></td>
+      <td>主分类损失, 仅在 seen 类上算</td>
+    </tr>
+    <tr>
+      <td>L_topo_pearson</td>
+      <td>0.05</td>
+      <td>Adapter (G1)</td>
+      <td><code>1 - Pearson(C_adapt, C_clip)</code></td>
+      <td>保持类间角度拓扑, 防 seen-only CE 拉散 unseen 几何</td>
+    </tr>
+    <tr>
+      <td>L_consist</td>
+      <td>λ_eff (动态)</td>
+      <td>base ↔ local (G1)</td>
+      <td><code>KL(softmax(local/T) || softmax(base/T))</code></td>
+      <td>base 路与 local 路一致性, λ_eff 倒数衰减防爆</td>
+    </tr>
+    <tr>
+      <td>L_msdn</td>
+      <td>0.05</td>
+      <td>s2v ↔ v2s (G2)</td>
+      <td><code>(T²/2) · [KL(p_s2v.det || p_v2s) + KL(p_v2s.det || p_s2v)]</code></td>
+      <td>双分支互蒸馏, 防一支塌掉</td>
+    </tr>
+    <tr class="star-row">
+      <td>★ L_jepa</td>
+      <td>0.05</td>
+      <td>AG-JEPA</td>
+      <td><code>MSE(predictor(context, t_y), masked_patches_y)</code></td>
+      <td>用类文本 + 上下文预测被遮的语义 patch, 强制学局部细节</td>
+    </tr>
+    <tr class="star-row">
+      <td>★ L_jepa_neg</td>
+      <td>0.02</td>
+      <td>AG-JEPA 反事实</td>
+      <td><code>max(0, m - ‖predict(context,t_neg) - target‖)</code></td>
+      <td>负类文本不应能重构目标 patch, 防背景被当成属性</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- 模块说明 -->
+<!-- ============================================================ -->
+<h2 style="font-size:17px; color:#1e3a8a; margin-bottom:12px; padding-left:8px; border-left:4px solid #1e40af;">模块说明</h2>
+
+<div class="modules-grid">
+
+  <div class="module frozen">
+    <div class="mod-title">CLIP ViT-L/14 @ 336px <span class="mod-tag frozen">frozen</span></div>
+    <div class="mod-desc">视觉 + 文本编码器, <b>完全冻结不训练</b>。视觉端输出 <code>[B, 577, 768]</code> (CLS + 576 patches), 文本端输出 <code>[200, 768]</code> 类原型。</div>
+  </div>
+
+  <div class="module train">
+    <div class="mod-title">Adapter (text) <span class="mod-tag train">~295K 参数</span></div>
+    <div class="mod-desc">文本侧 bottleneck MLP <code>768→192→768</code>, residual ratio=0.2。<b>整个网络唯一的主体可训练参数</b>, 用于精炼 seen 类文本特征。</div>
+  </div>
+
+  <div class="module star">
+    <div class="mod-title">★ G3 CoCoOp Conditional Text <span class="mod-tag star">主创新</span></div>
+    <div class="mod-desc">图像条件文本残差: <code>π(x)=meta_net(v_cls)</code>, <code>t̃_c(x)=Norm(t_c + 0.005·π(x))</code>。让每张图都有自己的 200 类文本原型, 同类不同图侧重不同属性。</div>
+  </div>
+
+  <div class="module star">
+    <div class="mod-title">★ LaSt v5 Patch Selector <span class="mod-tag star">主创新 · 0 参数</span></div>
+    <div class="mod-desc">频域前景筛选: FFT + 高斯低通(σ=√D), 算每个 patch 的"通道平稳性"分数, topK=32 选最平稳的前景 token (滤背景 / artifact / lazy aggregation)。<b>不进梯度链路, 显存零增长</b>。</div>
+  </div>
+
+  <div class="module train">
+    <div class="mod-title">FAE 子集 gather <span class="mod-tag train">几何感知</span></div>
+    <div class="mod-desc">对选中的 32 个 patch 做几何感知自注意力。从全图 box_emb <code>[576,576,64]</code> 做 advanced indexing 取 <code>[B,32,32,64]</code> 子矩阵, attention 计算量 = 全图的 <b>1/81</b>。</div>
+  </div>
+
+  <div class="module train">
+    <div class="mod-title">Cross-Modal Transformer <span class="mod-tag train">双向</span></div>
+    <div class="mod-desc">两条 cross-attention 路径并行: <b>v2s</b> (文本 query patch) + <b>s2v</b> (patch query 文本), 公共维 dim=512, heads=4。两路 logits 等权融合得到 <code>local_score</code>。</div>
+  </div>
+
+  <div class="module star">
+    <div class="mod-title">★ AG-JEPA <span class="mod-tag star">训练辅助 · 主创新</span></div>
+    <div class="mod-desc">用真实类文本与 patch 做相似度选 top-8 作 masked target, predictor 用剩余 patch + 类文本在抽象空间预测 target 特征 (MSE)。配反事实负类文本 margin loss 防"非因果背景"被当成属性表征。<b>仅参与 loss, 不影响推理路径</b>。</div>
+  </div>
+
+  <div class="module train">
+    <div class="mod-title">最终融合 (add 模式) <span class="mod-tag train">输出层</span></div>
+    <div class="mod-desc">全局 base 分支 + 局部 local 分支线性叠加: <code>logits = base_logits + 0.3 · local_score</code>。base 给 unseen 一个"CLIP 兜底", local 在 seen 上做精细化加分。</div>
+  </div>
+
+</div>
+
+<footer>
+  DVSR / VGSR Framework Diagram v2 · 2026-06-01<br>
+  详细实验账本: <code>report/EXPERIMENT_LEDGER.html</code> · 完整汇报: <code>report/FRAMEWORK_REPORT.html</code>
+</footer>
+
+</div>
+</body>
+</html>

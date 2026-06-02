@@ -1,0 +1,603 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-25_00-53-13.txt
+  Device    : cuda:0
+  Epochs    : 20
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : claude
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : mean
+├─ LaSt-ViT-CLS (CLIP CLS 增强) ──────────────────────────┤
+│  use_lastvit_cls : False
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : add
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+│  text_residual : 0.5
+│  visual_residual: 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.0
+│  lambda_l2sp   : 0.0
+│  lambda_topo   : 0.0
+│  lambda_aux_s2v: 0.0
+│  lambda_aux_v2s: 0.0
+│  aux_temp      : 14.28
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : ''
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (BF16 autocast)
+│  pin_memory    : True (always)  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      [info] Train patches kept on CPU (GPU preload disabled - perf issue on sm_120)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using Claude descriptions: .\data\gpt4_data\cub_claude.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,435,851
+      Trainable params: 10,282,251
+
+============================================================
+  Start Training: epoch [1/20], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.6174 | Avg: 2.9071 | CE: 2.617  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 2.1443 | Avg: 2.6227 | CE: 2.144  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 1.9948 | Avg: 2.4200 | CE: 1.995  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 1.7123 | Avg: 2.2882 | CE: 1.712  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 1.7088 | Avg: 2.1732 | CE: 1.709  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 1.6953 | Avg: 2.1243 | CE: 1.695  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [1/20] Train Summary
+     Avg Loss : 2.1243
+     LR       : 0.000994
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [1/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H6351.pth
+
+  ┌─ Epoch [1/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 66.12%
+  │  GZSL-S (Seen Acc)   : 61.10%
+  │  GZSL-H (Harmonic)   : 63.51%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.26%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.4505 | Avg: 1.5690 | CE: 1.450  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 1.3637 | Avg: 1.5405 | CE: 1.364  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 1.3112 | Avg: 1.5068 | CE: 1.311  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 1.2905 | Avg: 1.4728 | CE: 1.290  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 1.3223 | Avg: 1.4476 | CE: 1.322  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 1.2165 | Avg: 1.4315 | CE: 1.216  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [2/20] Train Summary
+     Avg Loss : 1.4315
+     LR       : 0.000976
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [2/20] Evaluating GZSL...
+
+  ┌─ Epoch [2/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 58.71%
+  │  GZSL-S (Seen Acc)   : 68.89%
+  │  GZSL-H (Harmonic)   : 63.39%  
+  │  ZSL    (ZS Acc)     : 81.84%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.1518 | Avg: 1.2670 | CE: 1.152  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 1.0961 | Avg: 1.2414 | CE: 1.096  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 1.1739 | Avg: 1.2163 | CE: 1.174  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 1.0477 | Avg: 1.1945 | CE: 1.048  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 1.0247 | Avg: 1.1798 | CE: 1.025  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 1.0872 | Avg: 1.1671 | CE: 1.087  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [3/20] Train Summary
+     Avg Loss : 1.1671
+     LR       : 0.000946
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [3/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H6713.pth
+
+  ┌─ Epoch [3/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 63.22%
+  │  GZSL-S (Seen Acc)   : 71.56%
+  │  GZSL-H (Harmonic)   : 67.13%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.96%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.8470 | Avg: 1.0199 | CE: 0.847  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.8303 | Avg: 0.9801 | CE: 0.830  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 1.1035 | Avg: 0.9730 | CE: 1.103  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.9171 | Avg: 0.9583 | CE: 0.917  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.8010 | Avg: 0.9455 | CE: 0.801  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.8330 | Avg: 0.9380 | CE: 0.833  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [4/20] Train Summary
+     Avg Loss : 0.9380
+     LR       : 0.000905
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [4/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H6896.pth
+
+  ┌─ Epoch [4/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 68.73%
+  │  GZSL-S (Seen Acc)   : 69.19%
+  │  GZSL-H (Harmonic)   : 68.96%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.96%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [5/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9005 | Avg: 0.8389 | CE: 0.900  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.7893 | Avg: 0.8330 | CE: 0.789  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.8146 | Avg: 0.8220 | CE: 0.815  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.7201 | Avg: 0.8075 | CE: 0.720  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.8386 | Avg: 0.7977 | CE: 0.839  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.7659 | Avg: 0.7926 | CE: 0.766  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [5/20] Train Summary
+     Avg Loss : 0.7926
+     LR       : 0.000854
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [5/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7007.pth
+
+  ┌─ Epoch [5/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 69.12%
+  │  GZSL-S (Seen Acc)   : 71.04%
+  │  GZSL-H (Harmonic)   : 70.07%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.99%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [6/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7305 | Avg: 0.6764 | CE: 0.730  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.6288 | Avg: 0.6721 | CE: 0.629  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.5471 | Avg: 0.6709 | CE: 0.547  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.7236 | Avg: 0.6776 | CE: 0.724  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.7327 | Avg: 0.6724 | CE: 0.733  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.6345 | Avg: 0.6655 | CE: 0.634  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [6/20] Train Summary
+     Avg Loss : 0.6655
+     LR       : 0.000794
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [6/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7032.pth
+
+  ┌─ Epoch [6/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 69.61%
+  │  GZSL-S (Seen Acc)   : 71.05%
+  │  GZSL-H (Harmonic)   : 70.32%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.99%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [7/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7435 | Avg: 0.6162 | CE: 0.743  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.6274 | Avg: 0.6038 | CE: 0.627  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.3945 | Avg: 0.5953 | CE: 0.394  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.4663 | Avg: 0.5992 | CE: 0.466  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.5553 | Avg: 0.5906 | CE: 0.555  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.5025 | Avg: 0.5859 | CE: 0.503  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [7/20] Train Summary
+     Avg Loss : 0.5859
+     LR       : 0.000727
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [7/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7096.pth
+
+  ┌─ Epoch [7/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 66.07%
+  │  GZSL-S (Seen Acc)   : 76.63%
+  │  GZSL-H (Harmonic)   : 70.96%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.89%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [8/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4530 | Avg: 0.5408 | CE: 0.453  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.4572 | Avg: 0.5250 | CE: 0.457  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.5234 | Avg: 0.5244 | CE: 0.523  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.5110 | Avg: 0.5218 | CE: 0.511  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.5385 | Avg: 0.5240 | CE: 0.539  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3966 | Avg: 0.5207 | CE: 0.397  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [8/20] Train Summary
+     Avg Loss : 0.5207
+     LR       : 0.000655
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [8/20] Evaluating GZSL...
+
+  ┌─ Epoch [8/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.57%
+  │  GZSL-S (Seen Acc)   : 63.22%
+  │  GZSL-H (Harmonic)   : 68.85%  
+  │  ZSL    (ZS Acc)     : 81.89%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [9/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4861 | Avg: 0.5008 | CE: 0.486  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.5241 | Avg: 0.4944 | CE: 0.524  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.4454 | Avg: 0.4863 | CE: 0.445  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.4216 | Avg: 0.4828 | CE: 0.422  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.4044 | Avg: 0.4813 | CE: 0.404  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.4104 | Avg: 0.4775 | CE: 0.410  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [9/20] Train Summary
+     Avg Loss : 0.4775
+     LR       : 0.000578
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [9/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7165.pth
+
+  ┌─ Epoch [9/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 70.93%
+  │  GZSL-S (Seen Acc)   : 72.38%
+  │  GZSL-H (Harmonic)   : 71.65%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.89%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [10/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3634 | Avg: 0.4690 | CE: 0.363  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.4369 | Avg: 0.4561 | CE: 0.437  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.4370 | Avg: 0.4397 | CE: 0.437  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.3722 | Avg: 0.4378 | CE: 0.372  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.4409 | Avg: 0.4375 | CE: 0.441  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.4659 | Avg: 0.4409 | CE: 0.466  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [10/20] Train Summary
+     Avg Loss : 0.4409
+     LR       : 0.000500
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [10/20] Evaluating GZSL...
+
+  ┌─ Epoch [10/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 67.46%
+  │  GZSL-S (Seen Acc)   : 74.72%
+  │  GZSL-H (Harmonic)   : 70.90%  
+  │  ZSL    (ZS Acc)     : 81.89%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [11/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4455 | Avg: 0.4015 | CE: 0.446  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.4143 | Avg: 0.4010 | CE: 0.414  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.4029 | Avg: 0.4035 | CE: 0.403  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.3821 | Avg: 0.4012 | CE: 0.382  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3867 | Avg: 0.4000 | CE: 0.387  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.4452 | Avg: 0.3950 | CE: 0.445  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [11/20] Train Summary
+     Avg Loss : 0.3950
+     LR       : 0.000422
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [11/20] Evaluating GZSL...
+
+  ┌─ Epoch [11/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.83%
+  │  GZSL-S (Seen Acc)   : 68.75%
+  │  GZSL-H (Harmonic)   : 71.20%  
+  │  ZSL    (ZS Acc)     : 81.86%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [12/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.2922 | Avg: 0.3802 | CE: 0.292  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.4896 | Avg: 0.3811 | CE: 0.490  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.4958 | Avg: 0.3837 | CE: 0.496  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.5021 | Avg: 0.3866 | CE: 0.502  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.4741 | Avg: 0.3823 | CE: 0.474  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.2750 | Avg: 0.3793 | CE: 0.275  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [12/20] Train Summary
+     Avg Loss : 0.3793
+     LR       : 0.000345
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [12/20] Evaluating GZSL...
+
+  ┌─ Epoch [12/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.22%
+  │  GZSL-S (Seen Acc)   : 66.93%
+  │  GZSL-H (Harmonic)   : 70.83%  
+  │  ZSL    (ZS Acc)     : 81.83%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [13/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.2869 | Avg: 0.3555 | CE: 0.287  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.3140 | Avg: 0.3786 | CE: 0.314  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.2254 | Avg: 0.3668 | CE: 0.225  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.3328 | Avg: 0.3609 | CE: 0.333  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3725 | Avg: 0.3581 | CE: 0.372  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3484 | Avg: 0.3594 | CE: 0.348  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [13/20] Train Summary
+     Avg Loss : 0.3594
+     LR       : 0.000273
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [13/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7170.pth
+
+  ┌─ Epoch [13/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.26%
+  │  GZSL-S (Seen Acc)   : 69.31%
+  │  GZSL-H (Harmonic)   : 71.70%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.86%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [14/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4438 | Avg: 0.3375 | CE: 0.444  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.3008 | Avg: 0.3340 | CE: 0.301  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.2923 | Avg: 0.3297 | CE: 0.292  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.3737 | Avg: 0.3308 | CE: 0.374  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3116 | Avg: 0.3372 | CE: 0.312  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.2763 | Avg: 0.3367 | CE: 0.276  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [14/20] Train Summary
+     Avg Loss : 0.3367
+     LR       : 0.000206
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [14/20] Evaluating GZSL...
+
+  ┌─ Epoch [14/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.52%
+  │  GZSL-S (Seen Acc)   : 67.64%
+  │  GZSL-H (Harmonic)   : 70.91%  
+  │  ZSL    (ZS Acc)     : 81.73%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [15/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3412 | Avg: 0.3519 | CE: 0.341  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.2307 | Avg: 0.3406 | CE: 0.231  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.3469 | Avg: 0.3411 | CE: 0.347  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.3472 | Avg: 0.3369 | CE: 0.347  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.4400 | Avg: 0.3352 | CE: 0.440  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3573 | Avg: 0.3341 | CE: 0.357  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [15/20] Train Summary
+     Avg Loss : 0.3341
+     LR       : 0.000146
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [15/20] Evaluating GZSL...
+
+  ┌─ Epoch [15/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.03%
+  │  GZSL-S (Seen Acc)   : 70.30%
+  │  GZSL-H (Harmonic)   : 71.64%  
+  │  ZSL    (ZS Acc)     : 81.76%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [16/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.2993 | Avg: 0.3234 | CE: 0.299  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.2832 | Avg: 0.3083 | CE: 0.283  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.2443 | Avg: 0.3095 | CE: 0.244  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.2420 | Avg: 0.3078 | CE: 0.242  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3624 | Avg: 0.3068 | CE: 0.362  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.2828 | Avg: 0.3055 | CE: 0.283  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [16/20] Train Summary
+     Avg Loss : 0.3055
+     LR       : 0.000095
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [16/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7178.pth
+
+  ┌─ Epoch [16/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.00%
+  │  GZSL-S (Seen Acc)   : 69.69%
+  │  GZSL-H (Harmonic)   : 71.78%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.76%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [17/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.2827 | Avg: 0.3290 | CE: 0.283  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.3122 | Avg: 0.3077 | CE: 0.312  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.3515 | Avg: 0.3067 | CE: 0.352  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.2647 | Avg: 0.3063 | CE: 0.265  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.5363 | Avg: 0.3133 | CE: 0.536  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3406 | Avg: 0.3092 | CE: 0.341  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [17/20] Train Summary
+     Avg Loss : 0.3092
+     LR       : 0.000054
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [17/20] Evaluating GZSL...
+
+  ┌─ Epoch [17/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.35%
+  │  GZSL-S (Seen Acc)   : 67.43%
+  │  GZSL-H (Harmonic)   : 71.17%  
+  │  ZSL    (ZS Acc)     : 81.73%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [18/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4074 | Avg: 0.3137 | CE: 0.407  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.2284 | Avg: 0.3043 | CE: 0.228  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.2965 | Avg: 0.3009 | CE: 0.297  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.2766 | Avg: 0.3016 | CE: 0.277  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.2550 | Avg: 0.3044 | CE: 0.255  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.2351 | Avg: 0.3017 | CE: 0.235  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [18/20] Train Summary
+     Avg Loss : 0.3017
+     LR       : 0.000024
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [18/20] Evaluating GZSL...
+
+  ┌─ Epoch [18/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.38%
+  │  GZSL-S (Seen Acc)   : 69.16%
+  │  GZSL-H (Harmonic)   : 71.67%  
+  │  ZSL    (ZS Acc)     : 81.79%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [19/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3039 | Avg: 0.2856 | CE: 0.304  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.3262 | Avg: 0.2784 | CE: 0.326  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.3112 | Avg: 0.2814 | CE: 0.311  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.4317 | Avg: 0.2827 | CE: 0.432  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3906 | Avg: 0.2865 | CE: 0.391  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3996 | Avg: 0.2907 | CE: 0.400  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [19/20] Train Summary
+     Avg Loss : 0.2907
+     LR       : 0.000006
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [19/20] Evaluating GZSL...
+
+  ┌─ Epoch [19/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.67%
+  │  GZSL-S (Seen Acc)   : 69.79%
+  │  GZSL-H (Harmonic)   : 71.68%  
+  │  ZSL    (ZS Acc)     : 81.73%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [20/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3569 | Avg: 0.3154 | CE: 0.357  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 40/110] | Loss: 0.2950 | Avg: 0.2904 | CE: 0.295  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 60/110] | Loss: 0.3194 | Avg: 0.2965 | CE: 0.319  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [ 80/110] | Loss: 0.2614 | Avg: 0.2996 | CE: 0.261  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [100/110] | Loss: 0.3178 | Avg: 0.3005 | CE: 0.318  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+  Step [110/110] | Loss: 0.3522 | Avg: 0.2991 | CE: 0.352  Cons: 0.000  L2SP: 0.0000  Topo: 0.0000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000
+
+  >> Epoch [20/20] Train Summary
+     Avg Loss : 0.2991
+     LR       : 0.000000
+     Residual : vr=0.5000  tr_seen=0.5000  tr_unseen=0.9526
+     CB Blend : cb=0.7311  (sigmoid of logit=1.0000)
+
+  >> Epoch [20/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_00-53-13_H7188.pth
+
+  ┌─ Epoch [20/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.60%
+  │  GZSL-S (Seen Acc)   : 70.24%
+  │  GZSL-H (Harmonic)   : 71.88%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.73%
+  └──────────────────────────────────────────────────────
+
+============================================================
+  Training Finished!
+============================================================
+  Best Results @ Epoch 20
+  ┌─────────────────────────────────────
+  │  GZSL-U : 73.60%
+  │  GZSL-S : 70.24%
+  │  GZSL-H : 71.88%
+  │  ZSL    : 81.73%
+  └─────────────────────────────────────
+
+  Log saved to: ./train_log/CUB/training_log_CUB_2026-05-25_00-53-13.txt

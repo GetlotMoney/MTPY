@@ -1,0 +1,155 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-25_03-44-32.txt
+  Device    : cuda:0
+  Epochs    : 20
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : gpt55
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : mean
+├─ LaSt-ViT-CLS (CLIP CLS 增强) ──────────────────────────┤
+│  use_lastvit_cls : False
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : add
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+│  text_residual : 0.5
+│  visual_residual: 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.05
+│  lambda_l2sp   : 0.0
+│  lambda_topo   : 0.05
+│  lambda_aux_s2v: 0.0
+│  lambda_aux_v2s: 0.0
+│  aux_temp      : 14.28
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : ''
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (BF16 autocast)
+│  pin_memory    : True (always)  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      [info] Train patches kept on CPU (GPU preload disabled - perf issue on sm_120)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using GPT-5.5 descriptions: .\data\gpt4_data\cub_gpt55.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,510,487
+      Trainable params: 10,356,887
+
+============================================================
+  Start Training: epoch [1/20], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.2386 | Avg: 2.7494 | CE: 2.180  Cons: 0.866  L2SP: 0.0000  Topo: 0.3099  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0031
+  Step [ 40/110] | Loss: 2.2347 | Avg: 2.5113 | CE: 2.173  Cons: 0.886  L2SP: 0.0000  Topo: 0.3235  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0167
+  Step [ 60/110] | Loss: 1.9035 | Avg: 2.3609 | CE: 1.823  Cons: 1.124  L2SP: 0.0000  Topo: 0.3352  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.1562
+  Step [ 80/110] | Loss: 1.9214 | Avg: 2.2501 | CE: 1.846  Cons: 1.147  L2SP: 0.0000  Topo: 0.3318  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0307
+  Step [100/110] | Loss: 1.6079 | Avg: 2.1449 | CE: 1.508  Cons: 1.461  L2SP: 0.0000  Topo: 0.3398  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.1945
+  Step [110/110] | Loss: 1.6467 | Avg: 2.1041 | CE: 1.559  Cons: 1.336  L2SP: 0.0000  Topo: 0.3427  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0793
+
+  >> Epoch [1/20] Train Summary
+     Avg Loss : 2.1041
+     LR       : 0.000994
+
+  >> Epoch [1/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-25_03-44-32_H5080.pth
+
+  ┌─ Epoch [1/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 39.20%
+  │  GZSL-S (Seen Acc)   : 72.17%
+  │  GZSL-H (Harmonic)   : 50.80%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 80.84%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.4321 | Avg: 1.5809 | CE: 1.330  Cons: 1.648  L2SP: 0.0000  Topo: 0.3484  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0557
+  Step [ 40/110] | Loss: 1.5540 | Avg: 1.5352 | CE: 1.439  Cons: 1.746  L2SP: 0.0000  Topo: 0.3553  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.1945
+  Step [ 60/110] | Loss: 1.3103 | Avg: 1.4994 | CE: 1.188  Cons: 2.011  L2SP: 0.0000  Topo: 0.3510  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0836
+  Step [ 80/110] | Loss: 1.2509 | Avg: 1.4626 | CE: 1.133  Cons: 1.957  L2SP: 0.0000  Topo: 0.3610  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0378
+  Step [100/110] | Loss: 1.3382 | Avg: 1.4289 | CE: 1.192  Cons: 2.527  L2SP: 0.0000  Topo: 0.3439  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0526
+  Step [110/110] | Loss: 1.2637 | Avg: 1.4097 | CE: 1.123  Cons: 2.346  L2SP: 0.0000  Topo: 0.3606  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.1107
+
+  >> Epoch [2/20] Train Summary
+     Avg Loss : 1.4097
+     LR       : 0.000976
+
+  >> Epoch [2/20] Evaluating GZSL...
+
+  ┌─ Epoch [2/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 4.28%
+  │  GZSL-S (Seen Acc)   : 80.74%
+  │  GZSL-H (Harmonic)   : 8.13%  
+  │  ZSL    (ZS Acc)     : 80.43%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.0522 | Avg: 1.1590 | CE: 0.903  Cons: 2.561  L2SP: 0.0000  Topo: 0.3456  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0814
+  Step [ 40/110] | Loss: 1.0030 | Avg: 1.1394 | CE: 0.839  Cons: 2.832  L2SP: 0.0000  Topo: 0.3536  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0883
+  Step [ 60/110] | Loss: 1.1942 | Avg: 1.1039 | CE: 1.027  Cons: 2.968  L2SP: 0.0000  Topo: 0.3582  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0249
+  Step [ 80/110] | Loss: 0.9553 | Avg: 1.0788 | CE: 0.782  Cons: 3.081  L2SP: 0.0000  Topo: 0.3459  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0416
+  Step [100/110] | Loss: 0.8341 | Avg: 1.0553 | CE: 0.641  Cons: 3.446  L2SP: 0.0000  Topo: 0.3474  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0596
+  Step [110/110] | Loss: 0.9147 | Avg: 1.0475 | CE: 0.708  Cons: 3.733  L2SP: 0.0000  Topo: 0.3437  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0508
+
+  >> Epoch [3/20] Train Summary
+     Avg Loss : 1.0475
+     LR       : 0.000946
+
+  >> Epoch [3/20] Evaluating GZSL...
+
+  ┌─ Epoch [3/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 0.23%
+  │  GZSL-S (Seen Acc)   : 84.19%
+  │  GZSL-H (Harmonic)   : 0.47%  
+  │  ZSL    (ZS Acc)     : 80.65%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7664 | Avg: 0.9080 | CE: 0.551  Cons: 3.928  L2SP: 0.0000  Topo: 0.3587  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0149

@@ -1,0 +1,314 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-24_22-35-19.txt
+  Device    : cuda:0
+  Epochs    : 20
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : claude
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : mean
+├─ LaSt-ViT-CLS (CLIP CLS 增强) ──────────────────────────┤
+│  use_lastvit_cls : False
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : cosine_only
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.0
+│  lambda_l2sp   : 0.0
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : ''
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (BF16 autocast)
+│  pin_memory    : True (always)  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      [info] Train patches kept on CPU (GPU preload disabled - perf issue on sm_120)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using Claude descriptions: .\data\gpt4_data\cub_claude.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,435,847
+      Trainable params: 10,282,247
+
+============================================================
+  Start Training: epoch [1/20], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.3218 | Avg: 4.1305 | CE: 2.322  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 1.2459 | Avg: 2.9126 | CE: 1.246  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 1.1110 | Avg: 2.2951 | CE: 1.111  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.8836 | Avg: 1.9591 | CE: 0.884  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.8126 | Avg: 1.7247 | CE: 0.813  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.8074 | Avg: 1.6365 | CE: 0.807  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [1/20] Train Summary
+     Avg Loss : 1.6365
+     LR       : 0.000994
+
+  >> Epoch [1/20] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-24_22-35-19_H4532.pth
+
+  ┌─ Epoch [1/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 32.14%
+  │  GZSL-S (Seen Acc)   : 76.86%
+  │  GZSL-H (Harmonic)   : 45.32%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 68.24%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7080 | Avg: 0.7047 | CE: 0.708  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.7354 | Avg: 0.6966 | CE: 0.735  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.4896 | Avg: 0.6565 | CE: 0.490  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.5709 | Avg: 0.6358 | CE: 0.571  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.5947 | Avg: 0.6220 | CE: 0.595  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.3286 | Avg: 0.6093 | CE: 0.329  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [2/20] Train Summary
+     Avg Loss : 0.6093
+     LR       : 0.000976
+
+  >> Epoch [2/20] Evaluating GZSL...
+
+  ┌─ Epoch [2/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 29.94%
+  │  GZSL-S (Seen Acc)   : 80.51%
+  │  GZSL-H (Harmonic)   : 43.65%  
+  │  ZSL    (ZS Acc)     : 69.08%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4513 | Avg: 0.4992 | CE: 0.451  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.4064 | Avg: 0.4731 | CE: 0.406  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.4117 | Avg: 0.4620 | CE: 0.412  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.4397 | Avg: 0.4568 | CE: 0.440  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.5289 | Avg: 0.4596 | CE: 0.529  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.4634 | Avg: 0.4564 | CE: 0.463  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [3/20] Train Summary
+     Avg Loss : 0.4564
+     LR       : 0.000946
+
+  >> Epoch [3/20] Evaluating GZSL...
+
+  ┌─ Epoch [3/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 25.92%
+  │  GZSL-S (Seen Acc)   : 82.82%
+  │  GZSL-H (Harmonic)   : 39.48%  
+  │  ZSL    (ZS Acc)     : 71.27%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3053 | Avg: 0.4298 | CE: 0.305  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.3012 | Avg: 0.4040 | CE: 0.301  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.5690 | Avg: 0.4040 | CE: 0.569  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.3894 | Avg: 0.3939 | CE: 0.389  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.3442 | Avg: 0.3880 | CE: 0.344  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.3471 | Avg: 0.3855 | CE: 0.347  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [4/20] Train Summary
+     Avg Loss : 0.3855
+     LR       : 0.000905
+
+  >> Epoch [4/20] Evaluating GZSL...
+
+  ┌─ Epoch [4/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 26.13%
+  │  GZSL-S (Seen Acc)   : 83.77%
+  │  GZSL-H (Harmonic)   : 39.83%  
+  │  ZSL    (ZS Acc)     : 68.83%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [5/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3404 | Avg: 0.3338 | CE: 0.340  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.3185 | Avg: 0.3505 | CE: 0.319  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.3678 | Avg: 0.3409 | CE: 0.368  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.3816 | Avg: 0.3336 | CE: 0.382  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.3872 | Avg: 0.3316 | CE: 0.387  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.3807 | Avg: 0.3326 | CE: 0.381  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [5/20] Train Summary
+     Avg Loss : 0.3326
+     LR       : 0.000854
+
+  >> Epoch [5/20] Evaluating GZSL...
+
+  ┌─ Epoch [5/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 23.24%
+  │  GZSL-S (Seen Acc)   : 83.87%
+  │  GZSL-H (Harmonic)   : 36.39%  
+  │  ZSL    (ZS Acc)     : 69.97%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [6/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.2845 | Avg: 0.2971 | CE: 0.284  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.2484 | Avg: 0.2968 | CE: 0.248  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.1949 | Avg: 0.2914 | CE: 0.195  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.3236 | Avg: 0.2925 | CE: 0.324  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.3361 | Avg: 0.2911 | CE: 0.336  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.2326 | Avg: 0.2895 | CE: 0.233  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [6/20] Train Summary
+     Avg Loss : 0.2895
+     LR       : 0.000794
+
+  >> Epoch [6/20] Evaluating GZSL...
+
+  ┌─ Epoch [6/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 26.69%
+  │  GZSL-S (Seen Acc)   : 84.98%
+  │  GZSL-H (Harmonic)   : 40.62%  
+  │  ZSL    (ZS Acc)     : 69.31%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [7/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3974 | Avg: 0.2611 | CE: 0.397  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.3219 | Avg: 0.2466 | CE: 0.322  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.1341 | Avg: 0.2474 | CE: 0.134  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.1930 | Avg: 0.2536 | CE: 0.193  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.2325 | Avg: 0.2513 | CE: 0.233  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.1467 | Avg: 0.2453 | CE: 0.147  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [7/20] Train Summary
+     Avg Loss : 0.2453
+     LR       : 0.000727
+
+  >> Epoch [7/20] Evaluating GZSL...
+
+  ┌─ Epoch [7/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 27.93%
+  │  GZSL-S (Seen Acc)   : 86.05%
+  │  GZSL-H (Harmonic)   : 42.18%  
+  │  ZSL    (ZS Acc)     : 71.01%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [8/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.0991 | Avg: 0.2028 | CE: 0.099  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.2023 | Avg: 0.2087 | CE: 0.202  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.2261 | Avg: 0.2135 | CE: 0.226  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.1249 | Avg: 0.2133 | CE: 0.125  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.1579 | Avg: 0.2139 | CE: 0.158  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.1319 | Avg: 0.2131 | CE: 0.132  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [8/20] Train Summary
+     Avg Loss : 0.2131
+     LR       : 0.000655
+
+  >> Epoch [8/20] Evaluating GZSL...
+
+  ┌─ Epoch [8/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 24.71%
+  │  GZSL-S (Seen Acc)   : 84.28%
+  │  GZSL-H (Harmonic)   : 38.22%  
+  │  ZSL    (ZS Acc)     : 70.77%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [9/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.1726 | Avg: 0.1872 | CE: 0.173  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.1204 | Avg: 0.1692 | CE: 0.120  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.2003 | Avg: 0.1758 | CE: 0.200  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.1343 | Avg: 0.1807 | CE: 0.134  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.1493 | Avg: 0.1793 | CE: 0.149  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.1072 | Avg: 0.1763 | CE: 0.107  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [9/20] Train Summary
+     Avg Loss : 0.1763
+     LR       : 0.000578
+
+  >> Epoch [9/20] Evaluating GZSL...
+
+  ┌─ Epoch [9/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 24.96%
+  │  GZSL-S (Seen Acc)   : 85.93%
+  │  GZSL-H (Harmonic)   : 38.68%  
+  │  ZSL    (ZS Acc)     : 69.22%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [10/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.0975 | Avg: 0.1526 | CE: 0.097  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.1134 | Avg: 0.1485 | CE: 0.113  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.1766 | Avg: 0.1410 | CE: 0.177  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.0838 | Avg: 0.1382 | CE: 0.084  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.0824 | Avg: 0.1358 | CE: 0.082  Cons: 0.000  L2SP: 0.0000
+  Step [110/110] | Loss: 0.1945 | Avg: 0.1393 | CE: 0.194  Cons: 0.000  L2SP: 0.0000
+
+  >> Epoch [10/20] Train Summary
+     Avg Loss : 0.1393
+     LR       : 0.000500
+
+  >> Epoch [10/20] Evaluating GZSL...
+
+  ┌─ Epoch [10/20] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 22.62%
+  │  GZSL-S (Seen Acc)   : 86.76%
+  │  GZSL-H (Harmonic)   : 35.88%  
+  │  ZSL    (ZS Acc)     : 69.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [11/20]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.1073 | Avg: 0.1106 | CE: 0.107  Cons: 0.000  L2SP: 0.0000
+  Step [ 40/110] | Loss: 0.0922 | Avg: 0.1061 | CE: 0.092  Cons: 0.000  L2SP: 0.0000
+  Step [ 60/110] | Loss: 0.1340 | Avg: 0.1030 | CE: 0.134  Cons: 0.000  L2SP: 0.0000
+  Step [ 80/110] | Loss: 0.0671 | Avg: 0.1057 | CE: 0.067  Cons: 0.000  L2SP: 0.0000
+  Step [100/110] | Loss: 0.0876 | Avg: 0.1081 | CE: 0.088  Cons: 0.000  L2SP: 0.0000

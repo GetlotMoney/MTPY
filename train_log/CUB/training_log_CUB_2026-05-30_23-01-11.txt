@@ -1,0 +1,1264 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-05-30_23-01-11.txt
+  Device    : cuda:0
+  Epochs    : 30
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : gpt55
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : mean
+├─ LaSt-ViT-CLS (CLIP CLS 增强) ──────────────────────────┤
+│  use_lastvit_cls : False
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : add
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+│  text_residual : 0.5
+│  visual_residual: 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.05
+│  lambda_l2sp   : 0.0
+│  lambda_topo   : 0.05
+│  lambda_aux_s2v: 0.0
+│  lambda_aux_v2s: 0.0
+│  aux_temp      : 14.28
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : ''
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (BF16 autocast)
+│  pin_memory    : enabled if patch cache loaded  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      ★ Patches pinned to locked CPU memory (non_blocking H2D enabled)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using GPT-5.5 descriptions: .\data\gpt4_data\cub_gpt55.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 10,510,487
+      Trainable params: 10,356,887
+
+[Multi-Stage] 2 stages enabled (overrides epochs/extra_epochs):
+  Stage 1: lr=0.001, epochs=20 (epoch 1..20)
+  Stage 2: lr=0.0001, epochs=30 (epoch 21..50)
+  Total epochs (sum of stages) = 50
+  ✓ Stage 1 active: lr=0.001, cosine T_max=20
+
+============================================================
+  Start Training: epoch [1/50], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.2388 | Avg: 2.7525 | CE: 2.182  Cons: 0.870  L2SP: 0.0000  Topo: 0.3246  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0048  Bias: 0.0000
+  Step [ 40/110] | Loss: 2.2410 | Avg: 2.5170 | CE: 2.184  Cons: 0.853  L2SP: 0.0000  Topo: 0.3327  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0125  Bias: 0.0000
+  Step [ 60/110] | Loss: 1.9284 | Avg: 2.3712 | CE: 1.863  Cons: 1.021  L2SP: 0.0000  Topo: 0.3423  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0468  Bias: 0.0000
+  Step [ 80/110] | Loss: 1.9489 | Avg: 2.2625 | CE: 1.878  Cons: 1.099  L2SP: 0.0000  Topo: 0.3462  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0892  Bias: 0.0000
+  Step [100/110] | Loss: 1.6582 | Avg: 2.1628 | CE: 1.585  Cons: 1.244  L2SP: 0.0000  Topo: 0.3511  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0159  Bias: 0.0000
+  Step [110/110] | Loss: 1.7093 | Avg: 2.1239 | CE: 1.635  Cons: 1.201  L2SP: 0.0000  Topo: 0.3679  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0371  Bias: 0.0000
+
+  >> Epoch [1/50] Train Summary
+     Avg Loss : 2.1239
+     LR       : 0.000994
+
+  >> Epoch [1/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H6200.pth
+
+  ┌─ Epoch [1/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 68.31%
+  │  GZSL-S (Seen Acc)   : 56.76%
+  │  GZSL-H (Harmonic)   : 62.00%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.07%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.4764 | Avg: 1.6392 | CE: 1.395  Cons: 1.426  L2SP: 0.0000  Topo: 0.3764  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0118  Bias: 0.0000
+  Step [ 40/110] | Loss: 1.6128 | Avg: 1.5962 | CE: 1.532  Cons: 1.368  L2SP: 0.0000  Topo: 0.3902  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0143  Bias: 0.0000
+  Step [ 60/110] | Loss: 1.4212 | Avg: 1.5656 | CE: 1.334  Cons: 1.556  L2SP: 0.0000  Topo: 0.3959  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0105  Bias: 0.0000
+  Step [ 80/110] | Loss: 1.3503 | Avg: 1.5318 | CE: 1.265  Cons: 1.464  L2SP: 0.0000  Topo: 0.4063  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0140  Bias: 0.0000
+  Step [100/110] | Loss: 1.4514 | Avg: 1.5036 | CE: 1.352  Cons: 1.809  L2SP: 0.0000  Topo: 0.4056  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0464  Bias: 0.0000
+  Step [110/110] | Loss: 1.3589 | Avg: 1.4869 | CE: 1.262  Cons: 1.757  L2SP: 0.0000  Topo: 0.4216  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0151  Bias: 0.0000
+
+  >> Epoch [2/50] Train Summary
+     Avg Loss : 1.4869
+     LR       : 0.000976
+
+  >> Epoch [2/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H6431.pth
+
+  ┌─ Epoch [2/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 62.02%
+  │  GZSL-S (Seen Acc)   : 66.76%
+  │  GZSL-H (Harmonic)   : 64.31%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.04%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.1909 | Avg: 1.2854 | CE: 1.092  Cons: 1.853  L2SP: 0.0000  Topo: 0.4115  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0039  Bias: 0.0000
+  Step [ 40/110] | Loss: 1.1282 | Avg: 1.2700 | CE: 1.030  Cons: 1.815  L2SP: 0.0000  Topo: 0.4097  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0075  Bias: 0.0000
+  Step [ 60/110] | Loss: 1.3351 | Avg: 1.2406 | CE: 1.232  Cons: 1.953  L2SP: 0.0000  Topo: 0.4266  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0031  Bias: 0.0000
+  Step [ 80/110] | Loss: 1.1187 | Avg: 1.2208 | CE: 1.015  Cons: 1.962  L2SP: 0.0000  Topo: 0.4259  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0070  Bias: 0.0000
+  Step [100/110] | Loss: 0.9853 | Avg: 1.2005 | CE: 0.874  Cons: 2.182  L2SP: 0.0000  Topo: 0.4316  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0081  Bias: 0.0000
+  Step [110/110] | Loss: 1.0892 | Avg: 1.1936 | CE: 0.975  Cons: 2.255  L2SP: 0.0000  Topo: 0.4362  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0124  Bias: 0.0000
+
+  >> Epoch [3/50] Train Summary
+     Avg Loss : 1.1936
+     LR       : 0.000946
+
+  >> Epoch [3/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H6520.pth
+
+  ┌─ Epoch [3/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 58.47%
+  │  GZSL-S (Seen Acc)   : 73.70%
+  │  GZSL-H (Harmonic)   : 65.20%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.49%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9187 | Avg: 1.0593 | CE: 0.799  Cons: 2.439  L2SP: 0.0000  Topo: 0.4291  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0050  Bias: 0.0000
+  Step [ 40/110] | Loss: 1.0721 | Avg: 1.0557 | CE: 0.951  Cons: 2.456  L2SP: 0.0000  Topo: 0.4482  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0113  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.8981 | Avg: 1.0351 | CE: 0.776  Cons: 2.471  L2SP: 0.0000  Topo: 0.4462  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0074  Bias: 0.0000
+  Step [ 80/110] | Loss: 1.0345 | Avg: 1.0254 | CE: 0.901  Cons: 2.853  L2SP: 0.0000  Topo: 0.4500  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0066  Bias: 0.0000
+  Step [100/110] | Loss: 0.8903 | Avg: 1.0121 | CE: 0.764  Cons: 2.637  L2SP: 0.0000  Topo: 0.4365  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0026  Bias: 0.0000
+  Step [110/110] | Loss: 1.0785 | Avg: 1.0027 | CE: 0.952  Cons: 2.605  L2SP: 0.0000  Topo: 0.4610  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0031  Bias: 0.0000
+
+  >> Epoch [4/50] Train Summary
+     Avg Loss : 1.0027
+     LR       : 0.000905
+
+  >> Epoch [4/50] Evaluating GZSL...
+
+  ┌─ Epoch [4/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 56.03%
+  │  GZSL-S (Seen Acc)   : 77.45%
+  │  GZSL-H (Harmonic)   : 65.02%  
+  │  ZSL    (ZS Acc)     : 81.55%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [5/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7981 | Avg: 0.9020 | CE: 0.659  Cons: 3.033  L2SP: 0.0000  Topo: 0.4487  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0151  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.9197 | Avg: 0.9078 | CE: 0.785  Cons: 2.879  L2SP: 0.0000  Topo: 0.4563  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0026  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.8253 | Avg: 0.9037 | CE: 0.690  Cons: 2.900  L2SP: 0.0000  Topo: 0.4604  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0035  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.8077 | Avg: 0.8868 | CE: 0.671  Cons: 2.920  L2SP: 0.0000  Topo: 0.4624  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0016  Bias: 0.0000
+  Step [100/110] | Loss: 0.7404 | Avg: 0.8742 | CE: 0.592  Cons: 3.342  L2SP: 0.0000  Topo: 0.4621  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0051  Bias: 0.0000
+  Step [110/110] | Loss: 0.9514 | Avg: 0.8770 | CE: 0.804  Cons: 3.292  L2SP: 0.0000  Topo: 0.4666  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0050  Bias: 0.0000
+
+  >> Epoch [5/50] Train Summary
+     Avg Loss : 0.8770
+     LR       : 0.000854
+
+  >> Epoch [5/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7018.pth
+
+  ┌─ Epoch [5/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 68.05%
+  │  GZSL-S (Seen Acc)   : 72.45%
+  │  GZSL-H (Harmonic)   : 70.18%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.55%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [6/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.8525 | Avg: 0.8465 | CE: 0.703  Cons: 3.364  L2SP: 0.0000  Topo: 0.4606  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0055  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.7315 | Avg: 0.8389 | CE: 0.582  Cons: 3.351  L2SP: 0.0000  Topo: 0.4633  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0103  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.7624 | Avg: 0.8207 | CE: 0.611  Cons: 3.393  L2SP: 0.0000  Topo: 0.4882  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0054  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.7406 | Avg: 0.8072 | CE: 0.581  Cons: 3.708  L2SP: 0.0000  Topo: 0.4838  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0075  Bias: 0.0000
+  Step [100/110] | Loss: 0.7880 | Avg: 0.8022 | CE: 0.628  Cons: 3.743  L2SP: 0.0000  Topo: 0.4703  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0049  Bias: 0.0000
+  Step [110/110] | Loss: 0.7706 | Avg: 0.7987 | CE: 0.606  Cons: 3.910  L2SP: 0.0000  Topo: 0.4678  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0094  Bias: 0.0000
+
+  >> Epoch [6/50] Train Summary
+     Avg Loss : 0.7987
+     LR       : 0.000794
+
+  >> Epoch [6/50] Evaluating GZSL...
+
+  ┌─ Epoch [6/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 64.06%
+  │  GZSL-S (Seen Acc)   : 77.04%
+  │  GZSL-H (Harmonic)   : 69.95%  
+  │  ZSL    (ZS Acc)     : 81.85%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [7/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7638 | Avg: 0.7926 | CE: 0.601  Cons: 3.850  L2SP: 0.0000  Topo: 0.4778  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0039  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.6055 | Avg: 0.7560 | CE: 0.438  Cons: 3.982  L2SP: 0.0000  Topo: 0.4863  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0137  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.7926 | Avg: 0.7529 | CE: 0.632  Cons: 3.745  L2SP: 0.0000  Topo: 0.4718  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0123  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.7776 | Avg: 0.7480 | CE: 0.610  Cons: 4.018  L2SP: 0.0000  Topo: 0.4807  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0072  Bias: 0.0000
+  Step [100/110] | Loss: 0.6942 | Avg: 0.7424 | CE: 0.524  Cons: 4.113  L2SP: 0.0000  Topo: 0.4842  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0076  Bias: 0.0000
+  Step [110/110] | Loss: 0.7787 | Avg: 0.7370 | CE: 0.612  Cons: 3.998  L2SP: 0.0000  Topo: 0.4731  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0035  Bias: 0.0000
+
+  >> Epoch [7/50] Train Summary
+     Avg Loss : 0.7370
+     LR       : 0.000727
+
+  >> Epoch [7/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7037.pth
+
+  ┌─ Epoch [7/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 66.25%
+  │  GZSL-S (Seen Acc)   : 75.05%
+  │  GZSL-H (Harmonic)   : 70.37%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.84%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [8/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6610 | Avg: 0.7116 | CE: 0.488  Cons: 4.195  L2SP: 0.0000  Topo: 0.4846  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0102  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.7024 | Avg: 0.7057 | CE: 0.527  Cons: 4.308  L2SP: 0.0000  Topo: 0.4755  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0113  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.7274 | Avg: 0.7050 | CE: 0.552  Cons: 4.322  L2SP: 0.0000  Topo: 0.4826  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0059  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.7269 | Avg: 0.6957 | CE: 0.550  Cons: 4.359  L2SP: 0.0000  Topo: 0.4917  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0099  Bias: 0.0000
+  Step [100/110] | Loss: 0.6258 | Avg: 0.6900 | CE: 0.442  Cons: 4.677  L2SP: 0.0000  Topo: 0.4822  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0070  Bias: 0.0000
+  Step [110/110] | Loss: 0.5538 | Avg: 0.6847 | CE: 0.377  Cons: 4.395  L2SP: 0.0000  Topo: 0.4851  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0052  Bias: 0.0000
+
+  >> Epoch [8/50] Train Summary
+     Avg Loss : 0.6847
+     LR       : 0.000655
+
+  >> Epoch [8/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7116.pth
+
+  ┌─ Epoch [8/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 66.45%
+  │  GZSL-S (Seen Acc)   : 76.58%
+  │  GZSL-H (Harmonic)   : 71.16%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.89%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [9/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7301 | Avg: 0.6718 | CE: 0.548  Cons: 4.580  L2SP: 0.0000  Topo: 0.4838  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0164  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5643 | Avg: 0.6617 | CE: 0.371  Cons: 5.083  L2SP: 0.0000  Topo: 0.4803  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0086  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5279 | Avg: 0.6558 | CE: 0.334  Cons: 5.091  L2SP: 0.0000  Topo: 0.4819  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0131  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6218 | Avg: 0.6508 | CE: 0.435  Cons: 4.773  L2SP: 0.0000  Topo: 0.4933  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0127  Bias: 0.0000
+  Step [100/110] | Loss: 0.7174 | Avg: 0.6467 | CE: 0.525  Cons: 5.074  L2SP: 0.0000  Topo: 0.4798  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0103  Bias: 0.0000
+  Step [110/110] | Loss: 0.6922 | Avg: 0.6460 | CE: 0.502  Cons: 4.945  L2SP: 0.0000  Topo: 0.4810  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0121  Bias: 0.0000
+
+  >> Epoch [9/50] Train Summary
+     Avg Loss : 0.6460
+     LR       : 0.000578
+
+  >> Epoch [9/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7144.pth
+
+  ┌─ Epoch [9/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 70.92%
+  │  GZSL-S (Seen Acc)   : 71.97%
+  │  GZSL-H (Harmonic)   : 71.44%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.82%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [10/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6010 | Avg: 0.6284 | CE: 0.411  Cons: 4.924  L2SP: 0.0000  Topo: 0.4952  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0130  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.6683 | Avg: 0.6145 | CE: 0.477  Cons: 4.982  L2SP: 0.0000  Topo: 0.4864  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0150  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.6773 | Avg: 0.6093 | CE: 0.486  Cons: 4.955  L2SP: 0.0000  Topo: 0.4855  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0242  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5265 | Avg: 0.6023 | CE: 0.328  Cons: 5.278  L2SP: 0.0000  Topo: 0.4982  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0154  Bias: 0.0000
+  Step [100/110] | Loss: 0.6751 | Avg: 0.6043 | CE: 0.466  Cons: 5.839  L2SP: 0.0000  Topo: 0.4928  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0084  Bias: 0.0000
+  Step [110/110] | Loss: 0.7458 | Avg: 0.6060 | CE: 0.547  Cons: 5.322  L2SP: 0.0000  Topo: 0.4814  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0178  Bias: 0.0000
+
+  >> Epoch [10/50] Train Summary
+     Avg Loss : 0.6060
+     LR       : 0.000500
+
+  >> Epoch [10/50] Evaluating GZSL...
+
+  ┌─ Epoch [10/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.34%
+  │  GZSL-S (Seen Acc)   : 66.65%
+  │  GZSL-H (Harmonic)   : 70.73%  
+  │  ZSL    (ZS Acc)     : 81.85%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [11/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6180 | Avg: 0.5966 | CE: 0.420  Cons: 5.261  L2SP: 0.0000  Topo: 0.4958  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0166  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5629 | Avg: 0.5963 | CE: 0.359  Cons: 5.518  L2SP: 0.0000  Topo: 0.4989  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0144  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5994 | Avg: 0.5974 | CE: 0.390  Cons: 5.790  L2SP: 0.0000  Topo: 0.4977  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0137  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5523 | Avg: 0.5939 | CE: 0.347  Cons: 5.622  L2SP: 0.0000  Topo: 0.4945  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0145  Bias: 0.0000
+  Step [100/110] | Loss: 0.6195 | Avg: 0.5904 | CE: 0.415  Cons: 5.619  L2SP: 0.0000  Topo: 0.4848  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0136  Bias: 0.0000
+  Step [110/110] | Loss: 0.5786 | Avg: 0.5899 | CE: 0.375  Cons: 5.552  L2SP: 0.0000  Topo: 0.4814  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0161  Bias: 0.0000
+
+  >> Epoch [11/50] Train Summary
+     Avg Loss : 0.5899
+     LR       : 0.000422
+
+  >> Epoch [11/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7156.pth
+
+  ┌─ Epoch [11/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.08%
+  │  GZSL-S (Seen Acc)   : 69.21%
+  │  GZSL-H (Harmonic)   : 71.56%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.72%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [12/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7546 | Avg: 0.5919 | CE: 0.543  Cons: 5.934  L2SP: 0.0000  Topo: 0.4950  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0204  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5567 | Avg: 0.5797 | CE: 0.348  Cons: 5.737  L2SP: 0.0000  Topo: 0.5078  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0152  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5654 | Avg: 0.5818 | CE: 0.361  Cons: 5.567  L2SP: 0.0000  Topo: 0.5023  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0184  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5238 | Avg: 0.5761 | CE: 0.312  Cons: 5.938  L2SP: 0.0000  Topo: 0.4992  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0139  Bias: 0.0000
+  Step [100/110] | Loss: 0.6116 | Avg: 0.5753 | CE: 0.396  Cons: 6.130  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0164  Bias: 0.0000
+  Step [110/110] | Loss: 0.6201 | Avg: 0.5709 | CE: 0.406  Cons: 6.047  L2SP: 0.0000  Topo: 0.5033  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0105  Bias: 0.0000
+
+  >> Epoch [12/50] Train Summary
+     Avg Loss : 0.5709
+     LR       : 0.000345
+
+  >> Epoch [12/50] Evaluating GZSL...
+
+  ┌─ Epoch [12/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.82%
+  │  GZSL-S (Seen Acc)   : 65.07%
+  │  GZSL-H (Harmonic)   : 70.04%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [13/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4722 | Avg: 0.5547 | CE: 0.256  Cons: 6.155  L2SP: 0.0000  Topo: 0.4977  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0128  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5465 | Avg: 0.5355 | CE: 0.333  Cons: 5.987  L2SP: 0.0000  Topo: 0.5050  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0157  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5283 | Avg: 0.5308 | CE: 0.313  Cons: 6.084  L2SP: 0.0000  Topo: 0.5051  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0183  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6016 | Avg: 0.5468 | CE: 0.387  Cons: 6.049  L2SP: 0.0000  Topo: 0.5051  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0144  Bias: 0.0000
+  Step [100/110] | Loss: 0.6520 | Avg: 0.5472 | CE: 0.431  Cons: 6.382  L2SP: 0.0000  Topo: 0.5030  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0182  Bias: 0.0000
+  Step [110/110] | Loss: 0.5362 | Avg: 0.5465 | CE: 0.313  Cons: 6.544  L2SP: 0.0000  Topo: 0.4941  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0210  Bias: 0.0000
+
+  >> Epoch [13/50] Train Summary
+     Avg Loss : 0.5465
+     LR       : 0.000273
+
+  >> Epoch [13/50] Evaluating GZSL...
+
+  ┌─ Epoch [13/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.67%
+  │  GZSL-S (Seen Acc)   : 69.09%
+  │  GZSL-H (Harmonic)   : 71.31%  
+  │  ZSL    (ZS Acc)     : 81.38%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [14/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5858 | Avg: 0.5522 | CE: 0.369  Cons: 6.169  L2SP: 0.0000  Topo: 0.4939  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0172  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5079 | Avg: 0.5519 | CE: 0.293  Cons: 6.105  L2SP: 0.0000  Topo: 0.4950  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0130  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.6348 | Avg: 0.5461 | CE: 0.420  Cons: 6.078  L2SP: 0.0000  Topo: 0.5030  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0182  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5656 | Avg: 0.5410 | CE: 0.346  Cons: 6.295  L2SP: 0.0000  Topo: 0.4989  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0206  Bias: 0.0000
+  Step [100/110] | Loss: 0.4980 | Avg: 0.5371 | CE: 0.269  Cons: 6.802  L2SP: 0.0000  Topo: 0.5076  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0209  Bias: 0.0000
+  Step [110/110] | Loss: 0.5218 | Avg: 0.5365 | CE: 0.297  Cons: 6.597  L2SP: 0.0000  Topo: 0.5034  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0133  Bias: 0.0000
+
+  >> Epoch [14/50] Train Summary
+     Avg Loss : 0.5365
+     LR       : 0.000206
+
+  >> Epoch [14/50] Evaluating GZSL...
+
+  ┌─ Epoch [14/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.21%
+  │  GZSL-S (Seen Acc)   : 68.14%
+  │  GZSL-H (Harmonic)   : 71.05%  
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [15/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5515 | Avg: 0.5494 | CE: 0.331  Cons: 6.391  L2SP: 0.0000  Topo: 0.5026  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0174  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.6454 | Avg: 0.5653 | CE: 0.423  Cons: 6.446  L2SP: 0.0000  Topo: 0.5011  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0180  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4352 | Avg: 0.5500 | CE: 0.206  Cons: 6.841  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0192  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6005 | Avg: 0.5449 | CE: 0.382  Cons: 6.286  L2SP: 0.0000  Topo: 0.4945  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0171  Bias: 0.0000
+  Step [100/110] | Loss: 0.6193 | Avg: 0.5430 | CE: 0.401  Cons: 6.259  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0212  Bias: 0.0000
+  Step [110/110] | Loss: 0.4830 | Avg: 0.5400 | CE: 0.260  Cons: 6.444  L2SP: 0.0000  Topo: 0.5034  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0286  Bias: 0.0000
+
+  >> Epoch [15/50] Train Summary
+     Avg Loss : 0.5400
+     LR       : 0.000146
+
+  >> Epoch [15/50] Evaluating GZSL...
+
+  ┌─ Epoch [15/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.30%
+  │  GZSL-S (Seen Acc)   : 68.11%
+  │  GZSL-H (Harmonic)   : 71.07%  
+  │  ZSL    (ZS Acc)     : 81.68%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [16/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4760 | Avg: 0.5247 | CE: 0.252  Cons: 6.535  L2SP: 0.0000  Topo: 0.5061  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0214  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5021 | Avg: 0.5198 | CE: 0.274  Cons: 6.755  L2SP: 0.0000  Topo: 0.4988  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0239  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5136 | Avg: 0.5170 | CE: 0.288  Cons: 6.644  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0201  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5687 | Avg: 0.5208 | CE: 0.339  Cons: 6.864  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0242  Bias: 0.0000
+  Step [100/110] | Loss: 0.6908 | Avg: 0.5210 | CE: 0.468  Cons: 6.483  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0199  Bias: 0.0000
+  Step [110/110] | Loss: 0.5182 | Avg: 0.5213 | CE: 0.292  Cons: 6.646  L2SP: 0.0000  Topo: 0.5004  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0238  Bias: 0.0000
+
+  >> Epoch [16/50] Train Summary
+     Avg Loss : 0.5213
+     LR       : 0.000095
+
+  >> Epoch [16/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7198.pth
+
+  ┌─ Epoch [16/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.71%
+  │  GZSL-S (Seen Acc)   : 69.44%
+  │  GZSL-H (Harmonic)   : 71.98%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.88%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [17/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5450 | Avg: 0.5486 | CE: 0.319  Cons: 6.661  L2SP: 0.0000  Topo: 0.5036  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0197  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5374 | Avg: 0.5368 | CE: 0.305  Cons: 7.012  L2SP: 0.0000  Topo: 0.5030  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0257  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4790 | Avg: 0.5263 | CE: 0.254  Cons: 6.611  L2SP: 0.0000  Topo: 0.5026  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0244  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5483 | Avg: 0.5259 | CE: 0.321  Cons: 6.711  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0289  Bias: 0.0000
+  Step [100/110] | Loss: 0.6179 | Avg: 0.5259 | CE: 0.394  Cons: 6.543  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0264  Bias: 0.0000
+  Step [110/110] | Loss: 0.5484 | Avg: 0.5253 | CE: 0.320  Cons: 6.822  L2SP: 0.0000  Topo: 0.5035  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0189  Bias: 0.0000
+
+  >> Epoch [17/50] Train Summary
+     Avg Loss : 0.5253
+     LR       : 0.000054
+
+  >> Epoch [17/50] Evaluating GZSL...
+
+  ┌─ Epoch [17/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.70%
+  │  GZSL-S (Seen Acc)   : 68.18%
+  │  GZSL-H (Harmonic)   : 71.29%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [18/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5097 | Avg: 0.5247 | CE: 0.282  Cons: 6.708  L2SP: 0.0000  Topo: 0.5047  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0266  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5011 | Avg: 0.5189 | CE: 0.266  Cons: 7.134  L2SP: 0.0000  Topo: 0.5012  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0287  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4561 | Avg: 0.5219 | CE: 0.227  Cons: 6.822  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0268  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5893 | Avg: 0.5285 | CE: 0.366  Cons: 6.538  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0186  Bias: 0.0000
+  Step [100/110] | Loss: 0.4515 | Avg: 0.5229 | CE: 0.221  Cons: 6.900  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0258  Bias: 0.0000
+  Step [110/110] | Loss: 0.5135 | Avg: 0.5250 | CE: 0.284  Cons: 6.828  L2SP: 0.0000  Topo: 0.5014  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0272  Bias: 0.0000
+
+  >> Epoch [18/50] Train Summary
+     Avg Loss : 0.5250
+     LR       : 0.000024
+
+  >> Epoch [18/50] Evaluating GZSL...
+
+  ┌─ Epoch [18/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.20%
+  │  GZSL-S (Seen Acc)   : 69.33%
+  │  GZSL-H (Harmonic)   : 71.68%  
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [19/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4838 | Avg: 0.5493 | CE: 0.257  Cons: 6.665  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0288  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5506 | Avg: 0.5385 | CE: 0.320  Cons: 6.907  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0268  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.7828 | Avg: 0.5359 | CE: 0.551  Cons: 6.996  L2SP: 0.0000  Topo: 0.5033  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0258  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5062 | Avg: 0.5271 | CE: 0.278  Cons: 6.780  L2SP: 0.0000  Topo: 0.5037  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0269  Bias: 0.0000
+  Step [100/110] | Loss: 0.5072 | Avg: 0.5252 | CE: 0.280  Cons: 6.710  L2SP: 0.0000  Topo: 0.5039  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0267  Bias: 0.0000
+  Step [110/110] | Loss: 0.4537 | Avg: 0.5206 | CE: 0.219  Cons: 7.116  L2SP: 0.0000  Topo: 0.5043  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0282  Bias: 0.0000
+
+  >> Epoch [19/50] Train Summary
+     Avg Loss : 0.5206
+     LR       : 0.000006
+
+  >> Epoch [19/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7205.pth
+
+  ┌─ Epoch [19/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.93%
+  │  GZSL-S (Seen Acc)   : 70.27%
+  │  GZSL-H (Harmonic)   : 72.05%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [20/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6379 | Avg: 0.5334 | CE: 0.407  Cons: 6.915  L2SP: 0.0000  Topo: 0.5044  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0267  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4708 | Avg: 0.5199 | CE: 0.234  Cons: 7.243  L2SP: 0.0000  Topo: 0.5045  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0327  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5044 | Avg: 0.5172 | CE: 0.268  Cons: 7.210  L2SP: 0.0000  Topo: 0.5042  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0257  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4802 | Avg: 0.5159 | CE: 0.248  Cons: 7.001  L2SP: 0.0000  Topo: 0.5040  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0285  Bias: 0.0000
+  Step [100/110] | Loss: 0.5262 | Avg: 0.5162 | CE: 0.299  Cons: 6.712  L2SP: 0.0000  Topo: 0.5039  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0300  Bias: 0.0000
+  Step [110/110] | Loss: 0.4856 | Avg: 0.5152 | CE: 0.255  Cons: 6.872  L2SP: 0.0000  Topo: 0.5040  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0257  Bias: 0.0000
+
+  >> Epoch [20/50] Train Summary
+     Avg Loss : 0.5152
+     LR       : 0.000000
+
+  ★★★ Stage 2 starts at epoch 21 ★★★
+     lr → 0.0001, cosine T_max=30
+
+  >> Epoch [20/50] Evaluating GZSL...
+
+  ┌─ Epoch [20/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.06%
+  │  GZSL-S (Seen Acc)   : 69.77%
+  │  GZSL-H (Harmonic)   : 71.85%  
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [21/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5977 | Avg: 0.5322 | CE: 0.368  Cons: 6.851  L2SP: 0.0000  Topo: 0.5037  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0292  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4542 | Avg: 0.5174 | CE: 0.220  Cons: 7.114  L2SP: 0.0000  Topo: 0.5022  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0298  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4990 | Avg: 0.5168 | CE: 0.273  Cons: 6.651  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0289  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5086 | Avg: 0.5182 | CE: 0.287  Cons: 6.414  L2SP: 0.0000  Topo: 0.4968  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0235  Bias: 0.0000
+  Step [100/110] | Loss: 0.5817 | Avg: 0.5176 | CE: 0.355  Cons: 6.706  L2SP: 0.0000  Topo: 0.4978  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0259  Bias: 0.0000
+  Step [110/110] | Loss: 0.5860 | Avg: 0.5152 | CE: 0.358  Cons: 6.722  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0316  Bias: 0.0000
+
+  >> Epoch [21/50] Train Summary
+     Avg Loss : 0.5152
+     LR       : 0.000100
+
+  >> Epoch [21/50] Evaluating GZSL...
+
+  ┌─ Epoch [21/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.69%
+  │  GZSL-S (Seen Acc)   : 70.22%
+  │  GZSL-H (Harmonic)   : 71.91%  
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [22/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4372 | Avg: 0.5176 | CE: 0.204  Cons: 7.060  L2SP: 0.0000  Topo: 0.5013  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0289  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4869 | Avg: 0.5237 | CE: 0.258  Cons: 6.772  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0306  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4530 | Avg: 0.5202 | CE: 0.225  Cons: 6.747  L2SP: 0.0000  Topo: 0.5007  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0309  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5286 | Avg: 0.5183 | CE: 0.291  Cons: 7.293  L2SP: 0.0000  Topo: 0.5013  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0254  Bias: 0.0000
+  Step [100/110] | Loss: 0.4675 | Avg: 0.5119 | CE: 0.231  Cons: 7.241  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0324  Bias: 0.0000
+  Step [110/110] | Loss: 0.5511 | Avg: 0.5158 | CE: 0.319  Cons: 6.991  L2SP: 0.0000  Topo: 0.4988  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  Bias: 0.0000
+
+  >> Epoch [22/50] Train Summary
+     Avg Loss : 0.5158
+     LR       : 0.000099
+
+  >> Epoch [22/50] Evaluating GZSL...
+
+  ┌─ Epoch [22/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.93%
+  │  GZSL-S (Seen Acc)   : 68.42%
+  │  GZSL-H (Harmonic)   : 71.53%  
+  │  ZSL    (ZS Acc)     : 81.50%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [23/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5271 | Avg: 0.5042 | CE: 0.293  Cons: 7.129  L2SP: 0.0000  Topo: 0.5019  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0269  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4308 | Avg: 0.5191 | CE: 0.197  Cons: 7.082  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0345  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.7438 | Avg: 0.5185 | CE: 0.512  Cons: 6.974  L2SP: 0.0000  Topo: 0.5010  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0315  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4310 | Avg: 0.5131 | CE: 0.200  Cons: 6.932  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0329  Bias: 0.0000
+  Step [100/110] | Loss: 0.4426 | Avg: 0.5125 | CE: 0.201  Cons: 7.535  L2SP: 0.0000  Topo: 0.5025  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0300  Bias: 0.0000
+  Step [110/110] | Loss: 0.4913 | Avg: 0.5123 | CE: 0.257  Cons: 7.062  L2SP: 0.0000  Topo: 0.5019  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0385  Bias: 0.0000
+
+  >> Epoch [23/50] Train Summary
+     Avg Loss : 0.5123
+     LR       : 0.000098
+
+  >> Epoch [23/50] Evaluating GZSL...
+
+  ┌─ Epoch [23/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.40%
+  │  GZSL-S (Seen Acc)   : 68.41%
+  │  GZSL-H (Harmonic)   : 71.28%  
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [24/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5660 | Avg: 0.5174 | CE: 0.336  Cons: 6.854  L2SP: 0.0000  Topo: 0.5005  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0330  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4235 | Avg: 0.5046 | CE: 0.190  Cons: 7.033  L2SP: 0.0000  Topo: 0.5005  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0335  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4826 | Avg: 0.5102 | CE: 0.236  Cons: 7.860  L2SP: 0.0000  Topo: 0.5027  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0237  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5386 | Avg: 0.5076 | CE: 0.306  Cons: 6.995  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0293  Bias: 0.0000
+  Step [100/110] | Loss: 0.4948 | Avg: 0.5046 | CE: 0.260  Cons: 7.135  L2SP: 0.0000  Topo: 0.4998  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0320  Bias: 0.0000
+  Step [110/110] | Loss: 0.4055 | Avg: 0.5050 | CE: 0.169  Cons: 7.214  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0312  Bias: 0.0000
+
+  >> Epoch [24/50] Train Summary
+     Avg Loss : 0.5050
+     LR       : 0.000096
+
+  >> Epoch [24/50] Evaluating GZSL...
+
+  ┌─ Epoch [24/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.83%
+  │  GZSL-S (Seen Acc)   : 69.82%
+  │  GZSL-H (Harmonic)   : 71.77%  
+  │  ZSL    (ZS Acc)     : 81.44%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [25/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4373 | Avg: 0.5003 | CE: 0.195  Cons: 7.571  L2SP: 0.0000  Topo: 0.4990  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0351  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4426 | Avg: 0.4979 | CE: 0.206  Cons: 7.220  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0302  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4955 | Avg: 0.4999 | CE: 0.258  Cons: 7.266  L2SP: 0.0000  Topo: 0.5036  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0401  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4540 | Avg: 0.4980 | CE: 0.214  Cons: 7.443  L2SP: 0.0000  Topo: 0.5041  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0317  Bias: 0.0000
+  Step [100/110] | Loss: 0.6195 | Avg: 0.4989 | CE: 0.377  Cons: 7.626  L2SP: 0.0000  Topo: 0.5014  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0284  Bias: 0.0000
+  Step [110/110] | Loss: 0.4255 | Avg: 0.4990 | CE: 0.180  Cons: 7.730  L2SP: 0.0000  Topo: 0.5037  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0357  Bias: 0.0000
+
+  >> Epoch [25/50] Train Summary
+     Avg Loss : 0.4990
+     LR       : 0.000093
+
+  >> Epoch [25/50] Evaluating GZSL...
+
+  ┌─ Epoch [25/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.73%
+  │  GZSL-S (Seen Acc)   : 68.17%
+  │  GZSL-H (Harmonic)   : 71.30%  
+  │  ZSL    (ZS Acc)     : 81.31%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [26/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4923 | Avg: 0.4872 | CE: 0.255  Cons: 7.258  L2SP: 0.0000  Topo: 0.5039  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0387  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5005 | Avg: 0.4865 | CE: 0.268  Cons: 6.994  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0344  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5170 | Avg: 0.4954 | CE: 0.281  Cons: 7.214  L2SP: 0.0000  Topo: 0.5011  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0344  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6097 | Avg: 0.4958 | CE: 0.372  Cons: 7.292  L2SP: 0.0000  Topo: 0.5023  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0332  Bias: 0.0000
+  Step [100/110] | Loss: 0.5377 | Avg: 0.4949 | CE: 0.297  Cons: 7.476  L2SP: 0.0000  Topo: 0.5017  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0367  Bias: 0.0000
+  Step [110/110] | Loss: 0.4874 | Avg: 0.4913 | CE: 0.251  Cons: 7.206  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0398  Bias: 0.0000
+
+  >> Epoch [26/50] Train Summary
+     Avg Loss : 0.4913
+     LR       : 0.000090
+
+  >> Epoch [26/50] Evaluating GZSL...
+
+  ┌─ Epoch [26/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.90%
+  │  GZSL-S (Seen Acc)   : 68.09%
+  │  GZSL-H (Harmonic)   : 71.33%  
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [27/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4465 | Avg: 0.5257 | CE: 0.207  Cons: 7.413  L2SP: 0.0000  Topo: 0.4974  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0425  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4899 | Avg: 0.5194 | CE: 0.248  Cons: 7.546  L2SP: 0.0000  Topo: 0.5016  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0296  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5792 | Avg: 0.5142 | CE: 0.350  Cons: 6.816  L2SP: 0.0000  Topo: 0.5026  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0342  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6191 | Avg: 0.5104 | CE: 0.382  Cons: 7.256  L2SP: 0.0000  Topo: 0.5057  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0366  Bias: 0.0000
+  Step [100/110] | Loss: 0.4656 | Avg: 0.5031 | CE: 0.226  Cons: 7.425  L2SP: 0.0000  Topo: 0.5021  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0370  Bias: 0.0000
+  Step [110/110] | Loss: 0.5775 | Avg: 0.5025 | CE: 0.334  Cons: 7.640  L2SP: 0.0000  Topo: 0.5031  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0399  Bias: 0.0000
+
+  >> Epoch [27/50] Train Summary
+     Avg Loss : 0.5025
+     LR       : 0.000087
+
+  >> Epoch [27/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7222.pth
+
+  ┌─ Epoch [27/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.03%
+  │  GZSL-S (Seen Acc)   : 70.49%
+  │  GZSL-H (Harmonic)   : 72.22%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.44%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [28/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5609 | Avg: 0.5215 | CE: 0.321  Cons: 7.376  L2SP: 0.0000  Topo: 0.5067  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0427  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4037 | Avg: 0.5057 | CE: 0.163  Cons: 7.453  L2SP: 0.0000  Topo: 0.5036  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0364  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4204 | Avg: 0.4946 | CE: 0.181  Cons: 7.412  L2SP: 0.0000  Topo: 0.5010  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0363  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4576 | Avg: 0.4996 | CE: 0.219  Cons: 7.339  L2SP: 0.0000  Topo: 0.5003  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0373  Bias: 0.0000
+  Step [100/110] | Loss: 0.4785 | Avg: 0.4983 | CE: 0.240  Cons: 7.378  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0353  Bias: 0.0000
+  Step [110/110] | Loss: 0.4331 | Avg: 0.4949 | CE: 0.191  Cons: 7.558  L2SP: 0.0000  Topo: 0.4990  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0349  Bias: 0.0000
+
+  >> Epoch [28/50] Train Summary
+     Avg Loss : 0.4949
+     LR       : 0.000083
+
+  >> Epoch [28/50] Evaluating GZSL...
+
+  ┌─ Epoch [28/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.77%
+  │  GZSL-S (Seen Acc)   : 67.48%
+  │  GZSL-H (Harmonic)   : 70.94%  
+  │  ZSL    (ZS Acc)     : 81.54%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [29/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4727 | Avg: 0.4922 | CE: 0.233  Cons: 7.407  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0366  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4212 | Avg: 0.4872 | CE: 0.176  Cons: 7.746  L2SP: 0.0000  Topo: 0.5027  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0426  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.6220 | Avg: 0.4919 | CE: 0.386  Cons: 7.141  L2SP: 0.0000  Topo: 0.5027  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0499  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4349 | Avg: 0.4895 | CE: 0.191  Cons: 7.666  L2SP: 0.0000  Topo: 0.5022  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0436  Bias: 0.0000
+  Step [100/110] | Loss: 0.4156 | Avg: 0.4904 | CE: 0.167  Cons: 7.932  L2SP: 0.0000  Topo: 0.5011  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0383  Bias: 0.0000
+  Step [110/110] | Loss: 0.5064 | Avg: 0.4894 | CE: 0.271  Cons: 7.197  L2SP: 0.0000  Topo: 0.5019  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0292  Bias: 0.0000
+
+  >> Epoch [29/50] Train Summary
+     Avg Loss : 0.4894
+     LR       : 0.000079
+
+  >> Epoch [29/50] Evaluating GZSL...
+
+  ┌─ Epoch [29/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.30%
+  │  GZSL-S (Seen Acc)   : 69.94%
+  │  GZSL-H (Harmonic)   : 72.05%  
+  │  ZSL    (ZS Acc)     : 81.57%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [30/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4553 | Avg: 0.4734 | CE: 0.208  Cons: 7.812  L2SP: 0.0000  Topo: 0.5029  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0492  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5567 | Avg: 0.4779 | CE: 0.313  Cons: 7.654  L2SP: 0.0000  Topo: 0.4979  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0345  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4992 | Avg: 0.4693 | CE: 0.253  Cons: 7.783  L2SP: 0.0000  Topo: 0.4956  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0456  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5746 | Avg: 0.4693 | CE: 0.329  Cons: 7.773  L2SP: 0.0000  Topo: 0.4991  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0421  Bias: 0.0000
+  Step [100/110] | Loss: 0.4702 | Avg: 0.4727 | CE: 0.215  Cons: 8.353  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0496  Bias: 0.0000
+  Step [110/110] | Loss: 0.4360 | Avg: 0.4752 | CE: 0.187  Cons: 7.947  L2SP: 0.0000  Topo: 0.5004  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0493  Bias: 0.0000
+
+  >> Epoch [30/50] Train Summary
+     Avg Loss : 0.4752
+     LR       : 0.000075
+
+  >> Epoch [30/50] Evaluating GZSL...
+
+  ┌─ Epoch [30/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.16%
+  │  GZSL-S (Seen Acc)   : 69.48%
+  │  GZSL-H (Harmonic)   : 71.74%  
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [31/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5659 | Avg: 0.4891 | CE: 0.323  Cons: 7.574  L2SP: 0.0000  Topo: 0.4999  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0394  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.6079 | Avg: 0.4820 | CE: 0.370  Cons: 7.257  L2SP: 0.0000  Topo: 0.5003  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0499  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.6447 | Avg: 0.4882 | CE: 0.403  Cons: 7.513  L2SP: 0.0000  Topo: 0.5013  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0360  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4324 | Avg: 0.4820 | CE: 0.184  Cons: 7.972  L2SP: 0.0000  Topo: 0.4999  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0395  Bias: 0.0000
+  Step [100/110] | Loss: 0.5858 | Avg: 0.4839 | CE: 0.340  Cons: 7.762  L2SP: 0.0000  Topo: 0.4975  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0397  Bias: 0.0000
+  Step [110/110] | Loss: 0.4734 | Avg: 0.4831 | CE: 0.229  Cons: 7.703  L2SP: 0.0000  Topo: 0.4975  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0410  Bias: 0.0000
+
+  >> Epoch [31/50] Train Summary
+     Avg Loss : 0.4831
+     LR       : 0.000070
+
+  >> Epoch [31/50] Evaluating GZSL...
+
+  ┌─ Epoch [31/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.83%
+  │  GZSL-S (Seen Acc)   : 68.31%
+  │  GZSL-H (Harmonic)   : 71.42%  
+  │  ZSL    (ZS Acc)     : 81.27%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [32/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5113 | Avg: 0.4952 | CE: 0.269  Cons: 7.572  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0413  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5211 | Avg: 0.4912 | CE: 0.278  Cons: 7.595  L2SP: 0.0000  Topo: 0.4982  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0376  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4577 | Avg: 0.4901 | CE: 0.209  Cons: 7.925  L2SP: 0.0000  Topo: 0.5011  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0460  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4556 | Avg: 0.4911 | CE: 0.209  Cons: 7.780  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0520  Bias: 0.0000
+  Step [100/110] | Loss: 0.4953 | Avg: 0.4904 | CE: 0.249  Cons: 7.788  L2SP: 0.0000  Topo: 0.5000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0420  Bias: 0.0000
+  Step [110/110] | Loss: 0.4466 | Avg: 0.4892 | CE: 0.198  Cons: 7.918  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0440  Bias: 0.0000
+
+  >> Epoch [32/50] Train Summary
+     Avg Loss : 0.4892
+     LR       : 0.000065
+
+  >> Epoch [32/50] Evaluating GZSL...
+
+  ┌─ Epoch [32/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.34%
+  │  GZSL-S (Seen Acc)   : 67.64%
+  │  GZSL-H (Harmonic)   : 71.28%  
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [33/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5169 | Avg: 0.4996 | CE: 0.267  Cons: 8.015  L2SP: 0.0000  Topo: 0.4978  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0487  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4856 | Avg: 0.4921 | CE: 0.247  Cons: 7.327  L2SP: 0.0000  Topo: 0.4978  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0493  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4604 | Avg: 0.4917 | CE: 0.218  Cons: 7.565  L2SP: 0.0000  Topo: 0.4987  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0490  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4831 | Avg: 0.4897 | CE: 0.239  Cons: 7.647  L2SP: 0.0000  Topo: 0.5020  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0536  Bias: 0.0000
+  Step [100/110] | Loss: 0.4960 | Avg: 0.4906 | CE: 0.249  Cons: 7.801  L2SP: 0.0000  Topo: 0.5004  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0495  Bias: 0.0000
+  Step [110/110] | Loss: 0.4702 | Avg: 0.4896 | CE: 0.223  Cons: 7.847  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0491  Bias: 0.0000
+
+  >> Epoch [33/50] Train Summary
+     Avg Loss : 0.4896
+     LR       : 0.000060
+
+  >> Epoch [33/50] Evaluating GZSL...
+
+  ┌─ Epoch [33/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.72%
+  │  GZSL-S (Seen Acc)   : 68.26%
+  │  GZSL-H (Harmonic)   : 71.34%  
+  │  ZSL    (ZS Acc)     : 81.36%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [34/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5278 | Avg: 0.4644 | CE: 0.281  Cons: 7.813  L2SP: 0.0000  Topo: 0.5026  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0376  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5100 | Avg: 0.4738 | CE: 0.264  Cons: 7.719  L2SP: 0.0000  Topo: 0.5030  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0562  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5375 | Avg: 0.4838 | CE: 0.287  Cons: 8.069  L2SP: 0.0000  Topo: 0.5026  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0422  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4633 | Avg: 0.4863 | CE: 0.213  Cons: 8.089  L2SP: 0.0000  Topo: 0.5013  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0404  Bias: 0.0000
+  Step [100/110] | Loss: 0.4809 | Avg: 0.4878 | CE: 0.234  Cons: 7.823  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0492  Bias: 0.0000
+  Step [110/110] | Loss: 0.4953 | Avg: 0.4881 | CE: 0.247  Cons: 7.925  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0458  Bias: 0.0000
+
+  >> Epoch [34/50] Train Summary
+     Avg Loss : 0.4881
+     LR       : 0.000055
+
+  >> Epoch [34/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-05-30_23-01-11_H7253.pth
+
+  ┌─ Epoch [34/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.72%
+  │  GZSL-S (Seen Acc)   : 71.39%
+  │  GZSL-H (Harmonic)   : 72.53%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.57%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [35/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5501 | Avg: 0.4872 | CE: 0.301  Cons: 7.965  L2SP: 0.0000  Topo: 0.4995  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0469  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4386 | Avg: 0.4845 | CE: 0.187  Cons: 8.137  L2SP: 0.0000  Topo: 0.5009  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0481  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4406 | Avg: 0.4825 | CE: 0.189  Cons: 8.136  L2SP: 0.0000  Topo: 0.5022  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0467  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4717 | Avg: 0.4829 | CE: 0.218  Cons: 8.260  L2SP: 0.0000  Topo: 0.5018  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0458  Bias: 0.0000
+  Step [100/110] | Loss: 0.4474 | Avg: 0.4804 | CE: 0.201  Cons: 7.807  L2SP: 0.0000  Topo: 0.5022  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0475  Bias: 0.0000
+  Step [110/110] | Loss: 0.3780 | Avg: 0.4796 | CE: 0.124  Cons: 8.285  L2SP: 0.0000  Topo: 0.5024  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0521  Bias: 0.0000
+
+  >> Epoch [35/50] Train Summary
+     Avg Loss : 0.4796
+     LR       : 0.000050
+
+  >> Epoch [35/50] Evaluating GZSL...
+
+  ┌─ Epoch [35/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.36%
+  │  GZSL-S (Seen Acc)   : 69.46%
+  │  GZSL-H (Harmonic)   : 71.83%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [36/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3992 | Avg: 0.4558 | CE: 0.148  Cons: 8.116  L2SP: 0.0000  Topo: 0.5012  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0489  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5021 | Avg: 0.4692 | CE: 0.264  Cons: 7.312  L2SP: 0.0000  Topo: 0.5000  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0470  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.3986 | Avg: 0.4674 | CE: 0.143  Cons: 8.407  L2SP: 0.0000  Topo: 0.4988  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0448  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5988 | Avg: 0.4685 | CE: 0.356  Cons: 7.584  L2SP: 0.0000  Topo: 0.4983  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0477  Bias: 0.0000
+  Step [100/110] | Loss: 0.5124 | Avg: 0.4656 | CE: 0.253  Cons: 8.629  L2SP: 0.0000  Topo: 0.4982  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0527  Bias: 0.0000
+  Step [110/110] | Loss: 0.4518 | Avg: 0.4673 | CE: 0.207  Cons: 7.706  L2SP: 0.0000  Topo: 0.4979  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0409  Bias: 0.0000
+
+  >> Epoch [36/50] Train Summary
+     Avg Loss : 0.4673
+     LR       : 0.000045
+
+  >> Epoch [36/50] Evaluating GZSL...
+
+  ┌─ Epoch [36/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.50%
+  │  GZSL-S (Seen Acc)   : 68.73%
+  │  GZSL-H (Harmonic)   : 71.50%  
+  │  ZSL    (ZS Acc)     : 81.41%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [37/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6465 | Avg: 0.4639 | CE: 0.397  Cons: 7.992  L2SP: 0.0000  Topo: 0.4979  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0531  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5981 | Avg: 0.4809 | CE: 0.344  Cons: 8.278  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0536  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4806 | Avg: 0.4754 | CE: 0.228  Cons: 8.187  L2SP: 0.0000  Topo: 0.4964  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0476  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.5551 | Avg: 0.4741 | CE: 0.309  Cons: 7.735  L2SP: 0.0000  Topo: 0.4969  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0541  Bias: 0.0000
+  Step [100/110] | Loss: 0.4692 | Avg: 0.4748 | CE: 0.212  Cons: 8.513  L2SP: 0.0000  Topo: 0.4991  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0452  Bias: 0.0000
+  Step [110/110] | Loss: 0.4809 | Avg: 0.4741 | CE: 0.232  Cons: 7.933  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0472  Bias: 0.0000
+
+  >> Epoch [37/50] Train Summary
+     Avg Loss : 0.4741
+     LR       : 0.000040
+
+  >> Epoch [37/50] Evaluating GZSL...
+
+  ┌─ Epoch [37/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.06%
+  │  GZSL-S (Seen Acc)   : 69.96%
+  │  GZSL-H (Harmonic)   : 71.95%  
+  │  ZSL    (ZS Acc)     : 81.27%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [38/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4197 | Avg: 0.4714 | CE: 0.167  Cons: 8.209  L2SP: 0.0000  Topo: 0.5006  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0478  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4230 | Avg: 0.4768 | CE: 0.168  Cons: 8.319  L2SP: 0.0000  Topo: 0.4995  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0551  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4392 | Avg: 0.4744 | CE: 0.186  Cons: 8.237  L2SP: 0.0000  Topo: 0.5004  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0508  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4462 | Avg: 0.4728 | CE: 0.195  Cons: 8.092  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0423  Bias: 0.0000
+  Step [100/110] | Loss: 0.4526 | Avg: 0.4732 | CE: 0.203  Cons: 8.005  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0484  Bias: 0.0000
+  Step [110/110] | Loss: 0.4657 | Avg: 0.4741 | CE: 0.213  Cons: 8.215  L2SP: 0.0000  Topo: 0.4992  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0505  Bias: 0.0000
+
+  >> Epoch [38/50] Train Summary
+     Avg Loss : 0.4741
+     LR       : 0.000035
+
+  >> Epoch [38/50] Evaluating GZSL...
+
+  ┌─ Epoch [38/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 75.03%
+  │  GZSL-S (Seen Acc)   : 68.22%
+  │  GZSL-H (Harmonic)   : 71.46%  
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [39/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3961 | Avg: 0.4626 | CE: 0.141  Cons: 8.358  L2SP: 0.0000  Topo: 0.4991  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0465  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4796 | Avg: 0.4716 | CE: 0.230  Cons: 7.949  L2SP: 0.0000  Topo: 0.4990  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0556  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.6097 | Avg: 0.4767 | CE: 0.359  Cons: 8.033  L2SP: 0.0000  Topo: 0.4982  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0575  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4676 | Avg: 0.4689 | CE: 0.218  Cons: 7.974  L2SP: 0.0000  Topo: 0.4978  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0549  Bias: 0.0000
+  Step [100/110] | Loss: 0.4811 | Avg: 0.4708 | CE: 0.230  Cons: 8.121  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0501  Bias: 0.0000
+  Step [110/110] | Loss: 0.6171 | Avg: 0.4714 | CE: 0.363  Cons: 8.286  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0433  Bias: 0.0000
+
+  >> Epoch [39/50] Train Summary
+     Avg Loss : 0.4714
+     LR       : 0.000030
+
+  >> Epoch [39/50] Evaluating GZSL...
+
+  ┌─ Epoch [39/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.83%
+  │  GZSL-S (Seen Acc)   : 68.59%
+  │  GZSL-H (Harmonic)   : 71.58%  
+  │  ZSL    (ZS Acc)     : 81.41%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [40/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6012 | Avg: 0.4770 | CE: 0.353  Cons: 7.873  L2SP: 0.0000  Topo: 0.4977  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0571  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4290 | Avg: 0.4697 | CE: 0.176  Cons: 8.212  L2SP: 0.0000  Topo: 0.4990  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0578  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4312 | Avg: 0.4778 | CE: 0.176  Cons: 8.365  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0502  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4459 | Avg: 0.4729 | CE: 0.199  Cons: 7.771  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0577  Bias: 0.0000
+  Step [100/110] | Loss: 0.4672 | Avg: 0.4721 | CE: 0.206  Cons: 8.756  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0520  Bias: 0.0000
+  Step [110/110] | Loss: 0.4636 | Avg: 0.4711 | CE: 0.215  Cons: 7.945  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0499  Bias: 0.0000
+
+  >> Epoch [40/50] Train Summary
+     Avg Loss : 0.4711
+     LR       : 0.000025
+
+  >> Epoch [40/50] Evaluating GZSL...
+
+  ┌─ Epoch [40/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.46%
+  │  GZSL-S (Seen Acc)   : 69.27%
+  │  GZSL-H (Harmonic)   : 71.77%  
+  │  ZSL    (ZS Acc)     : 81.34%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [41/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4822 | Avg: 0.4798 | CE: 0.229  Cons: 8.212  L2SP: 0.0000  Topo: 0.4987  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0550  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5836 | Avg: 0.4838 | CE: 0.332  Cons: 8.110  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0511  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5160 | Avg: 0.4754 | CE: 0.260  Cons: 8.411  L2SP: 0.0000  Topo: 0.4983  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0502  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4302 | Avg: 0.4771 | CE: 0.173  Cons: 8.498  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0442  Bias: 0.0000
+  Step [100/110] | Loss: 0.4537 | Avg: 0.4748 | CE: 0.198  Cons: 8.402  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0468  Bias: 0.0000
+  Step [110/110] | Loss: 0.4168 | Avg: 0.4742 | CE: 0.168  Cons: 7.913  L2SP: 0.0000  Topo: 0.4983  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0522  Bias: 0.0000
+
+  >> Epoch [41/50] Train Summary
+     Avg Loss : 0.4742
+     LR       : 0.000021
+
+  >> Epoch [41/50] Evaluating GZSL...
+
+  ┌─ Epoch [41/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.62%
+  │  GZSL-S (Seen Acc)   : 71.42%
+  │  GZSL-H (Harmonic)   : 72.51%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [42/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4327 | Avg: 0.4408 | CE: 0.183  Cons: 7.959  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0571  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5021 | Avg: 0.4487 | CE: 0.257  Cons: 7.694  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0509  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4076 | Avg: 0.4554 | CE: 0.151  Cons: 8.455  L2SP: 0.0000  Topo: 0.4998  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0560  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4496 | Avg: 0.4665 | CE: 0.197  Cons: 8.205  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0521  Bias: 0.0000
+  Step [100/110] | Loss: 0.4618 | Avg: 0.4699 | CE: 0.207  Cons: 8.315  L2SP: 0.0000  Topo: 0.4983  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0502  Bias: 0.0000
+  Step [110/110] | Loss: 0.4017 | Avg: 0.4693 | CE: 0.143  Cons: 8.534  L2SP: 0.0000  Topo: 0.4979  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0635  Bias: 0.0000
+
+  >> Epoch [42/50] Train Summary
+     Avg Loss : 0.4693
+     LR       : 0.000017
+
+  >> Epoch [42/50] Evaluating GZSL...
+
+  ┌─ Epoch [42/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.33%
+  │  GZSL-S (Seen Acc)   : 69.73%
+  │  GZSL-H (Harmonic)   : 71.95%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [43/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4670 | Avg: 0.4742 | CE: 0.213  Cons: 8.255  L2SP: 0.0000  Topo: 0.4980  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0532  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4146 | Avg: 0.4702 | CE: 0.155  Cons: 8.627  L2SP: 0.0000  Topo: 0.4987  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0532  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4463 | Avg: 0.4669 | CE: 0.199  Cons: 7.856  L2SP: 0.0000  Topo: 0.4992  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0531  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4196 | Avg: 0.4684 | CE: 0.170  Cons: 7.988  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0552  Bias: 0.0000
+  Step [100/110] | Loss: 0.5177 | Avg: 0.4701 | CE: 0.274  Cons: 7.613  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0488  Bias: 0.0000
+  Step [110/110] | Loss: 0.4001 | Avg: 0.4712 | CE: 0.143  Cons: 8.463  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0506  Bias: 0.0000
+
+  >> Epoch [43/50] Train Summary
+     Avg Loss : 0.4712
+     LR       : 0.000013
+
+  >> Epoch [43/50] Evaluating GZSL...
+
+  ┌─ Epoch [43/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.73%
+  │  GZSL-S (Seen Acc)   : 68.64%
+  │  GZSL-H (Harmonic)   : 71.56%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [44/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5241 | Avg: 0.4940 | CE: 0.269  Cons: 8.347  L2SP: 0.0000  Topo: 0.4998  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0502  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4742 | Avg: 0.4802 | CE: 0.216  Cons: 8.556  L2SP: 0.0000  Topo: 0.4996  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0535  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4439 | Avg: 0.4809 | CE: 0.194  Cons: 7.989  L2SP: 0.0000  Topo: 0.4996  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0519  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4275 | Avg: 0.4823 | CE: 0.174  Cons: 8.207  L2SP: 0.0000  Topo: 0.5001  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0609  Bias: 0.0000
+  Step [100/110] | Loss: 0.4311 | Avg: 0.4809 | CE: 0.173  Cons: 8.536  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0506  Bias: 0.0000
+  Step [110/110] | Loss: 0.4765 | Avg: 0.4792 | CE: 0.224  Cons: 8.179  L2SP: 0.0000  Topo: 0.5002  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0468  Bias: 0.0000
+
+  >> Epoch [44/50] Train Summary
+     Avg Loss : 0.4792
+     LR       : 0.000010
+
+  >> Epoch [44/50] Evaluating GZSL...
+
+  ┌─ Epoch [44/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.63%
+  │  GZSL-S (Seen Acc)   : 69.63%
+  │  GZSL-H (Harmonic)   : 72.04%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [45/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4652 | Avg: 0.4335 | CE: 0.214  Cons: 8.071  L2SP: 0.0000  Topo: 0.4999  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0560  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4627 | Avg: 0.4488 | CE: 0.211  Cons: 8.131  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0532  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5113 | Avg: 0.4571 | CE: 0.258  Cons: 8.225  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0565  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4269 | Avg: 0.4595 | CE: 0.175  Cons: 8.129  L2SP: 0.0000  Topo: 0.4996  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0634  Bias: 0.0000
+  Step [100/110] | Loss: 0.5590 | Avg: 0.4591 | CE: 0.304  Cons: 8.308  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0574  Bias: 0.0000
+  Step [110/110] | Loss: 0.5128 | Avg: 0.4624 | CE: 0.261  Cons: 8.138  L2SP: 0.0000  Topo: 0.4992  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0460  Bias: 0.0000
+
+  >> Epoch [45/50] Train Summary
+     Avg Loss : 0.4624
+     LR       : 0.000007
+
+  >> Epoch [45/50] Evaluating GZSL...
+
+  ┌─ Epoch [45/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.60%
+  │  GZSL-S (Seen Acc)   : 68.81%
+  │  GZSL-H (Harmonic)   : 71.59%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [46/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.3910 | Avg: 0.4462 | CE: 0.135  Cons: 8.357  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0581  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.3992 | Avg: 0.4643 | CE: 0.137  Cons: 8.806  L2SP: 0.0000  Topo: 0.4994  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0584  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.5873 | Avg: 0.4707 | CE: 0.335  Cons: 8.149  L2SP: 0.0000  Topo: 0.4997  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0650  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4682 | Avg: 0.4723 | CE: 0.217  Cons: 8.119  L2SP: 0.0000  Topo: 0.4996  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0489  Bias: 0.0000
+  Step [100/110] | Loss: 0.4705 | Avg: 0.4703 | CE: 0.218  Cons: 8.163  L2SP: 0.0000  Topo: 0.4993  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0549  Bias: 0.0000
+  Step [110/110] | Loss: 0.3905 | Avg: 0.4680 | CE: 0.132  Cons: 8.544  L2SP: 0.0000  Topo: 0.4991  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0568  Bias: 0.0000
+
+  >> Epoch [46/50] Train Summary
+     Avg Loss : 0.4680
+     LR       : 0.000004
+
+  >> Epoch [46/50] Evaluating GZSL...
+
+  ┌─ Epoch [46/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.70%
+  │  GZSL-S (Seen Acc)   : 69.03%
+  │  GZSL-H (Harmonic)   : 71.75%  
+  │  ZSL    (ZS Acc)     : 81.41%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [47/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4834 | Avg: 0.4512 | CE: 0.233  Cons: 8.054  L2SP: 0.0000  Topo: 0.4988  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0539  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.5737 | Avg: 0.4526 | CE: 0.323  Cons: 8.062  L2SP: 0.0000  Topo: 0.4988  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0564  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4288 | Avg: 0.4562 | CE: 0.175  Cons: 8.211  L2SP: 0.0000  Topo: 0.4987  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0616  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.6283 | Avg: 0.4608 | CE: 0.379  Cons: 7.939  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0612  Bias: 0.0000
+  Step [100/110] | Loss: 0.4688 | Avg: 0.4622 | CE: 0.220  Cons: 7.969  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0494  Bias: 0.0000
+  Step [110/110] | Loss: 0.4755 | Avg: 0.4628 | CE: 0.217  Cons: 8.597  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0553  Bias: 0.0000
+
+  >> Epoch [47/50] Train Summary
+     Avg Loss : 0.4628
+     LR       : 0.000002
+
+  >> Epoch [47/50] Evaluating GZSL...
+
+  ┌─ Epoch [47/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.56%
+  │  GZSL-S (Seen Acc)   : 69.26%
+  │  GZSL-H (Harmonic)   : 71.81%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [48/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4407 | Avg: 0.4585 | CE: 0.182  Cons: 8.567  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0557  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4206 | Avg: 0.4563 | CE: 0.172  Cons: 7.896  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0538  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4422 | Avg: 0.4573 | CE: 0.190  Cons: 8.149  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0573  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4724 | Avg: 0.4614 | CE: 0.224  Cons: 7.889  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0585  Bias: 0.0000
+  Step [100/110] | Loss: 0.4746 | Avg: 0.4636 | CE: 0.217  Cons: 8.495  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0576  Bias: 0.0000
+  Step [110/110] | Loss: 0.5078 | Avg: 0.4687 | CE: 0.251  Cons: 8.456  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0589  Bias: 0.0000
+
+  >> Epoch [48/50] Train Summary
+     Avg Loss : 0.4687
+     LR       : 0.000001
+
+  >> Epoch [48/50] Evaluating GZSL...
+
+  ┌─ Epoch [48/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.56%
+  │  GZSL-S (Seen Acc)   : 69.45%
+  │  GZSL-H (Harmonic)   : 71.92%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [49/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4330 | Avg: 0.4525 | CE: 0.178  Cons: 8.303  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0557  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4752 | Avg: 0.4537 | CE: 0.218  Cons: 8.521  L2SP: 0.0000  Topo: 0.4986  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0528  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4557 | Avg: 0.4578 | CE: 0.204  Cons: 8.123  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0527  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4669 | Avg: 0.4544 | CE: 0.217  Cons: 7.990  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0521  Bias: 0.0000
+  Step [100/110] | Loss: 0.4964 | Avg: 0.4579 | CE: 0.240  Cons: 8.399  L2SP: 0.0000  Topo: 0.4985  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0598  Bias: 0.0000
+  Step [110/110] | Loss: 0.4158 | Avg: 0.4564 | CE: 0.164  Cons: 8.106  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0575  Bias: 0.0000
+
+  >> Epoch [49/50] Train Summary
+     Avg Loss : 0.4564
+     LR       : 0.000000
+
+  >> Epoch [49/50] Evaluating GZSL...
+
+  ┌─ Epoch [49/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.56%
+  │  GZSL-S (Seen Acc)   : 69.40%
+  │  GZSL-H (Harmonic)   : 71.89%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [50/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4871 | Avg: 0.4793 | CE: 0.232  Cons: 8.311  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0646  Bias: 0.0000
+  Step [ 40/110] | Loss: 0.4254 | Avg: 0.4653 | CE: 0.174  Cons: 8.084  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0528  Bias: 0.0000
+  Step [ 60/110] | Loss: 0.4746 | Avg: 0.4692 | CE: 0.222  Cons: 8.193  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0543  Bias: 0.0000
+  Step [ 80/110] | Loss: 0.4205 | Avg: 0.4695 | CE: 0.171  Cons: 7.997  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0560  Bias: 0.0000
+  Step [100/110] | Loss: 0.4217 | Avg: 0.4721 | CE: 0.168  Cons: 8.243  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0493  Bias: 0.0000
+  Step [110/110] | Loss: 0.4571 | Avg: 0.4706 | CE: 0.202  Cons: 8.299  L2SP: 0.0000  Topo: 0.4984  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0588  Bias: 0.0000
+
+  >> Epoch [50/50] Train Summary
+     Avg Loss : 0.4706
+     LR       : 0.000000
+
+  >> Epoch [50/50] Evaluating GZSL...
+
+  ┌─ Epoch [50/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.56%
+  │  GZSL-S (Seen Acc)   : 69.45%
+  │  GZSL-H (Harmonic)   : 71.92%  
+  │  ZSL    (ZS Acc)     : 81.37%
+  └──────────────────────────────────────────────────────
+
+============================================================
+  Training Finished!
+============================================================
+  Best Results @ Epoch 34
+  ┌─────────────────────────────────────
+  │  GZSL-U : 73.72%
+  │  GZSL-S : 71.39%
+  │  GZSL-H : 72.53%
+  │  ZSL    : 81.57%
+  └─────────────────────────────────────
+
+  Log saved to: ./train_log/CUB/training_log_CUB_2026-05-30_23-01-11.txt

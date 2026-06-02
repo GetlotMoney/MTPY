@@ -1,0 +1,274 @@
+基于 LaSt-ViT 频域选择集成的 Cosine-Only 广义零样本学习双端特征增强研究报告一、 核心思想与 SOTA 背景在基于 CLIP 的广义零样本学习（GZSL）中，传统的适配器（如 CLIP-Adapter）通常采用 base_logits + β * local_score 的“加分”模式进行事后微调 。这种模式极度依赖原始 CLIP 的 base_logits 进行安全兜底 。为了追求更优雅的单一度量范式，本研究聚焦于纯余弦相似度（Cosine-Only）模式：$$\text{Logits} = \cos(\mathbf{v}_{\text{enh}}, \mathbf{w}_{\text{enh}}) \times \text{scale}$$所有模态间的特征融合与语义交互均在特征提取阶段（通过 CrossModalTransformer）完成，得分计算仅执行一次纯粹的余弦相似度度量。然而，在目前的 SOTA 级别多模态适配研究（如 PVA、SAC、Res2CLIP）中，纯余弦分类器在没有 base 兜底的情况下普遍面临极高的零样本失效风险 。其核心瓶颈在于：视觉表示钝化（背景稀释）： 视觉特征通过对所有局部 Patch 进行全局平均池化（GAP）得到，背景区域（通常占图像面积的 5/6 以上）产生的冗余和噪声严重 dilute 了前景目标语义。分布流形错位（Seen-Unseen Mismatch）： 文本适配器（proj_text）仅在 seen 类上接收梯度，导致训练后的 seen 类文本特征与保持 CLIP 原始状态的 unseen 类文本特征处于完全不同的投影流形，从而在计算余弦相似度时系统性低估 unseen 类的得分。针对这一痛点，本方案将 CVPR 2026 最颠覆性的工作之一 LaSt-ViT（LazyStrike ViT） 作为视觉端的核心优化组件，从频域层面对视觉特征进行物理净化 ，同时对文本端流形对齐进行精细化改造。二、 完整数据流框架（集成 LaSt-ViT 后）下图展示了将 LaSt-ViT 频域 Token 选择机制无缝集成到你的双分支 CrossModalTransformer 后的完整数据流框架：                          ┌─── CLIP 视觉编码 (frozen) ────┐
+                          │                                │
+        clip_features ────┤                                │
+            │                                │
+                          ├─── cls_token          │
+                          └─── patches       │
+                                              │
+                                              ▼
+                          ┌─────────────────────────────────────┐
+                          │  CrossModalTransformer (核心)        │
+                          │                                      │
+                          │  patches → embed_cv (768→512)       │
+                          │       │                              │
+                          │       ▼                              │
+                          │  FAE 几何感知自注意力                  │
+                          │       │                              │
+                          │       ▼                              │
+                          │  memory                │
+                          │       │                              │
+                          │     ┌─┴─┐                            │
+                          │     │   │                            │
+                          │  v2s   s2v                           │
+                          │  分支   分支                          │
+                          │     │   │                            │
+                          │  ▼   ▼                            │
+                          │   F_p_v2s  F_p_s2v                   │
+                          │                │
+                          └────┬───────────┬──────────────────────┘
+                               │           │
+                               │           │ ★ LaSt-ViT 频域选择滤波 (Pool_K)
+                               │           ▼ 
+                               │      v_enh_512  ← 提取最平稳的前景 Token
+                               │           │
+                               │      proj_visual (512→768)
+                               │           │
+                               │           ▼
+                               │      v_enh_raw
+                               │           │
+                               │      残差融合 cls_token (α = 0.5)
+                               │           │
+                               │           ▼
+                               │      v_enh  ← 增强视觉
+                               │
+                          proj_text (512→768)
+                               │
+                               ├─────────────────────────────────────────┐
+                               ▼ (带梯度训练)                              ▼ (梯度截断 detach)
+                          t_enh_raw_seen              t_enh_raw_unseen
+                               │                                         │
+                          残差融合 seen_text                         残差融合 unseen_text
+                               │                                         │
+                               ▼                                         ▼
+                          t_enh_seen                  t_enh_unseen
+                               │                                         │
+                               └───────────────────┬─────────────────────┘
+                                                   │ ★ 关键修复：合并共享流形空间
+                                                   ▼
+                                              t_enh  ← 增强文本
+                                                   │
+                                                   ▼
+                                           ┌─────────────────────┐
+                                           │  归一化 + 余弦       │
+                                           │                     │
+                                           │  v_n = norm(v_enh)  │
+                                           │  t_n = norm(t_enh)  │
+                                           │                     │
+                                           │  logits = (v_n * t_n).sum(-1) * scale │
+                                           └────────────┬────────┘
+                                                        │
+                                                        ▼
+                                               logits_200
+三、 关键组件重构与数学推导组件 1：基于 LaSt-ViT 频域过滤的视觉增强端 $v_{\text{enh}}$在你的原始方案中，v_enh_512 是由 F_p_s2v.mean(dim=1) 粗暴池化得到的，这导致无意义的背景高频噪声占主导，严重稀释了前景信号。重构后的 LaSt-ViT 选择性聚合算法如下：输入分离与梯度隔离： 提取 $s2v$ 分支的局部 Patch 特征 $F_{p\_s2v} \in \mathbb{R}^{B \times 576 \times 512}$，并复制一份脱离梯度的副本用于前景评估 ：
+$$F_{\text{detach}} = F_{p\_s2v}.\text{detach}()$$通道一维傅里叶变换： 将特征在最后一维（512 通道）上投影到复频域 ：
+$$Y = \mathcal{F}(F_{\text{detach}}) \in \mathbb{C}^{B \times 576 \times 512}$$高斯低通滤波： 采用一维高斯核 $G_{\sigma}$ 对频移后的光谱进行滤波，滤除通道维度的高频杂质和异常噪声 ：
+$$Y_{\text{filtered}} = \text{fftshift}(Y, \text{dim}=-1) \odot G_{\sigma}$$逆变换与平滑特征还原：$$F_{\text{LP}} = \text{Re}\left( \mathcal{F}^{-1}(\text{ifftshift}(Y_{\text{filtered}})) \right) \in \mathbb{R}^{B \times 576 \times 512}$$偏差对比度评估（计算 Patch Score）： 计算精细特征与低频平稳特征的比值。比值越高的 Patch 说明在通道内越平稳（同质性更强），越符合真实前景对象的特征分布：$$S_{i} = \frac{1}{D}\sum_{d=1}^{D} \left( \frac{F_{\text{detach}}[i, d]}{|F_{\text{LP}}[i, d] - F_{\text{detach}}[i, d]| + \epsilon} \right)$$Top-$K$ 选择性前景聚合成 v_enh_512： 选择得分最高的前 $K$ 个（如 $K=96$）Patch Token 进行平均池化，替代原本的 576 个全图平均：$$\mathcal{I} = \text{TopK\_Indices}(S, K)$$$$\mathbf{v}_{\text{enh\_512}} = \frac{1}{K}\sum_{j \in \mathcal{I}} F_{p\_s2v}[:, j, :]$$最后，经过你的 proj_visual 线性层投影，并以残差比例 $\alpha = 0.5$ 与 CLIP 原始的 cls_token 融合：$$\mathbf{v}_{\text{enh}} = (1-\alpha) \cdot \text{proj\_visual}(\mathbf{v}_{\text{enh\_512}}) + \alpha \cdot \mathbf{cls\_token}$$组件 2：共享文本投影流形的文本增强端 $t_{\text{enh}}$（梯度截断修复）针对 Failure 3（Seen-Unseen 文本流形不匹配），原方案 3 采取了“完全绕过”策略：unseen 50 列完全不经过 proj_text。这会导致计算余弦相似度时，seen 类的向量是在适配器投影空间中，而 unseen 类的向量是在 CLIP 原始空间中，引发严重的几何分布失衡。改进方案（流形共享梯度截断）：我们让 unseen 50 列也前向通过 proj_text 投影层，但在输入前调用 .detach() 截断其梯度。Seen 150 类（有梯度）：$$\mathbf{t}_{\text{enh\_raw\_seen}} = \text{proj\_text}(F_{p\_v2s}[:, \text{seen}, :])$$$$\mathbf{t}_{\text{enh\_seen}} = (1-\beta) \cdot \mathbf{t}_{\text{enh\_raw\_seen}} + \beta \cdot \mathbf{all\_text}[:, \text{seen}, :]$$Unseen 50 类（截断梯度前向）：$$\mathbf{t}_{\text{enh\_raw\_unseen}} = \text{proj\_text}(F_{p\_v2s}[:, \text{unseen}, :].\text{detach}())$$$$\mathbf{t}_{\text{enh\_unseen}} = (1-\beta) \cdot \mathbf{t}_{\text{enh\_raw\_unseen}} + \beta \cdot \mathbf{all\_text}[:, \text{unseen}, :]$$将两者重新拼合为完整的 $\mathbf{t}_{\text{enh}} \in \mathbb{R}^{B \times 200 \times 768}$。原理： 虽然 proj_text 在训练时只根据 seen 类的分类损失（CE Loss）进行更新，但前向传播时 unseen 类也经过了相同的投影变换。由于使用了 .detach()，模型在优化时不会因为 unseen 类的无标注性产生梯度冲突，同时又强迫 unseen 类和 seen 类处于相同的几何流形中，消除了流形错位带来的相似度低估。四、 核心 PyTorch 模块代码实现以下是将 LaSt-ViT 频域前景选择器与你的 Cosine-Only 特征增强框架结合的完整 PyTorch 代码实现：Pythonimport torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class CosineOnlyLaStModel(nn.Module):
+    def __init__(self, visual_residual=0.5, text_residual=0.5, last_k=96, last_sigma=1.0):
+        super().__init__()
+        self.visual_residual = visual_residual  # alpha = 0.5
+        self.text_residual = text_residual      # beta = 0.5
+        self.last_k = last_k                    # LaSt-ViT 筛选的前景 Token 数量 (从 576 中筛选)
+        self.last_sigma = last_sigma            # 频域高斯低通滤波标准差
+        
+        # 预先生成并注册 1D 高斯滤波器核 (适用于通道维度 512)
+        self.register_buffer("gs_k", self._generate_gaussian_kernel(512, last_sigma))
+        
+        # 用户框架中定义的可训练线性投影层 (512 -> 768)
+        self.proj_visual = nn.Linear(512, 768)
+        self.proj_text = nn.Linear(512, 768)
+        
+        # 可学习的 CLIP 温度系数
+        self.logit_scale = nn.Parameter(torch.ones() * log(1 / 0.07))
+
+    def _generate_gaussian_kernel(self, size, sigma):
+        coords = torch.arange(size).float() - (size - 1) / 2.0
+        g = torch.exp(-coords**2 / (2 * sigma**2))
+        return g / (g.sum() + 1e-6)
+
+    def _last_token_selection(self, F_p_s2v):
+        """
+        LaSt-ViT 频域感知选择性聚合算子
+        输入 F_p_s2v:
+        输出 v_enh_512:
+        """
+        B, N, D = F_p_s2v.shape
+        x_detach = F_p_s2v.detach()
+        
+        # 1. 通道一维傅里叶变换
+        x_fft = torch.fft.fft(x_detach, dim=-1)
+        x_fft_shifted = torch.fft.fftshift(x_fft, dim=-1)
+        
+        # 2. 一维高斯低通滤波
+        x_fft_filtered = x_fft_shifted * self.gs_k
+        x_fft_unshifted = torch.fft.ifftshift(x_fft_filtered, dim=-1)
+        
+        # 3. 逆傅里叶变换还原为空间特征矩阵
+        x_lp = torch.fft.ifft(x_fft_unshifted, dim=-1).real
+        
+        # 4. 计算 Patch 的通道偏差对比度（高频背景噪点和伪影会产生极大偏差）
+        diff = x_detach / (torch.abs(x_lp - x_detach) + 1e-6)
+        patch_scores = diff.mean(dim=-1)  #
+        
+        # 5. 提取 Top-K 个最平滑的前景 Token 索引
+        _, indices = torch.topk(patch_scores, k=self.last_k, dim=1, largest=True)
+        
+        # 6. 选择性 mean pooling（替代原先弱势的 F_p_s2v.mean(dim=1)）
+        gather_indices = indices.unsqueeze(-1).expand(-1, -1, D)  #
+        selected_patches = torch.gather(F_p_s2v, 1, gather_indices)  #
+        v_enh_512 = torch.mean(selected_patches, dim=1)  #
+        
+        return v_enh_512
+
+    def forward(self, cls_token, F_p_s2v, F_p_v2s, all_text, seen_classes, unseen_classes):
+        """
+        :param cls_token: (CLIP 原始 cls_token)
+        :param F_p_s2v: (CrossModalTransformer s2v 分支输出)
+        :param F_p_v2s: (CrossModalTransformer v2s 分支输出)
+        :param all_text: (输入图像对应的 200 类 CLIP 原始文本表示)
+        :param seen_classes: List[int] (当前数据集 150 个已知类索引)
+        :param unseen_classes: List[int] (当前数据集 50 个未知类索引)
+        """
+        B = cls_token.size(0)
+        
+        # ================== 1. 增强视觉端 v_enh ==================
+        # 通过 LaSt-ViT 频域算子选择并聚合前景视觉特征，从根源上击碎 Failure 1
+        v_enh_512 = self._last_token_selection(F_p_s2v)  #
+        v_enh_raw = self.proj_visual(v_enh_512)          #
+        
+        # 残差融合
+        v_enh = (1.0 - self.visual_residual) * v_enh_raw + self.visual_residual * cls_token #
+        
+        # ================== 2. 增强文本端 t_enh ==================
+        # 初始化完整的文本输出张量并克隆原始 CLIP 特征作为底色
+        t_enh = all_text.clone()  #
+        
+        # A. Seen 150 类（正常前向，保留梯度用于 CE 优化）
+        F_p_v2s_seen = F_p_v2s[:, seen_classes, :]  #
+        t_enh_raw_seen = self.proj_text(F_p_v2s_seen)  #
+        t_enh_seen = (1.0 - self.text_residual) * t_enh_raw_seen + self.text_residual * all_text[:, seen_classes, :]
+        t_enh[:, seen_classes, :] = t_enh_seen
+        
+        # B. Unseen 50 类（梯度截断前向，解决 Failure 3 流形失衡问题）
+        F_p_v2s_unseen = F_p_v2s[:, unseen_classes, :].detach()  # (截断梯度)
+        t_enh_raw_unseen = self.proj_text(F_p_v2s_unseen)        # (共享线性投影)
+        t_enh_unseen = (1.0 - self.text_residual) * t_enh_raw_unseen + self.text_residual * all_text[:, unseen_classes, :]
+        t_enh[:, unseen_classes, :] = t_enh_unseen
+        
+        # ================== 3. 纯余弦计分 (Cosine-Only) ==================
+        # 特征归一化
+        v_n = F.normalize(v_enh, dim=-1).unsqueeze(1)    #
+        t_n = F.normalize(t_enh, dim=-1)                 #
+        
+        # 逐元素相乘并求和，计算余弦相似度
+        logits_200 = (v_n * t_n).sum(dim=-1) * self.logit_scale.exp()  #
+        
+        return logits_200
+五、 重试可行性评估与预期效果经过上述集成优化，我们对修改后的 Cosine-Only 框架进行理论推演，各项核心指标的改善对比预期如下：评估维度原始 Cosine_only 模式本方案优化后模式（Cosine-Only + LaSt）提升机制分析视觉池化策略F_p_s2v.mean(dim=1)LaSt 频域前景感知 Token 选择聚合通过 1D FFT 滤除背景杂质，强迫特征专注于前景 。背景干扰占比约 5/6 background趋近于 0（仅提取 Top-$K$ 纯净前景） 消除背景噪声的干扰，直接提升 $v_{\text{enh}}$ 的辨识度 。Unseen 类文本处理直接使用原始 all_text共享梯度截断（Manifold-Shared detach）unseen 经由 proj_text 投影对齐到相同几何流形，消除分布错位。参数拟合风险极高（零样本分类直接崩溃）极低（视觉和文本均获得锚点保护） 既保留了 CLIP 的泛化空间，又消除了背景过拟合。计算开销增幅0.0%低于 1.5%（仅在 CPU/GPU 执行轻量 1D FFT） 梯度截断及无主干反求的设计，使训练保持极速收敛。
+
+
+这版报告的主线可以概括成一句话：
+
+**你想把原来的 `base_logits + β * local_score` 改成真正的 Cosine-Only，即只靠增强后的视觉特征 `v_enh` 和文本特征 `t_enh` 做余弦分类；为了避免视觉端被背景污染，用 LaSt-ViT 的频域 Token 选择替代普通 GAP，同时让 seen/unseen 文本都经过同一个 `proj_text`，减少文本流形错位。**
+
+这个思路是成立的，而且比上一版更贴近你自己的模型结构。LaSt-ViT 官方实现也确实是用频域 token selection 替代标准 CLS 聚合，并把 ViT 的背景 shortcut 问题解释为 lazy aggregation。参考：[LAST-ViT GitHub](https://github.com/ChengShiest/LAST-ViT)。
+
+但这版有几个地方要改得更严谨：
+
+1. **不要说“背景干扰趋近于 0”**
+
+LaSt 只能“降低背景/伪影 token 的影响”，不能保证只选到前景。建议改成：
+
+```text
+背景干扰显著降低，但仍可能选入部分与前景共现或频域稳定的背景 token。
+```
+
+2. **训练时不要把 unseen 类放进 CE 分母**
+
+如果训练 loss 是：
+
+```python
+loss = CE(logits_200, seen_label)
+```
+
+那 unseen 类会被当成负类压低，这对 GZSL 很危险。训练阶段更稳的是：
+
+```python
+logits_seen = logits[:, seen_classes]
+loss = CE(logits_seen, seen_label_seen_index)
+```
+
+推理阶段再计算 `seen + unseen` 全部类别。
+
+3. **`detach()` 不能完全阻止 `proj_text` 从 unseen 分支收到梯度**
+
+你写的：
+
+```python
+t_enh_raw_unseen = self.proj_text(F_p_v2s_unseen.detach())
+```
+
+这里只阻断了输入 `F_p_v2s_unseen` 的梯度，但如果训练 loss 用到了 unseen logits，`proj_text` 的权重仍然会收到来自 unseen 分支的梯度。
+
+所以更准确的说法是：
+
+```text
+detach 只阻断 unseen 输入特征的反向传播，不阻断 proj_text 参数梯度。
+若训练阶段只使用 seen logits 计算 CE，则 unseen 分支不会参与优化；推理时再让 unseen 经过共享 proj_text。
+```
+
+4. **LaSt score 公式要小心高 norm token**
+
+你现在的：
+
+```python
+diff = x_detach / (abs(x_lp - x_detach) + eps)
+patch_scores = diff.mean(dim=-1)
+```
+
+如果 `x_detach` 有正负值，直接 mean 可能互相抵消；而且高 norm token 仍可能因为分子大而得高分。更稳一点可以写成：
+
+```python
+diff = x_detach.abs() / (torch.abs(x_lp - x_detach) + 1e-6)
+patch_scores = diff.mean(dim=-1)
+```
+
+或者更保守：
+
+```python
+patch_scores = 1.0 / (torch.norm(x_lp - x_detach, dim=-1) + 1e-6)
+```
+
+5. **代码里少了 `log` 的来源**
+
+这一句会报错：
+
+```python
+self.logit_scale = nn.Parameter(torch.ones() * log(1 / 0.07))
+```
+
+应改成：
+
+```python
+import math
+self.logit_scale = nn.Parameter(torch.ones([]) * math.log(1 / 0.07))
+```
+
+更简洁的论文版总结可以写成：
+
+> 本方案将 GZSL 中的双端增强框架改造为 Cosine-Only 分类范式。视觉端不再直接对全部 patch tokens 做平均池化，而是引入 LaSt-ViT 的频域选择机制，从 `s2v` 分支输出中筛选更稳定的 Top-K patch tokens 聚合为前景视觉表征，从而缓解背景 shortcut 和高 norm 伪影对余弦分类的污染。文本端则让 seen 与 unseen 类别共享同一个 `proj_text` 前向空间，避免 seen 类进入适配器流形而 unseen 类停留在 CLIP 原始流形所造成的分布错位。训练阶段仅在 seen 类上优化，推理阶段对 seen/unseen 全部类别执行统一余弦相似度分类，并可叠加 calibrated stacking 缓解已知类偏置。
+
+一句话评价：**这个方案的创新点是清楚的：LaSt 解决视觉端“看错地方”，共享文本投影解决文本端“站在不同空间”，两者共同支撑 Cosine-Only 不依赖 base logits。**

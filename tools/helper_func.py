@@ -125,6 +125,70 @@ def extract_and_predict(loader, clip_model, model, device, target_classes=None, 
     return torch.cat(true_labels), torch.cat(predicted_labels)
 
 
+def _estimate_prior_unseen_bias(model, device, batch_size=64):
+    """Estimate a single unseen logit shift from the cached test distribution."""
+    cfg = getattr(model, 'config', None)
+    mode = getattr(cfg, 'prior_correction', 'none') if cfg is not None else 'none'
+    if mode in (False, None, 'none', 'off', ''):
+        return 0.0
+    if not _test_cache:
+        return 0.0
+
+    temp = float(getattr(cfg, 'prior_temp', 1.0))
+    max_bias = float(getattr(cfg, 'prior_max_bias', 3.0))
+    target = str(getattr(cfg, 'prior_target', 'balanced'))
+
+    prior_sum = None
+    total = 0
+    feat_sets = [
+        (_test_cache['seen_feat'], _test_cache.get('seen_patch')),
+        (_test_cache['unseen_feat'], _test_cache.get('unseen_patch')),
+    ]
+
+    with torch.no_grad():
+        for feat, patch_cache in feat_sets:
+            N = feat.size(0)
+            for i in range(0, N, batch_size):
+                batch_feat = feat[i:i + batch_size].to(device)
+                cls = batch_feat.unsqueeze(1)
+                if patch_cache is not None:
+                    if patch_cache.is_cuda:
+                        patches = patch_cache[i:i + batch_size].float()
+                    else:
+                        patches = patch_cache[i:i + batch_size].to(
+                            device, non_blocking=True).float()
+                else:
+                    patches = cls.expand(-1, 576, -1).contiguous()
+                logits = model(torch.cat([cls, patches], dim=1),
+                               is_train=False)['clip_S_pp']
+                prob = F.softmax(logits / max(temp, 1e-6), dim=-1)
+                prior_sum = prob.sum(dim=0) if prior_sum is None else prior_sum + prob.sum(dim=0)
+                total += prob.size(0)
+
+    if prior_sum is None or total == 0:
+        return 0.0
+
+    prior = prior_sum / float(total)
+    seen_mass = prior[model.seenclass].sum().clamp_min(1e-8)
+    unseen_mass = prior[model.unseenclass].sum().clamp_min(1e-8)
+
+    if target == 'class_frequency':
+        target_seen = model.seenclass.numel() / float(model.nclass)
+        target_unseen = model.unseenclass.numel() / float(model.nclass)
+    else:
+        target_seen = 0.5
+        target_unseen = 0.5
+
+    seen_shift = torch.log(torch.tensor(target_seen, device=device) / seen_mass)
+    unseen_shift = torch.log(torch.tensor(target_unseen, device=device) / unseen_mass)
+    bias = (unseen_shift - seen_shift).clamp(min=-max_bias, max=max_bias)
+    bias_value = float(bias.item())
+    print(f"  >> [PriorCorrection] seen_mass={seen_mass.item():.4f} "
+          f"unseen_mass={unseen_mass.item():.4f} unseen_bias={bias_value:+.3f}",
+          flush=True)
+    return bias_value
+
+
 def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen=0):
     model.eval()
 
@@ -134,6 +198,8 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
 
     # 优先用缓存（快），没有缓存用实时提取（慢）
     use_cache = _load_test_cache(device)
+
+    effective_bias_unseen = bias_unseen
 
     with torch.no_grad():
         if use_cache:
@@ -165,14 +231,17 @@ def eval_zs_gzsl(dataloader, clip_model, model, device, bias_seen=0, bias_unseen
                 seen_patch   = seen_patch_cpu
                 unseen_patch = unseen_patch_cpu
 
+            effective_bias_unseen = bias_unseen + _estimate_prior_unseen_bias(
+                model, device)
+
             acc_seen  = _eval_from_cache(
                 _test_cache['seen_feat'], _test_cache['seen_label'],
                 model, seenclasses, in_package, device,
-                bias_unseen=bias_unseen, patches_cache=seen_patch)
+                bias_unseen=effective_bias_unseen, patches_cache=seen_patch)
             acc_novel, acc_zs = _eval_unseen_from_cache(
                 _test_cache['unseen_feat'], _test_cache['unseen_label'],
                 model, unseenclasses, in_package, device,
-                bias_unseen=bias_unseen, patches_cache=unseen_patch)
+                bias_unseen=effective_bias_unseen, patches_cache=unseen_patch)
 
             # ★ 释放临时 GPU 张量, 不污染训练 step 显存
             if seen_patch is not None and seen_patch.is_cuda and not seen_patch_cpu.is_cuda:

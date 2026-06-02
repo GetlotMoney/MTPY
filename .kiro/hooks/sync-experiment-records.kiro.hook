@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "同步实验记录三件套",
+  "description": "用户触发后, agent 读取最新 train_log/CUB/*.txt, 提取 Best @ Epoch 的 H/U/S/ZS 数据, 同时把结果写入 Guide/TODO_ROADMAP.md (改状态 [~]/[x] 填结果列), report/EXPERIMENT_LEDGER.html (添加新行), 创新指导清单/INNOVATION_RECORD.md (更新当前最佳/累计收益 + 主创新清单)。三文件强制同步, 任何创新加入/删除/参数变化必须三处一起更新。",
+  "version": "2",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "读取 train_log/CUB/ 下最新的 training_log_*.txt, 找到 \"Best Results @ Epoch X\" 那一段, 提取 H/U/S/ZS 数值。然后强制同步更新三个文件:\n\n1. **Guide/TODO_ROADMAP.md**: 找到 \"进行中 [~]\" 的任务行, 在结果列填 \"H=XX.XX U=XX.XX S=XX.XX ZS=XX.XX (best@epXX)\", 状态改 [x]。\n\n2. **report/EXPERIMENT_LEDGER.html**: 在主结果总表 (第一个 table) 末尾添加一个 <tr> 行, 包含: 实验编号 / 日期 / 配置 (yaml 关键字段) / U / S / H / ZS / Δ vs main baseline。如果是当前最佳就加 class=\"best\" tr. 若涉及 3-seed 完整跑完, 加 avg±std 高亮汇总行。\n\n3. **创新指导清单/INNOVATION_RECORD.md** ⭐ 必须更新:\n   - 如果新结果 H 超过文件顶部\"当前最佳\", 更新顶部\"当前最佳\"行 + \"累计收益\"行\n   - **任何新创新模块加入/删除/失败 → 必须更新顶部\"论文主创新清单\"表**, 标注实测增益和章节定位\n   - **控变量对照实验 (e.g. on/off 对比)** → 必须在主创新清单的\"控变量证据链\"段落加新数据点\n   - 在合适位置 (G1/G2/G3/v5/AG-JEPA 等已有章节) 追加新数据点\n   - 如果是 negative result, 加到 Discussion / 真·结构性失败 列表\n\n4. **(可选) Guide/TODO_ROADMAP.md 顶部当前阶段总览**: 如有重大配置变化 (新创新加入/旧模块删除/schedule 切换), 更新顶部 baseline 行\n\n完成后简短报告每个文件改了什么 (一行一文件), 不要重复输出实验数据。"
+  }
+}
