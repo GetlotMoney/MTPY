@@ -1,5 +1,6 @@
 node_modules/
 dist/
 experiments/.agent-state/
+experiments/.agent-queue/
 fixtures/*.claude-review.md
 .env

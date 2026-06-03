@@ -52,3 +52,8 @@ Thumbs.db
 
 # ===== 大型 PDF/二进制 =====
 *.pdf
+
+# Agent / MCP runtime artifacts
+experiments/.agent-queue/
+experiments/MCP-SMOKE.*
+mcp/codex-gateway/

@@ -11,6 +11,7 @@ import { z } from "zod";
 const SERVER_VERSION = "0.1.0";
 const DEFAULT_BASE_URL = "https://api.deepseek.com/anthropic";
 const DEFAULT_MODEL = "deepseek-v4-pro";
+const DEFAULT_WORKER_MODE = "manual" as const;
 const DEFAULT_MAX_ROUNDS = 3;
 const DEFAULT_TIMEOUT_SECONDS = 900;
 const DEFAULT_TAIL_BYTES = 64 * 1024;
@@ -23,6 +24,7 @@ type JobState = {
   experiment_id: string;
   round: number;
   max_rounds: number;
+  mode: "manual" | "external";
   status: JobStatus;
   cwd: string;
   packet_path: string;
@@ -236,10 +238,50 @@ async function finishJob(job: JobRecord, status: JobStatus, reason: string | nul
   await writeJson(job.state.state_path, job.state);
 }
 
+async function refreshStateFromOutput(state: JobState) {
+  if (state.status !== "pending" && state.status !== "running") return state;
+
+  let output = "";
+  try {
+    output = await fs.readFile(state.output_path, "utf8");
+  } catch {
+    return state;
+  }
+
+  const decision = parseDecision(output);
+  state.updated_at = nowIso();
+  state.changed_files = await getChangedFiles(state.cwd);
+  state.checks = {
+    ...state.checks,
+    output_bytes: Buffer.byteLength(output),
+    output_has_decision: decision !== null
+  };
+
+  if (decision === "ACCEPTED") {
+    state.status = "accepted";
+    state.decision = "ACCEPTED";
+    state.reason = null;
+    state.completed_at = nowIso();
+  } else if (decision === "REJECTED") {
+    state.status = "rejected";
+    state.decision = "REJECTED";
+    state.reason = null;
+    state.completed_at = nowIso();
+  } else {
+    state.status = "failed";
+    state.reason = "review output exists but does not contain Decision: ACCEPTED or Decision: REJECTED";
+    state.completed_at = nowIso();
+  }
+
+  await writeJson(state.state_path, state);
+  return state;
+}
+
 const startSchema = z.object({
   experiment_id: z.string().min(1),
   round: z.number().int().positive().default(1),
   max_rounds: z.number().int().positive().default(DEFAULT_MAX_ROUNDS),
+  mode: z.enum(["manual", "external"]).default(DEFAULT_WORKER_MODE),
   cwd: z.string().optional(),
   packet_path: z.string().min(1),
   output_path: z.string().min(1),
@@ -279,10 +321,19 @@ server.registerTool(
     const allowedDirs = asArray(args.allowed_dirs, [cwd]);
     const packetPath = resolveScopedPath(cwd, args.packet_path, allowedDirs);
     const outputPath = resolveScopedPath(cwd, args.output_path, allowedDirs);
-    const stateDir = resolveScopedPath(cwd, "experiments/.agent-state", allowedDirs);
+    const stateDir =
+      args.mode === "manual"
+        ? resolveScopedPath(cwd, "experiments/.agent-queue/state", allowedDirs)
+        : resolveScopedPath(cwd, "experiments/.agent-state", allowedDirs);
+    const queueRoot = resolveScopedPath(cwd, "experiments/.agent-queue", allowedDirs);
     const jobId = `${args.experiment_id}.round-${args.round}.${randomUUID().slice(0, 8)}`;
     const statePath = path.join(stateDir, `${jobId}.json`);
-    const logPath = path.join(stateDir, `${jobId}.log`);
+    const logPath =
+      args.mode === "manual"
+        ? path.join(queueRoot, "logs", `${jobId}.log`)
+        : path.join(stateDir, `${jobId}.log`);
+    const requestPath = path.join(queueRoot, "inbox", `${jobId}.request.json`);
+    const packetCopyPath = path.join(queueRoot, "inbox", `${jobId}.review-packet.md`);
     const changedFiles = await getChangedFiles(cwd);
     const packet = await fs.readFile(packetPath, "utf8");
 
@@ -292,7 +343,8 @@ server.registerTool(
       experiment_id: args.experiment_id,
       round: args.round,
       max_rounds: args.max_rounds,
-      status: args.dry_run ? "pending" : "running",
+      mode: args.mode,
+      status: args.mode === "manual" || args.dry_run ? "pending" : "running",
       cwd,
       packet_path: packetPath,
       output_path: outputPath,
@@ -309,13 +361,56 @@ server.registerTool(
       reason: args.dry_run ? "dry_run" : null,
       changed_files: changedFiles,
       checks: {
+        mode: args.mode,
         packet_bytes: Buffer.byteLength(packet),
-        deepseek_base_url: args.anthropic_base_url,
-        dry_run: args.dry_run
+        dry_run: args.dry_run,
+        ...(args.mode === "manual"
+          ? {
+              request_path: requestPath,
+              packet_copy_path: packetCopyPath,
+              outbox_path: outputPath
+            }
+          : {
+              deepseek_base_url: args.anthropic_base_url
+            })
       }
     };
 
     await writeJson(statePath, state);
+
+    if (args.mode === "manual") {
+      const request = {
+        server_version: SERVER_VERSION,
+        job_id: jobId,
+        experiment_id: args.experiment_id,
+        round: args.round,
+        max_rounds: args.max_rounds,
+        status: state.status,
+        cwd,
+        packet_path: packetPath,
+        packet_copy_path: packetCopyPath,
+        output_path: outputPath,
+        state_path: statePath,
+        changed_files: changedFiles,
+        instructions: [
+          "Current Claude Code session should review this request.",
+          "Do not edit files unless the user explicitly asks.",
+          "Write Markdown to output_path beginning with exactly one line:",
+          "Decision: ACCEPTED",
+          "or",
+          "Decision: REJECTED"
+        ]
+      };
+
+      if (!args.dry_run) {
+        await ensureParent(packetCopyPath);
+        await fs.writeFile(packetCopyPath, packet, "utf8");
+        await writeJson(requestPath, request);
+        await appendFileSafe(logPath, `manual request queued at ${nowIso()}\nrequest: ${requestPath}\noutput: ${outputPath}\n`);
+      }
+
+      return textResponse({ ...state, request_path: requestPath, packet_copy_path: packetCopyPath });
+    }
 
     const prompt = buildReviewPrompt({
       experiment_id: args.experiment_id,
@@ -395,9 +490,15 @@ async function loadState(jobId: string, cwd?: string) {
   const live = jobs.get(jobId);
   if (live) return live.state;
   const root = normalizeCwd(cwd);
-  const stateDir = path.join(root, "experiments", ".agent-state");
-  const statePath = path.join(stateDir, `${jobId}.json`);
-  return await readJson<JobState>(statePath);
+  const candidates = [
+    path.join(root, "experiments", ".agent-queue", "state", `${jobId}.json`),
+    path.join(root, "experiments", ".agent-state", `${jobId}.json`)
+  ];
+  for (const statePath of candidates) {
+    const state = await readJson<JobState>(statePath);
+    if (state) return state;
+  }
+  return null;
 }
 
 server.registerTool(
@@ -409,7 +510,8 @@ server.registerTool(
   },
   async (input) => {
     const args = jobLookupSchema.parse(input);
-    const state = await loadState(args.job_id, args.cwd);
+    const loaded = await loadState(args.job_id, args.cwd);
+    const state = loaded ? await refreshStateFromOutput(loaded) : null;
     if (!state) return textResponse({ server_version: SERVER_VERSION, status: "failed", reason: "job not found" });
     return textResponse({
       ...state,
@@ -445,6 +547,13 @@ server.registerTool(
     } catch {
       text = "";
     }
+    if (!text) {
+      try {
+        text = await fs.readFile(state.output_path, "utf8");
+      } catch {
+        text = "";
+      }
+    }
     return textResponse({ server_version: SERVER_VERSION, job_id: args.job_id, log_path: state.log_path, tail: text });
   }
 );
@@ -469,10 +578,12 @@ server.registerTool(
       poll_seconds: z.number().positive().default(2)
     }).parse(input);
     const deadline = Date.now() + args.timeout_seconds * 1000;
-    let state = await loadState(args.job_id, args.cwd);
-    while (state && state.status === "running" && Date.now() < deadline) {
+    let loaded = await loadState(args.job_id, args.cwd);
+    let state = loaded ? await refreshStateFromOutput(loaded) : null;
+    while (state && (state.status === "running" || state.status === "pending") && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, args.poll_seconds * 1000));
-      state = await loadState(args.job_id, args.cwd);
+      loaded = await loadState(args.job_id, args.cwd);
+      state = loaded ? await refreshStateFromOutput(loaded) : null;
     }
     if (!state) return textResponse({ server_version: SERVER_VERSION, status: "failed", reason: "job not found" });
     return textResponse({ ...state, changed_files: await getChangedFiles(state.cwd) });
@@ -497,6 +608,12 @@ server.registerTool(
       state.updated_at = nowIso();
       job.child.kill();
       await writeJson(state.state_path, state);
+    } else if (state.status === "running" || state.status === "pending") {
+      state.status = "canceled";
+      state.reason = "canceled by caller";
+      state.updated_at = nowIso();
+      state.completed_at = nowIso();
+      await writeJson(state.state_path, state);
     }
     return textResponse(state);
   }
@@ -516,21 +633,28 @@ server.registerTool(
     const claudeVersion = await runCommand(args.claude_command, ["-v"], cwd);
     const gitStatus = await runCommand("git", ["status", "--short"], cwd);
     const hasKey = Boolean(process.env.ANTHROPIC_API_KEY || process.env.DEEPSEEK_API_KEY);
+    const queueRoot = path.join(cwd, "experiments", ".agent-queue");
     return textResponse({
       server_version: SERVER_VERSION,
       cwd,
       node_version: nodeVersion,
+      default_mode: DEFAULT_WORKER_MODE,
       claude_command: args.claude_command,
       claude_ok: claudeVersion.exitCode === 0,
       claude_version: claudeVersion.stdout.trim() || claudeVersion.stderr.trim(),
       git_ok: gitStatus.exitCode === 0,
       deepseek_or_anthropic_key_present: hasKey,
+      api_key_required_for_default_mode: false,
+      api_key_required_for_external_mode: true,
       recommended_base_url: DEFAULT_BASE_URL,
       recommended_model: DEFAULT_MODEL,
       checks: {
         safe_default_permission_mode: "plan",
         bypass_permissions_default: false,
-        state_dir: path.join(cwd, "experiments", ".agent-state")
+        queue_root: queueRoot,
+        inbox_dir: path.join(queueRoot, "inbox"),
+        outbox_dir: "output_path supplied to start",
+        state_dir: path.join(queueRoot, "state")
       }
     });
   }
@@ -554,20 +678,16 @@ server.registerTool(
       `args = [${JSON.stringify(serverPath)}]`,
       `cwd = ${JSON.stringify(cwd)}`,
       "startup_timeout_sec = 40",
-      "tool_timeout_sec = 1800",
-      "",
-      "[mcp_servers.claude_code_worker.env]",
-      `ANTHROPIC_BASE_URL = ${JSON.stringify(DEFAULT_BASE_URL)}`,
-      "CLAUDE_WORKER_MODEL = \"deepseek-v4-pro\"",
-      "CLAUDE_WORKER_API_KEY_ENV = \"DEEPSEEK_API_KEY\""
+      "tool_timeout_sec = 1800"
     ].join("\n");
     return textResponse({
       server_version: SERVER_VERSION,
       codex_config_path: "%USERPROFILE%\\.codex\\config.toml",
       codex_config_snippet: snippet,
-      powershell_env_example: "$env:DEEPSEEK_API_KEY = \"sk-...\"",
+      external_mode_env_example: "$env:DEEPSEEK_API_KEY = \"sk-...\"",
       notes: [
-        "Do not put real API keys in the repository.",
+        "Default mode is manual file queue and does not require an API key.",
+        "Only external mode needs DEEPSEEK_API_KEY or ANTHROPIC_API_KEY.",
         "Restart Codex Desktop after adding the MCP server.",
         "Use doctor first, then start with dry_run=true for the first smoke test."
       ]

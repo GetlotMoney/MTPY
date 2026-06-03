@@ -1,17 +1,20 @@
 # Claude Code Worker MCP
 
-Node.js MCP server for Codex Desktop that runs Claude Code as an asynchronous worker. It is intended for the Claude review gate in `experiment-agent-workflow`, while letting Claude Code use DeepSeek's Anthropic-compatible API backend to reduce Codex main-thread token use.
+Node.js MCP server for Codex Desktop that coordinates Claude review work through a project-local file queue.
+
+Default mode is `manual`: Codex asks this MCP to write a review request into the project, and the currently running Claude Code session reviews it and writes the result back. This default mode does not start another model process and does not require a DeepSeek or Anthropic API key.
+
+An optional `external` mode is still available for future use. In that mode the MCP starts `claude -p` as a separate worker process, and that mode does require a usable Claude/DeepSeek backend key.
 
 ## What It Does
 
-- Starts Claude Code workers asynchronously with `start`.
-- Returns `server_version`, job status, changed files, checks, and optional diff with `get`.
-- Streams worker logs through `tail`.
-- Waits for long reasoning without killing it through `wait`.
-- Cancels a stuck worker with `cancel`.
-- Provides `setup` and `doctor` helpers.
-- Defaults to `--permission-mode plan`; it does not enable `bypassPermissions` by default.
-- Restricts file paths through `allowed_dirs` and project-scoped paths.
+- `start`: queue a review request in manual mode, or start `claude -p` in external mode.
+- `get`: return `server_version`, job status, changed files, checks, decision, and optional diff.
+- `tail`: read the queue log or review output tail.
+- `wait`: poll until the review result appears or the timeout expires.
+- `cancel`: mark a pending/running manual request as canceled, or kill a running external worker.
+- `doctor`: check Node, Git, Claude CLI availability, queue paths, and key status.
+- `setup`: print the Codex Desktop MCP config snippet.
 
 ## Install
 
@@ -20,29 +23,6 @@ cd C:\Users\Administrator\Desktop\项目\DVSR\mcp\claude-code-worker-mcp
 npm install
 npm run build
 npm run smoke
-```
-
-## DeepSeek Backend
-
-DeepSeek documents an Anthropic-compatible endpoint:
-
-```powershell
-$env:ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic"
-$env:DEEPSEEK_API_KEY = "sk-..."
-```
-
-The MCP maps `DEEPSEEK_API_KEY` to `ANTHROPIC_API_KEY` for the spawned Claude Code worker unless `ANTHROPIC_API_KEY` is already set.
-
-Default model:
-
-```text
-deepseek-v4-pro
-```
-
-Override with:
-
-```powershell
-$env:CLAUDE_WORKER_MODEL = "deepseek-v4-pro"
 ```
 
 ## Codex Desktop Config
@@ -57,79 +37,88 @@ args = ["C:\\Users\\Administrator\\Desktop\\项目\\DVSR\\mcp\\claude-code-worke
 cwd = "C:\\Users\\Administrator\\Desktop\\项目\\DVSR"
 startup_timeout_sec = 40
 tool_timeout_sec = 1800
-
-[mcp_servers.claude_code_worker.env]
-ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic"
-CLAUDE_WORKER_MODEL = "deepseek-v4-pro"
-CLAUDE_WORKER_API_KEY_ENV = "DEEPSEEK_API_KEY"
 ```
-
-Do not commit real API keys. Set `DEEPSEEK_API_KEY` in your user environment or shell instead.
 
 Restart Codex Desktop after adding the MCP server.
 
-## Tool Examples
+## Manual Mode Flow
 
-Start a dry-run worker:
-
-```json
-{
-  "experiment_id": "EXP-000",
-  "round": 1,
-  "packet_path": "experiments/EXP-000.review-packet.md",
-  "output_path": "experiments/EXP-000.claude-review.md",
-  "cwd": "C:\\Users\\Administrator\\Desktop\\项目\\DVSR",
-  "allowed_dirs": ["C:\\Users\\Administrator\\Desktop\\项目\\DVSR"],
-  "dry_run": true
-}
-```
-
-Start a real review:
+Codex calls `start`:
 
 ```json
 {
   "experiment_id": "EXP-000",
   "round": 1,
   "max_rounds": 3,
+  "mode": "manual",
   "packet_path": "experiments/EXP-000.review-packet.md",
   "output_path": "experiments/EXP-000.claude-review.md",
   "cwd": "C:\\Users\\Administrator\\Desktop\\项目\\DVSR",
-  "allowed_dirs": ["C:\\Users\\Administrator\\Desktop\\项目\\DVSR"],
-  "timeout_seconds": 900
+  "allowed_dirs": ["C:\\Users\\Administrator\\Desktop\\项目\\DVSR"]
 }
 ```
 
-Then poll:
+The MCP writes:
+
+```text
+experiments/.agent-queue/inbox/<job_id>.request.json
+experiments/.agent-queue/inbox/<job_id>.review-packet.md
+experiments/.agent-queue/state/<job_id>.json
+experiments/.agent-queue/logs/<job_id>.log
+```
+
+The current Claude Code session reviews the request and writes Markdown to `output_path`:
+
+```markdown
+Decision: ACCEPTED
+
+Findings:
+- No blocking issues found.
+```
+
+or:
+
+```markdown
+Decision: REJECTED
+
+Findings:
+- The experiment changes more than one variable.
+```
+
+Codex then calls `get` or `wait`. The MCP parses `Decision: ACCEPTED` or `Decision: REJECTED` from `output_path` and updates the job state.
+
+## External Mode
+
+External mode is optional:
 
 ```json
 {
-  "job_id": "EXP-000.round-1.xxxxxxxx",
+  "mode": "external",
+  "experiment_id": "EXP-000",
+  "round": 1,
+  "packet_path": "experiments/EXP-000.review-packet.md",
+  "output_path": "experiments/EXP-000.claude-review.md",
   "cwd": "C:\\Users\\Administrator\\Desktop\\项目\\DVSR",
-  "include_diff": true
+  "allowed_dirs": ["C:\\Users\\Administrator\\Desktop\\项目\\DVSR"]
 }
 ```
 
-## Status Files
+Only this mode needs:
 
-Worker state and logs are written under:
-
-```text
-experiments/.agent-state/
-```
-
-Review output is written to the `output_path` you pass, usually:
-
-```text
-experiments/EXP-XXX.claude-review.md
+```powershell
+$env:ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic"
+$env:DEEPSEEK_API_KEY = "sk-..."
 ```
 
 ## Safety Defaults
 
-- No `bypassPermissions` by default.
-- Default Claude Code permission mode is `plan`.
-- Edit tools are disallowed.
-- Paths must stay inside `allowed_dirs`.
+- Default mode is `manual`.
 - Default maximum review-repair rounds is 3.
+- No API key is required for default mode.
+- No `bypassPermissions` by default.
+- External mode uses `--permission-mode plan`.
+- External mode disallows Edit / Write / MultiEdit.
+- Paths must stay inside `allowed_dirs`.
 - Review rounds greater than `max_rounds` return `blocked` with reason `exceeded max review rounds`.
 
 ## References
