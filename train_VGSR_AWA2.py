@@ -1,4 +1,5 @@
 import os
+import argparse
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -36,15 +37,23 @@ def print_log(message):
 # ==========================================
 
 # 加载 Config
-config_path = './config/VGSR_awa2_gzsl.yaml'
+parser = argparse.ArgumentParser(description="Train VGSR on AWA2 GZSL.")
+parser.add_argument(
+    "--config",
+    default="./config/VGSR_awa2_gzsl.yaml",
+    help="Path to the YAML config. Use an experiment-local config.yaml for tracked runs.",
+)
+args = parser.parse_args()
+config_path = os.path.normpath(args.config)
 if not os.path.exists(config_path):
     print_log(f"Error: Config file {config_path} not found!")
-    exit()
+    raise SystemExit(1)
 
-with open(config_path, 'r') as f:
+with open(config_path, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 config = {k: v['value'] if isinstance(v, dict) and 'value' in v else v for k, v in config.items()}
 config = SimpleNamespace(**config)
+config.config_path = config_path
 
 if not hasattr(config, 'device'):
     config.device = 'cuda:1'
@@ -53,6 +62,7 @@ if not hasattr(config, 'device'):
 print_log(f"Training Start... Log will be saved to: {LOG_FILE}")
 print_log("=" * 50)
 print_log(f"Dataset: AWA2 (Animals with Attributes 2)")
+print_log(f"Config file: {config_path}")
 print_log(f"Training config: {config}")
 print_log("=" * 50)
 

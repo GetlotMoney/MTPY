@@ -46,3 +46,10 @@
 ## 7. 后续动作
 
 - [ ] 
+
+## 8. Config Workflow
+
+- Copy the dataset baseline YAML into this experiment folder as `config.yaml`.
+- Run training with `--config path/to/this/config.yaml`.
+- Keep root `config/*.yaml` files as reusable baselines.
+- For ablation runs, use strict schedule unless the experiment explicitly studies warm-restart.

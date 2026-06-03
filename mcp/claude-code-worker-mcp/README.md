@@ -90,7 +90,7 @@ Start a real review:
 {
   "experiment_id": "EXP-000",
   "round": 1,
-  "max_rounds": 10,
+  "max_rounds": 3,
   "packet_path": "experiments/EXP-000.review-packet.md",
   "output_path": "experiments/EXP-000.claude-review.md",
   "cwd": "C:\\Users\\Administrator\\Desktop\\项目\\DVSR",
@@ -129,6 +129,7 @@ experiments/EXP-XXX.claude-review.md
 - Default Claude Code permission mode is `plan`.
 - Edit tools are disallowed.
 - Paths must stay inside `allowed_dirs`.
+- Default maximum review-repair rounds is 3.
 - Review rounds greater than `max_rounds` return `blocked` with reason `exceeded max review rounds`.
 
 ## References

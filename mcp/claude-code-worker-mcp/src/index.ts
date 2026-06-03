@@ -11,7 +11,7 @@ import { z } from "zod";
 const SERVER_VERSION = "0.1.0";
 const DEFAULT_BASE_URL = "https://api.deepseek.com/anthropic";
 const DEFAULT_MODEL = "deepseek-v4-pro";
-const DEFAULT_MAX_ROUNDS = 10;
+const DEFAULT_MAX_ROUNDS = 3;
 const DEFAULT_TIMEOUT_SECONDS = 900;
 const DEFAULT_TAIL_BYTES = 64 * 1024;
 

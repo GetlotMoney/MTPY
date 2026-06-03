@@ -2,10 +2,13 @@
 
 这个目录专门放后续实验管理材料，避免把实验计划、配置副本、结果记录散落在根目录。
 
+长期实验总表见 `EXPERIMENT_REGISTRY.md`。所有实验必须先在注册表里获得稳定 ID，再创建实验文件夹。
+
 ## 目录说明
 
 | 目录 | 用途 |
 |---|---|
+| `EXPERIMENT_REGISTRY.md` | 长期实验注册表，记录 ID、状态、优先级、路径和结果 |
 | `00_templates/` | 实验记录模板 |
 | `01_module_replacement/` | 替换模块实验，例如换 patch selector、pooling、gate、loss 结构 |
 | `02_ablation/` | 消融实验，例如关掉某个模块或 loss |
@@ -16,10 +19,10 @@
 
 ## 命名规范
 
-每个实验单独建一个文件夹：
+每个实验单独建一个文件夹，文件夹名必须以实验 ID 开头：
 
 ```text
-experiments/02_ablation/2026-06-02_disable_ag_jepa/
+experiments/02_ablation/ABL-002_disable_ag_jepa/
 ```
 
 建议包含：
