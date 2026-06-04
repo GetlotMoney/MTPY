@@ -11,10 +11,12 @@ import { z } from "zod";
 const SERVER_VERSION = "0.1.0";
 const DEFAULT_BASE_URL = "https://api.deepseek.com/anthropic";
 const DEFAULT_MODEL = "deepseek-v4-pro";
-const DEFAULT_WORKER_MODE = "manual" as const;
+const DEFAULT_WORKER_MODE = "cli" as const;
 const DEFAULT_MAX_ROUNDS = 3;
 const DEFAULT_TIMEOUT_SECONDS = 900;
 const DEFAULT_TAIL_BYTES = 64 * 1024;
+const WORKER_MODES = ["cli", "manual", "external"] as const;
+type WorkerMode = (typeof WORKER_MODES)[number];
 
 type JobStatus = "pending" | "running" | "accepted" | "rejected" | "failed" | "timeout" | "canceled" | "blocked";
 
@@ -24,7 +26,7 @@ type JobState = {
   experiment_id: string;
   round: number;
   max_rounds: number;
-  mode: "manual" | "external";
+  mode: WorkerMode;
   status: JobStatus;
   cwd: string;
   packet_path: string;
@@ -96,6 +98,14 @@ async function appendFileSafe(filePath: string, text: string) {
   await fs.appendFile(filePath, text, "utf8");
 }
 
+async function removeFileIfExists(filePath: string) {
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+}
+
 async function writeJson(filePath: string, data: unknown) {
   await ensureParent(filePath);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
@@ -131,7 +141,7 @@ async function runCommand(command: string, args: string[], cwd: string, timeoutM
 }
 
 async function getChangedFiles(cwd: string) {
-  const result = await runCommand("git", ["status", "--short"], cwd);
+  const result = await runCommand("git", ["status", "--short", "--", "."], cwd);
   if (result.exitCode !== 0) return [];
   return result.stdout
     .split(/\r?\n/)
@@ -146,8 +156,22 @@ async function getDiff(cwd: string, includeDiff: boolean) {
 }
 
 function parseDecision(text: string): "ACCEPTED" | "REJECTED" | null {
-  const match = text.match(/^\s*Decision\s*:\s*(ACCEPTED|REJECTED)\b/im) || text.match(/\b(ACCEPTED|REJECTED)\b/);
-  return match ? (match[1] as "ACCEPTED" | "REJECTED") : null;
+  const passDecisions = [1, 2, 3].map((pass) => {
+    const match = text.match(new RegExp(`^\\s*Pass\\s+${pass}\\s+Decision\\s*:\\s*(ACCEPTED|REJECTED)\\b`, "im"));
+    return match ? (match[1] as "ACCEPTED" | "REJECTED") : null;
+  });
+  const overallMatch = text.match(/^\s*Overall\s+Decision\s*:\s*(ACCEPTED|REJECTED)\b/im);
+
+  if (overallMatch) {
+    if (passDecisions.some((decision) => decision === null)) return null;
+    const expected = passDecisions.every((decision) => decision === "ACCEPTED") ? "ACCEPTED" : "REJECTED";
+    return overallMatch[1] === expected ? expected : null;
+  }
+
+  if (passDecisions.some((decision) => decision !== null)) return null;
+
+  const legacyMatch = text.match(/^\s*Decision\s*:\s*(ACCEPTED|REJECTED)\b/im);
+  return legacyMatch ? (legacyMatch[1] as "ACCEPTED" | "REJECTED") : null;
 }
 
 function extractClaudeText(stdout: string) {
@@ -176,27 +200,31 @@ function extractClaudeText(stdout: string) {
 function buildReviewPrompt(args: {
   experiment_id: string;
   round: number;
+  packet_path: string;
   output_path: string;
   changed_files: string[];
 }) {
   return [
-    "You are the Claude Code worker for an experiment-agent-workflow review gate.",
-    "You must review only. Do not edit files. Do not run long experiments.",
-    "Return a concise Markdown review that begins with exactly one of:",
-    "Decision: ACCEPTED",
-    "Decision: REJECTED",
+    "你是 experiment-agent-workflow 的 Claude Code 审查工作器。",
+    "只审查，不修改代码，不运行长实验。",
+    "必须完成固定三轮审查，并在靠前位置返回以下四行：",
+    "Pass 1 Decision: ACCEPTED 或 REJECTED",
+    "Pass 2 Decision: ACCEPTED 或 REJECTED",
+    "Pass 3 Decision: ACCEPTED 或 REJECTED",
+    "Overall Decision: ACCEPTED 或 REJECTED",
     "",
-    "Reject for correctness bugs, data leakage, invalid metrics, reproducibility gaps, unrelated changes, unsafe permissions, or missing evidence.",
-    "Accept only when the implementation is safe to run for this experiment.",
+    "只有三轮全部 ACCEPTED 时，Overall Decision 才能是 ACCEPTED。",
+    "如果存在正确性 bug、数据泄漏、指标无效、可复现性缺口、无关改动、不安全权限或证据不足，拒绝对应轮次。",
     "",
-    `Experiment: ${args.experiment_id}`,
-    `Review round: ${args.round}`,
-    `The MCP server will write your final Markdown to: ${args.output_path}`,
+    `实验：${args.experiment_id}`,
+    `审查轮次：${args.round}`,
+    `审查包路径：${args.packet_path}`,
+    `MCP 会把你的最终 Markdown 写入：${args.output_path}`,
     "",
-    "Changed files visible before review:",
+    "审查前可见的变更文件：",
     args.changed_files.length > 0 ? args.changed_files.join("\n") : "(none reported)",
     "",
-    "The review packet is provided on stdin. Base your review on it."
+    "审查包内容会通过 stdin 提供。优先基于审查包完成审查；只有证据不足时才读取项目文件或 Git 差异。"
   ].join("\n");
 }
 
@@ -204,16 +232,18 @@ async function finishJob(job: JobRecord, status: JobStatus, reason: string | nul
   const text = extractClaudeText(job.stdout);
   const decision = parseDecision(text);
   const finalStatus: JobStatus =
-    status === "failed" || status === "timeout" || status === "canceled"
+    status === "timeout" || status === "canceled"
       ? status
+      : decision === "REJECTED"
+        ? "rejected"
       : decision === "ACCEPTED"
-        ? "accepted"
-        : decision === "REJECTED"
-          ? "rejected"
-          : "failed";
+        ? status === "failed"
+          ? "failed"
+          : "accepted"
+        : "failed";
 
   job.state.status = finalStatus;
-  job.state.reason = reason || (decision ? null : "Claude output did not contain Decision: ACCEPTED or Decision: REJECTED");
+  job.state.reason = finalStatus === "failed" ? reason || "Claude 输出没有包含可解析且一致的三轮审查决策" : null;
   job.state.exit_code = exitCode;
   job.state.decision = decision;
   job.state.completed_at = nowIso();
@@ -226,12 +256,16 @@ async function finishJob(job: JobRecord, status: JobStatus, reason: string | nul
     output_has_decision: decision !== null
   };
 
-  const reviewMarkdown = text || [
-    "Decision: REJECTED",
+  const fallbackReviewMarkdown = [
+    "Pass 1 Decision: REJECTED",
+    "Pass 2 Decision: REJECTED",
+    "Pass 3 Decision: REJECTED",
+    "Overall Decision: REJECTED",
     "",
-    "Findings:",
-    "- Claude Code produced no parseable review output."
+    "审查发现：",
+    "- Claude Code 没有产生可解析的审查输出。"
   ].join("\n");
+  const reviewMarkdown = decision ? text : fallbackReviewMarkdown;
 
   await ensureParent(job.state.output_path);
   await fs.writeFile(job.state.output_path, reviewMarkdown.endsWith("\n") ? reviewMarkdown : reviewMarkdown + "\n", "utf8");
@@ -242,6 +276,13 @@ async function refreshStateFromOutput(state: JobState) {
   if (state.status !== "pending" && state.status !== "running") return state;
 
   let output = "";
+  try {
+    const outputStat = await fs.stat(state.output_path);
+    if (outputStat.mtimeMs + 1000 < new Date(state.started_at).getTime()) return state;
+  } catch {
+    return state;
+  }
+
   try {
     output = await fs.readFile(state.output_path, "utf8");
   } catch {
@@ -269,7 +310,7 @@ async function refreshStateFromOutput(state: JobState) {
     state.completed_at = nowIso();
   } else {
     state.status = "failed";
-    state.reason = "review output exists but does not contain Decision: ACCEPTED or Decision: REJECTED";
+    state.reason = "审查输出已存在，但没有包含可解析且一致的三轮审查决策";
     state.completed_at = nowIso();
   }
 
@@ -281,13 +322,13 @@ const startSchema = z.object({
   experiment_id: z.string().min(1),
   round: z.number().int().positive().default(1),
   max_rounds: z.number().int().positive().default(DEFAULT_MAX_ROUNDS),
-  mode: z.enum(["manual", "external"]).default(DEFAULT_WORKER_MODE),
+  mode: z.enum(WORKER_MODES).default(DEFAULT_WORKER_MODE),
   cwd: z.string().optional(),
   packet_path: z.string().min(1),
   output_path: z.string().min(1),
   allowed_dirs: z.array(z.string()).optional(),
   timeout_seconds: z.number().int().positive().default(DEFAULT_TIMEOUT_SECONDS),
-  model: z.string().default(process.env.CLAUDE_WORKER_MODEL || DEFAULT_MODEL),
+  model: z.string().optional(),
   claude_command: z.string().default(process.env.CLAUDE_WORKER_COMMAND || "claude"),
   permission_mode: z.enum(["plan", "default", "dontAsk", "auto", "acceptEdits"]).default("plan"),
   anthropic_base_url: z.string().default(process.env.ANTHROPIC_BASE_URL || DEFAULT_BASE_URL),
@@ -301,8 +342,8 @@ const startSchema = z.object({
 server.registerTool(
   "start",
   {
-    title: "Start Claude Code Worker",
-    description: "Start an async Claude Code review worker for an experiment packet.",
+    title: "启动 Claude Code 审查工作器",
+    description: "为实验审查包启动异步 Claude Code 审查任务。",
     inputSchema: startSchema
   },
   async (input) => {
@@ -321,6 +362,7 @@ server.registerTool(
     const allowedDirs = asArray(args.allowed_dirs, [cwd]);
     const packetPath = resolveScopedPath(cwd, args.packet_path, allowedDirs);
     const outputPath = resolveScopedPath(cwd, args.output_path, allowedDirs);
+    if (!args.dry_run) await removeFileIfExists(outputPath);
     const stateDir =
       args.mode === "manual"
         ? resolveScopedPath(cwd, "experiments/.agent-queue/state", allowedDirs)
@@ -351,7 +393,7 @@ server.registerTool(
       log_path: logPath,
       state_path: statePath,
       pid: null,
-      model: args.model,
+      model: args.model || (args.mode === "external" ? process.env.CLAUDE_WORKER_MODEL || DEFAULT_MODEL : process.env.CLAUDE_WORKER_CLI_MODEL || "default"),
       permission_mode: args.permission_mode,
       started_at: nowIso(),
       updated_at: nowIso(),
@@ -371,7 +413,9 @@ server.registerTool(
               outbox_path: outputPath
             }
           : {
-              deepseek_base_url: args.anthropic_base_url
+              cli_mode: args.mode === "cli",
+              external_mode: args.mode === "external",
+              ...(args.mode === "external" ? { deepseek_base_url: args.anthropic_base_url } : {})
             })
       }
     };
@@ -393,12 +437,13 @@ server.registerTool(
         state_path: statePath,
         changed_files: changedFiles,
         instructions: [
-          "Current Claude Code session should review this request.",
-          "Do not edit files unless the user explicitly asks.",
-          "Write Markdown to output_path beginning with exactly one line:",
-          "Decision: ACCEPTED",
-          "or",
-          "Decision: REJECTED"
+          "当前 Claude Code 会话需要审查这个请求。",
+          "除非用户明确要求，否则不要编辑文件。",
+          "请把 Markdown 审查结果写入 output_path，并在靠前位置包含这四行：",
+          "Pass 1 Decision: ACCEPTED 或 REJECTED",
+          "Pass 2 Decision: ACCEPTED 或 REJECTED",
+          "Pass 3 Decision: ACCEPTED 或 REJECTED",
+          "Overall Decision: ACCEPTED 或 REJECTED"
         ]
       };
 
@@ -415,65 +460,95 @@ server.registerTool(
     const prompt = buildReviewPrompt({
       experiment_id: args.experiment_id,
       round: args.round,
+      packet_path: packetPath,
       output_path: outputPath,
       changed_files: changedFiles
     });
 
-    const cliArgs = ["-p", "--output-format", "stream-json", "--permission-mode", args.permission_mode, "--model", args.model];
+    const cliArgs = ["-p", "--output-format", "stream-json", "--permission-mode", args.permission_mode];
+    const effectiveModel = args.model || (args.mode === "external" ? process.env.CLAUDE_WORKER_MODEL || DEFAULT_MODEL : process.env.CLAUDE_WORKER_CLI_MODEL);
+    if (effectiveModel) cliArgs.push("--model", effectiveModel);
     if (args.verbose) cliArgs.push("--verbose");
     if (args.bare) cliArgs.push("--bare");
-    cliArgs.push("--disallowedTools", "Edit,Write,MultiEdit,NotebookEdit");
+    if (args.mode === "cli") cliArgs.push("--add-dir", cwd);
+    cliArgs.push("--tools=Read");
+    cliArgs.push("--disallowedTools=Bash,Edit,Write,MultiEdit,NotebookEdit");
     if (args.max_budget_usd) cliArgs.push("--max-budget-usd", String(args.max_budget_usd));
-    cliArgs.push(prompt);
+
+    const stdinPayload = [
+      prompt,
+      "",
+      "--- 审查包内容开始 ---",
+      packet,
+      "--- 审查包内容结束 ---"
+    ].join("\n");
 
     if (args.dry_run) {
-      return textResponse({ ...state, command: args.claude_command, args: cliArgs });
+      return textResponse({ ...state, command: args.claude_command, args: cliArgs, stdin_bytes: Buffer.byteLength(stdinPayload) });
     }
 
-    const env: NodeJS.ProcessEnv = { ...process.env, ANTHROPIC_BASE_URL: args.anthropic_base_url };
-    const apiKey = process.env.ANTHROPIC_API_KEY || process.env[args.anthropic_api_key_env];
-    if (apiKey) env.ANTHROPIC_API_KEY = apiKey;
+    const env: NodeJS.ProcessEnv = { ...process.env };
+    if (args.mode === "external") {
+      env.ANTHROPIC_BASE_URL = args.anthropic_base_url;
+      const apiKey = process.env.ANTHROPIC_API_KEY || process.env[args.anthropic_api_key_env];
+      if (apiKey) env.ANTHROPIC_API_KEY = apiKey;
+    }
 
-    const child = spawn(args.claude_command, cliArgs, {
-      cwd,
-      env,
-      shell: process.platform === "win32"
-    });
-
-    state.pid = child.pid ?? null;
-    state.updated_at = nowIso();
-    await writeJson(statePath, state);
-
-    const job: JobRecord = { state, child, stdout: "", stderr: "" };
+    const job: JobRecord = { state, stdout: "", stderr: "" };
     jobs.set(jobId, job);
 
-    const timeout = setTimeout(() => {
-      if (job.state.status === "running") {
-        job.state.status = "timeout";
-        job.state.reason = "timeout";
-        child.kill();
-      }
-    }, args.timeout_seconds * 1000);
+    setImmediate(() => {
+      void (async () => {
+        let child: ChildProcessWithoutNullStreams;
+        try {
+          child = spawn(args.claude_command, cliArgs, {
+            cwd,
+            env,
+            shell: process.platform === "win32"
+          });
+        } catch (error) {
+          job.state.status = "failed";
+          job.state.reason = error instanceof Error ? error.message : String(error);
+          job.state.updated_at = nowIso();
+          job.state.completed_at = nowIso();
+          await writeJson(statePath, job.state);
+          return;
+        }
 
-    child.stdin.write(packet);
-    child.stdin.end();
+        job.child = child;
+        state.pid = child.pid ?? null;
+        state.updated_at = nowIso();
+        await writeJson(statePath, state);
 
-    child.stdout.on("data", async (chunk) => {
-      const text = chunk.toString();
-      job.stdout += text;
-      await appendFileSafe(logPath, text);
-    });
+        const timeout = setTimeout(() => {
+          if (job.state.status === "running") {
+            job.state.status = "timeout";
+            job.state.reason = "timeout";
+            child.kill();
+          }
+        }, args.timeout_seconds * 1000);
 
-    child.stderr.on("data", async (chunk) => {
-      const text = chunk.toString();
-      job.stderr += text;
-      await appendFileSafe(logPath, `\n[stderr]\n${text}`);
-    });
+        child.stdout.on("data", async (chunk) => {
+          const text = chunk.toString();
+          job.stdout += text;
+          await appendFileSafe(logPath, text);
+        });
 
-    child.on("close", async (exitCode) => {
-      clearTimeout(timeout);
-      const status = job.state.status === "timeout" || job.state.status === "canceled" ? job.state.status : exitCode === 0 ? "running" : "failed";
-      await finishJob(job, status, status === "failed" ? "claude process failed" : job.state.reason, exitCode);
+        child.stderr.on("data", async (chunk) => {
+          const text = chunk.toString();
+          job.stderr += text;
+          await appendFileSafe(logPath, `\n[stderr]\n${text}`);
+        });
+
+        child.on("close", async (exitCode) => {
+          clearTimeout(timeout);
+          const status = job.state.status === "timeout" || job.state.status === "canceled" ? job.state.status : exitCode === 0 ? "running" : "failed";
+          await finishJob(job, status, status === "failed" ? "claude process failed" : job.state.reason, exitCode);
+        });
+
+        child.stdin.write(stdinPayload);
+        child.stdin.end();
+      })();
     });
 
     return textResponse(state);
@@ -504,8 +579,8 @@ async function loadState(jobId: string, cwd?: string) {
 server.registerTool(
   "get",
   {
-    title: "Get Worker Status",
-    description: "Get a Claude worker job status, changed files, checks, and optional git diff stat.",
+    title: "读取审查任务状态",
+    description: "读取 Claude 审查任务状态、变更文件、检查项和可选 Git diff 统计。",
     inputSchema: jobLookupSchema
   },
   async (input) => {
@@ -524,8 +599,8 @@ server.registerTool(
 server.registerTool(
   "tail",
   {
-    title: "Tail Worker Log",
-    description: "Read the end of a Claude worker stream-json log.",
+    title: "读取审查日志尾部",
+    description: "读取 Claude 审查工作器 stream-json 日志的末尾内容。",
     inputSchema: z.object({
       job_id: z.string().min(1),
       cwd: z.string().optional(),
@@ -561,8 +636,8 @@ server.registerTool(
 server.registerTool(
   "wait",
   {
-    title: "Wait For Worker",
-    description: "Wait for a Claude worker to finish without killing long-running reasoning.",
+    title: "等待审查任务结束",
+    description: "等待 Claude 审查任务结束，不中断正在进行的推理。",
     inputSchema: z.object({
       job_id: z.string().min(1),
       cwd: z.string().optional(),
@@ -593,8 +668,8 @@ server.registerTool(
 server.registerTool(
   "cancel",
   {
-    title: "Cancel Worker",
-    description: "Cancel a running Claude worker job.",
+    title: "取消审查任务",
+    description: "取消正在运行的 Claude 审查任务。",
     inputSchema: z.object({ job_id: z.string().min(1), cwd: z.string().optional() })
   },
   async (input) => {
@@ -622,8 +697,8 @@ server.registerTool(
 server.registerTool(
   "doctor",
   {
-    title: "Doctor",
-    description: "Check local Claude Code worker prerequisites.",
+    title: "环境检查",
+    description: "检查本地 Claude Code 审查工作器的运行前提。",
     inputSchema: z.object({ cwd: z.string().optional(), claude_command: z.string().default(process.env.CLAUDE_WORKER_COMMAND || "claude") })
   },
   async (input) => {
@@ -645,6 +720,7 @@ server.registerTool(
       git_ok: gitStatus.exitCode === 0,
       deepseek_or_anthropic_key_present: hasKey,
       api_key_required_for_default_mode: false,
+      api_key_required_for_cli_mode: false,
       api_key_required_for_external_mode: true,
       recommended_base_url: DEFAULT_BASE_URL,
       recommended_model: DEFAULT_MODEL,
@@ -654,7 +730,8 @@ server.registerTool(
         queue_root: queueRoot,
         inbox_dir: path.join(queueRoot, "inbox"),
         outbox_dir: "output_path supplied to start",
-        state_dir: path.join(queueRoot, "state")
+        default_state_dir: path.join(cwd, "experiments", ".agent-state"),
+        manual_state_dir: path.join(queueRoot, "state")
       }
     });
   }
@@ -663,8 +740,8 @@ server.registerTool(
 server.registerTool(
   "setup",
   {
-    title: "Setup Instructions",
-    description: "Return Codex Desktop config and environment setup snippets for this MCP server.",
+    title: "配置说明",
+    description: "返回该 MCP 服务的 Codex Desktop 配置片段和环境说明。",
     inputSchema: z.object({ cwd: z.string().optional(), server_path: z.string().optional() })
   },
   async (input) => {
@@ -684,12 +761,14 @@ server.registerTool(
       server_version: SERVER_VERSION,
       codex_config_path: "%USERPROFILE%\\.codex\\config.toml",
       codex_config_snippet: snippet,
+      cli_mode_example: "mode = \"cli\" 会通过 claude -p 使用本机 Claude CLI OAuth 登录状态，不需要 API key。",
       external_mode_env_example: "$env:DEEPSEEK_API_KEY = \"sk-...\"",
       notes: [
-        "Default mode is manual file queue and does not require an API key.",
-        "Only external mode needs DEEPSEEK_API_KEY or ANTHROPIC_API_KEY.",
-        "Restart Codex Desktop after adding the MCP server.",
-        "Use doctor first, then start with dry_run=true for the first smoke test."
+        "默认模式是 cli，会使用本机 Claude CLI OAuth 登录状态，不需要 API key。",
+        "manual 模式保留为文件队列备用模式。",
+        "只有 external 模式需要 DEEPSEEK_API_KEY 或 ANTHROPIC_API_KEY。",
+        "加入 MCP 服务后需要重启 Codex Desktop。",
+        "第一次冒烟测试建议先调用 doctor，再用 dry_run=true 调用 start。"
       ]
     });
   }
