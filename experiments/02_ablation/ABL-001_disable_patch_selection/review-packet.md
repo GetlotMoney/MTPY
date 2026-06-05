@@ -8,7 +8,7 @@
 - 实验记录：`experiments/02_ablation/ABL-001_disable_patch_selection/README.md`
 - 实验配置：`experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml`
 - 基线配置：`config/VGSR_cub_gzsl.yaml`
-- 实验前 checkpoint：待 workflow 启动时创建
+- 实验前 checkpoint：`0874c5d Prepare ABL-001 workflow checkpoint`
 - 审查输出：`experiments/02_ablation/ABL-001_disable_patch_selection/claude-review.md`
 
 ## 审查请求

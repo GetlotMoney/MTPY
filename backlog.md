@@ -10,7 +10,7 @@
 
 | ID | 状态 | 实验 | 假设 | 配置 | 运行命令 | 备注 |
 |---|---|---|---|---|---|---|
-| `ABL-001` | open | 去掉局部补丁选择 | 32 个局部补丁选择是否是当前 CUB GZSL 结果的核心贡献来源 | `experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | 第一个从头测试 skill 的实验；先审查，通过后再训练 |
+| `ABL-001` | running | 去掉局部补丁选择 | 32 个局部补丁选择是否是当前 CUB GZSL 结果的核心贡献来源 | `experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | 已建立实验前 checkpoint `0874c5d`；先审查，通过后再训练 |
 
 ## P1
 
