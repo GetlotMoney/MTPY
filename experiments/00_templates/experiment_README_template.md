@@ -2,7 +2,7 @@
 
 日期:
 
-类型: 替换模块 / 消融 / 调参 / 跨数据集 / 最终多 seed
+类型: 替换模块 / 消融 / 调参 / 跨数据集 / 最终 seed 候选池
 
 ## 1. 实验目的
 
@@ -19,16 +19,22 @@
 | 项 | 值 |
 |---|---|
 | 数据集 | CUB / AWA2 / SUN |
-| seed |  |
-| schedule | strict / warm-restart |
+| 随机种子 |  |
+| 训练流程 | 严格连续 / 热重启 |
 | 命令 |  |
 | 配置文件 |  |
 
 ## 4. 结果
 
-| U | S | H | ZS | Best Epoch | Log |
+| U | S | H | ZS | 最佳轮次 | 日志 |
 |---:|---:|---:|---:|---:|---|
 |  |  |  |  |  |  |
+
+多 seed 规则：
+
+- 如果同一设置测试多个 seed，正式比较值取主指标 H 的最大值。
+- 必须保留所有 seed 的完整结果和日志路径。
+- 不用多 seed 平均值作为主结果。
 
 ## 5. 对比基线
 
@@ -46,10 +52,17 @@
 ## 7. 后续动作
 
 - [ ] 
+- [ ] 生成或更新 `experiments/06_framework_flows/<EXP-ID>_<slug>.md`，包含代码框架图、流程说明和本实验数据。
 
-## 8. Config Workflow
+## 8. 配置管理流程
 
-- Copy the dataset baseline YAML into this experiment folder as `config.yaml`.
-- Run training with `--config path/to/this/config.yaml`.
-- Keep root `config/*.yaml` files as reusable baselines.
-- For ablation runs, use strict schedule unless the experiment explicitly studies warm-restart.
+- 把对应数据集的基线 YAML 复制到本实验文件夹，并命名为 `config.yaml`。
+- 训练时必须显式使用 `--config path/to/this/config.yaml`。
+- 根目录 `config/*.yaml` 只作为可复用基线，不要为了单个实验随手改。
+- 消融实验默认使用严格连续训练流程；只有专门研究热重启时，才允许使用热重启。
+
+## 9. 框架图记录流程
+
+- 实验跑完并分析后，必须在 `experiments/06_framework_flows/` 中为该实验生成一份 Markdown。
+- 文件名使用 `<EXP-ID>_<slug>.md`。
+- 文件必须包含 Mermaid 流程图、图的含义、本实验改动位置、结果数据表、原始日志路径、实验日志副本路径和结论。

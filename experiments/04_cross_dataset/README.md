@@ -1,4 +1,4 @@
-# Cross-Dataset Experiments
+# 跨数据集实验
 
 放跨数据集实验。
 
@@ -10,9 +10,9 @@
 目标：
 
 - 验证当前 CUB 主框架是否能迁移。
-- 论文 Table 1 需要跨数据集结果。
+- 论文主结果表需要跨数据集结果。
 
 注意：
 
 - AWA2 / SUN 脚本可能还没完整接入当前 CUB 的最新模块。
-- 开跑前先确认 AG-JEPA、patch selector、评估函数和 yaml 开关是否同步。
+- 开跑前先确认 AG-JEPA、补丁选择器、评估函数和 yaml 开关是否同步。

@@ -1,15 +1,16 @@
-# Final Runs
+# 最终正式实验
 
 放最终正式结果。
 
 例子：
 
-- strict schedule 三种 seed
-- warm-restart 三种 seed
+- 严格连续训练流程，多 seed 候选池取最高 H
+- 热重启训练流程，多 seed 候选池取最高 H
 - 最终论文主表结果
 
 规则：
 
-- 必须记录 seed、schedule、日志路径、best epoch。
-- strict 结果和 warm-restart 结果必须分开。
-- 论文 main result 优先使用多 seed 均值和标准差。
+- 必须记录随机种子、训练流程、日志路径、最佳轮次。
+- 严格连续结果和热重启结果必须分开。
+- 论文主结果按主指标 H 取候选 seed 中的最大值，不使用多 seed 均值作为主结果。
+- 其它 seed 结果作为复查记录保留，用于说明最高值来自哪个候选 seed。

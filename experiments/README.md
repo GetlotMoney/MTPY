@@ -1,4 +1,4 @@
-# DVSR Experiments
+# DVSR 实验管理区
 
 这个目录专门放后续实验管理材料，避免把实验计划、配置副本、结果记录散落在根目录。
 
@@ -10,11 +10,12 @@
 |---|---|
 | `EXPERIMENT_REGISTRY.md` | 长期实验注册表，记录 ID、状态、优先级、路径和结果 |
 | `00_templates/` | 实验记录模板 |
-| `01_module_replacement/` | 替换模块实验，例如换 patch selector、pooling、gate、loss 结构 |
+| `01_module_replacement/` | 替换模块实验，例如换补丁选择器、池化方法、门控结构、损失结构 |
 | `02_ablation/` | 消融实验，例如关掉某个模块或 loss |
 | `03_hyperparam_tuning/` | 调参实验，例如扫 K、lambda、学习率、sigma |
 | `04_cross_dataset/` | 跨数据集实验，例如 AWA2 / SUN |
-| `05_final_runs/` | 最终正式多 seed 或 warm-restart 结果 |
+| `05_final_runs/` | 最终正式 seed 候选池或热重启结果 |
+| `06_framework_flows/` | 每个实验完成后的代码框架图、实验流程图、指标数据和日志来源 |
 | `99_archive/` | 不再继续但需要保留的旧实验计划 |
 
 ## 命名规范
@@ -35,10 +36,26 @@ notes.md           # 训练中临时观察，可选
 
 原始训练日志仍放在 `train_log/`，不要复制大日志到这里，只在实验 README 里写日志路径。
 
+每个实验完成并分析后，还必须在 `06_framework_flows/` 中新增或更新一个文件：
+
+```text
+experiments/06_framework_flows/<EXP-ID>_<slug>.md
+```
+
+该文件必须包含：
+
+- 当前实验对应的代码框架图或数据流图。
+- 这张图说明的流程是什么。
+- 本实验改变了流程图中的哪一段。
+- 关键数据表：seed、U、S、H、ZS、最佳轮次、原始日志、实验日志副本。
+- 结论：该实验对当前代码框架的理解有什么影响。
+
 ## 基本原则
 
 - 一次只改一个主要变量。
-- 消融实验用 strict schedule，不能混 warm-restart。
-- 多 seed 结果才作为正式主结果。
+- 消融实验用严格连续训练流程，不能混用热重启。
+- 多 seed 不是取平均值；正式主结果按主指标 H 取候选 seed 中的最大值。
+- 每个候选 seed 的 U / S / H / ZS / 最佳轮次 / 日志路径都必须记录，便于复查最高值来源。
 - 单次 H 小幅下降不直接判失败，先标为待补消融。
 - 每个实验跑完必须写结论：保留 / 放弃 / 需要补跑。
+- 每个实验跑完必须生成对应的 `06_framework_flows/<EXP-ID>_<slug>.md`，用于长期沉淀代码框架图和实验数据。

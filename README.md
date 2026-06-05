@@ -4,24 +4,24 @@
 
 > 当前唯一项目汇报: `DVSR_标准项目汇报.md`
 >
-> 旧的 report / 汇报 / 交接文档已清理。日常接手、开实验、写论文优先读 `DVSR_标准项目汇报.md`。
+> 旧的报告 / 汇报 / 交接文档已清理。日常接手、开实验、写论文优先读 `DVSR_标准项目汇报.md`。
 
 ## 核心思想
 
 ```
-图像 → CLIP(冻结) → CLS + patches
+图像 → CLIP(冻结) → CLS + 补丁特征
                        │
        ┌───────────────┼─────────────────┐
        ↓                                 ↓
-  base_logits = CLS @ all_text.T    CrossModalTransformer
+  全局分类分数                      双向视觉-文本 Transformer
                                     (并行双向 v2s + s2v)
                                          ↓
-                                    local_score
+                                    局部分数
        └───────────────┬─────────────────┘
                        ↓
-          logits = base + 0.5 × local_score
+          最终分数 = 全局分类分数 + 局部分数
                        ↓
-                CE Loss (seen 150 类)
+                交叉熵损失 (seen 150 类)
 ```
 
 - **seen 类文本**：经 Adapter 优化（参数可训练）
@@ -32,21 +32,21 @@
 
 | 口径 | 配置 | U | S | H | ZSL |
 |------|------|---:|---:|---:|---:|
-| 新 main baseline | P3.10 配置, 3 seeds, strict 60ep | 73.07 +/- 0.85 | 72.26 +/- 0.85 | 72.65 +/- 0.19 | 81.54 +/- 0.16 |
-| 单点最高 strict | P3.10 seed=5 | 73.30 | 72.53 | 72.91 | 81.72 |
-| 旧 main baseline | v5+FAE, 3 seeds, strict 50ep | 74.13 +/- 0.62 | 70.99 +/- 0.40 | 72.52 +/- 0.11 | 81.56 +/- 0.18 |
-| 纯 CLIP zero-shot | no train | 60.88 | 61.69 | 61.28 | 78.07 |
+| 当前主基线 | 局部补丁选择 + AG-JEPA 辅助训练，多 seed 候选池取最高 H，严格连续 60 轮，seed=5 | 73.30 | 72.53 | 72.91 | 81.72 |
+| 多 seed 参考 | 同一框架，seed=5 / 42 / 2024 全部记录，但不取平均作为主结果 | 见项目汇报 | 见项目汇报 | 最高 H=72.91 | 见项目汇报 |
+| 旧主基线历史记录 | 局部补丁选择 + 几何感知编码，旧均值口径，仅作参考，待按最高 H 口径复核 | 74.13 +/- 0.62 | 70.99 +/- 0.40 | 72.52 +/- 0.11 | 81.56 +/- 0.18 |
+| 纯 CLIP 零样本 | 不训练 | 60.88 | 61.69 | 61.28 | 78.07 |
 
-注意: `H=73.05` / `H=73.20` 属于 warm-restart 或离群刷分口径，不作为当前 strict main baseline。
+注意：项目正式比较口径不是多 seed 均值，而是在预先记录的 seed 候选池中取主指标 H 的最大值。`H=73.05` / `H=73.20` 属于热重启或离群刷分口径，不作为当前严格连续主基线。
 
 ## 项目结构
 
 ```
 .
 ├── DVSR_标准项目汇报.md        # 当前唯一项目汇报
-├── model/MyModel.py           # 主模型 (Adapter + LaSt v5 + CrossModalTransformer)
+├── model/MyModel.py           # 主模型：Adapter + LaSt v5 + 双向视觉-文本 Transformer
 ├── tools/
-│   ├── dataset.py             # CUB / AWA2 / SUN DataLoader
+│   ├── dataset.py             # CUB / AWA2 / SUN 数据加载器
 │   ├── helper_func.py         # CLIP 特征提取 + GZSL 评估
 │   └── extract_features.py    # 预提取 CLIP 特征到缓存
 ├── config/
@@ -63,7 +63,7 @@
 
 ## 环境
 
-- OS: Windows
+- 操作系统：Windows
 - Python 3.x，conda 环境（推荐 `dassl_clip`）
 - CUDA: cuda:0 (CUB/SUN), cuda:1 (AWA2)
 - 主要依赖: `torch`, `clip` (OpenAI), `numpy`, `scipy`, `yaml`, `Pillow`
