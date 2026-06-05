@@ -8,6 +8,7 @@
 - 实验记录：`experiments/02_ablation/ABL-002_disable_ag_jepa/README.md`
 - 实验配置：`experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml`
 - 基线配置：`config/VGSR_cub_gzsl.yaml`
+- 实验前 checkpoint：`3d828ad Prepare ABL-002 workflow checkpoint`
 - 审查输出：`experiments/02_ablation/ABL-002_disable_ag_jepa/claude-review.md`
 
 ## 审查请求
