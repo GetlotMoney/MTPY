@@ -8,6 +8,7 @@
 - 实验记录：`experiments/02_ablation/ABL-003_disable_text_topology/README.md`
 - 实验配置：`experiments/02_ablation/ABL-003_disable_text_topology/config.yaml`
 - 基线配置：`config/VGSR_cub_gzsl.yaml`
+- 实验前 checkpoint：`9a5f6ab Prepare ABL-003 workflow checkpoint`
 - 审查输出：`experiments/02_ablation/ABL-003_disable_text_topology/claude-review.md`
 
 ## 审查请求
