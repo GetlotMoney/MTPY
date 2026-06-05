@@ -5,6 +5,7 @@
 - 实验编号：`ABL-004`
 - 实验名称：去掉双分支互蒸馏
 - 当前分支：`experiment/batch-ablation-cub-20260605`
+- Git checkpoint：`f10a663`，提交信息 `Prepare ABL-004 workflow checkpoint`
 - 实验记录：`experiments/02_ablation/ABL-004_disable_branch_distillation/README.md`
 - 实验配置：`experiments/02_ablation/ABL-004_disable_branch_distillation/config.yaml`
 - 基线配置：`config/VGSR_cub_gzsl.yaml`
@@ -13,6 +14,8 @@
 ## 审查请求
 
 请审查当前实验准备是否允许进入训练阶段。不要修改代码，不要运行训练。
+
+Codex 自审结果：`ACCEPTED`。理由：当前准备只新增 ABL-004 实验目录并更新队列状态，实验配置只把 `lambda_msdn.value` 从基线的 `0.05` 改为 `0.0`，同时保持 `lastvit_select_k=32`、`use_ag_jepa=True`、`lambda_topo_pearson=0.05`、`random_seed=5` 和严格连续训练流程；未修改模型核心代码或根目录基线配置。
 
 必须执行固定三轮审查：
 

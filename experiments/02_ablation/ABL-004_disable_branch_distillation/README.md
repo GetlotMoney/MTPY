@@ -4,7 +4,7 @@
 
 类型：消融实验
 
-状态：进行中，等待审查放行
+状态：进行中，等待 Claude Code 审查放行
 
 ## 1. 实验目的
 
@@ -50,7 +50,8 @@
 
 | 审查项 | 结果 | 备注 |
 |---|---|---|
-| Codex 自查 | 待执行 | 检查配置变量、训练命令和记录完整性 |
+| Git checkpoint | 已完成 | `f10a663`，提交信息：`Prepare ABL-004 workflow checkpoint` |
+| Codex 自查 | ACCEPTED | 配置只关闭 `lambda_msdn`，保留其它主框架变量；训练命令、seed、日志命名和结果记录计划完整 |
 | Claude Code 三轮审查 | 待执行 | 通过 `claude_code_worker` MCP 的默认 `cli` 模式执行 |
 
 审查通过前不允许运行训练。
@@ -69,8 +70,8 @@
 
 ## 9. 后续动作
 
-- [ ] 创建 ABL-004 实验前 Git checkpoint。
-- [ ] Codex 自审。
+- [x] 创建 ABL-004 实验前 Git checkpoint。
+- [x] Codex 自审。
 - [ ] Claude Code 固定三轮审查。
 - [ ] 审查全部通过后运行训练。
 - [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-004_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
