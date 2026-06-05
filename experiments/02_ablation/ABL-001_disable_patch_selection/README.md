@@ -4,7 +4,7 @@
 
 类型：消融实验
 
-状态：进行中，等待审查放行
+状态：已完成
 
 ## 1. 实验目的
 
@@ -44,7 +44,7 @@
 | 对比对象 | 口径 | H |
 |---|---|---:|
 | 当前主基线 | 严格连续训练，seed 候选池取最高 H，来源 seed=5 | 72.91 |
-| 本实验 | 待运行 | - |
+| 本实验 | seed=5，严格连续训练，关闭局部补丁选择 | 71.55 |
 
 ## 6. 审查记录
 
@@ -59,21 +59,29 @@
 
 | seed | U | S | H | ZS | 最佳轮次 | 原始日志 | 实验日志副本 |
 |---:|---:|---:|---:|---:|---:|---|---|
-| 5 |  |  |  |  |  |  |  |
+| 5 | 74.22 | 69.07 | 71.55 | 81.84 | 9 | `train_log/CUB/training_log_CUB_2026-06-05_22-43-55.txt` | `experiments/02_ablation/ABL-001_disable_patch_selection/logs/ABL-001_CUB_seed5_20260605-224355_attempt2.txt` |
+
+运行备注：
+
+- `train_log/CUB/training_log_CUB_2026-06-05_22-40-02.txt` 是第一次启动失败日志，原因是 Windows GBK 控制台无法编码日志里的 `⚠` 字符，训练未进入 epoch。
+- 第二次运行只设置进程环境变量 `PYTHONIOENCODING=utf-8`，未修改模型代码或实验配置，训练完整跑完 30 epoch。
+- 失败日志副本：`experiments/02_ablation/ABL-001_disable_patch_selection/logs/ABL-001_CUB_seed5_20260605-224002_attempt1_failed_encoding.txt`。
 
 ## 8. 结论
 
-状态：待定
+状态：完成。
 
-决策：待训练和结果分析后填写。
+观察事实：关闭局部补丁选择后，seed=5 的最佳 H 为 71.55，低于当前主基线 H=72.91，下降 1.36。
+
+结论：在当前 CUB 设置下，局部补丁选择对主框架有效；去掉它会削弱 GZSL-H。该实验支持继续保留局部补丁选择，并优先做更细的补丁数量或选择策略消融。
 
 ## 9. 后续动作
 
 - [x] 启动 skill 后创建实验前 Git checkpoint。
 - [x] Codex 自审。
 - [x] Claude Code 固定三轮审查。
-- [ ] 审查全部通过后运行训练。
-- [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-001_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
-- [ ] 生成 `experiments/06_framework_flows/ABL-001_disable_patch_selection.md`，记录代码框架图、流程说明和本实验数据。
-- [ ] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
-- [ ] 更新 `backlog.md`。
+- [x] 审查全部通过后运行训练。
+- [x] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-001_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
+- [x] 生成 `experiments/06_framework_flows/ABL-001_disable_patch_selection.md`，记录代码框架图、流程说明和本实验数据。
+- [x] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
+- [x] 更新 `backlog.md`。

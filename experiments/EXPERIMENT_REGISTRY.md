@@ -51,7 +51,7 @@ experiments/04_cross_dataset/XDS-001_awa2_main_framework/
 
 | ID | 状态 | 优先级 | 类型 | 实验名称 | 核心问题 | 实验目录 | 当前结果 |
 |---|---|---:|---|---|---|---|---|
-| `ABL-001` | 进行中 | 1 | 消融 | 去掉局部补丁选择 | 32 个局部补丁信息瓶颈是否是核心贡献 | `02_ablation/ABL-001_disable_patch_selection/` | 已建立实验前 checkpoint `0874c5d`，等待审查放行 |
+| `ABL-001` | 已完成 | 1 | 消融 | 去掉局部补丁选择 | 32 个局部补丁信息瓶颈是否是核心贡献 | `02_ablation/ABL-001_disable_patch_selection/` | seed=5: U=74.22, S=69.07, H=71.55, ZS=81.84；较主基线 H=72.91 下降 1.36 |
 | `ABL-002` | 计划中 | 2 | 消融 | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `02_ablation/ABL-002_disable_ag_jepa/` | 已有单种子证据: -0.46 H |
 | `ABL-003` | 计划中 | 3 | 消融 | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `02_ablation/ABL-003_disable_text_topology/` | - |
 | `ABL-004` | 计划中 | 4 | 消融 | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | `02_ablation/ABL-004_disable_branch_distillation/` | - |
@@ -75,16 +75,17 @@ experiments/04_cross_dataset/XDS-001_awa2_main_framework/
 
 | 顺序 | ID | 实验 |
 |---:|---|---|
-| 1 | `ABL-001` | 去掉局部补丁选择 |
-| 2 | `ABL-002` | 去掉 AG-JEPA 辅助训练 |
-| 3 | `ABL-003` | 去掉文本拓扑保持 |
-| 4 | `ABL-004` | 去掉双分支互蒸馏 |
+| 1 | `ABL-002` | 去掉 AG-JEPA 辅助训练 |
+| 2 | `ABL-003` | 去掉文本拓扑保持 |
+| 3 | `ABL-004` | 去掉双分支互蒸馏 |
+| 4 | `ABL-005` | 去掉条件文本扰动 |
 
 原因：
 
-- `ABL-001` 验证核心结构。
+- `ABL-001` 已完成，结果支持保留局部补丁选择。
 - `ABL-002` 验证当前最强辅助训练信号。
 - `ABL-003` / `ABL-004` 补齐论文 Table 2 需要的 loss-level 消融。
+- `ABL-005` 验证图像条件化文本扰动是否是当前增益来源之一。
 
 ## 5. 单个实验文件夹规范
 
