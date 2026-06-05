@@ -4,7 +4,7 @@
 
 类型：消融实验
 
-状态：进行中，Claude Code 审查已放行，等待训练
+状态：已完成
 
 ## 1. 实验目的
 
@@ -45,7 +45,7 @@
 | 对比对象 | 口径 | H |
 |---|---|---:|
 | 当前主基线 | 严格连续训练，seed 候选池取最高 H，来源 seed=5 | 72.91 |
-| 本实验 | 待运行 | - |
+| 本实验 | seed=5，严格连续训练，关闭条件文本扰动 | 72.12 |
 
 ## 6. 审查记录
 
@@ -61,21 +61,23 @@
 
 | seed | U | S | H | ZS | 最佳轮次 | 原始日志 | 实验日志副本 |
 |---:|---:|---:|---:|---:|---:|---|---|
-| 5 |  |  |  |  |  |  |  |
+| 5 | 72.97 | 71.29 | 72.12 | 81.86 | 10 | `train_log/CUB/training_log_CUB_2026-06-06_00-25-24.txt` | `experiments/02_ablation/ABL-005_disable_conditional_text/logs/ABL-005_CUB_seed5_20260606-002524.txt` |
 
 ## 8. 结论
 
-状态：待定
+状态：完成。
 
-决策：待训练和结果分析后填写。
+观察事实：关闭条件文本扰动后，seed=5 的最佳 H 为 72.12，低于当前主基线 H=72.91，下降 0.79。
+
+结论：在当前 CUB 设置下，图像条件化文本扰动有轻到中等正贡献。该实验支持继续保留 `use_conditional_text=True` 和 `conditional_text_ratio=0.005`，但它的贡献弱于文本拓扑保持、AG-JEPA 和双分支互蒸馏。
 
 ## 9. 后续动作
 
 - [x] 创建 ABL-005 实验前 Git checkpoint。
 - [x] Codex 自审。
 - [x] Claude Code 固定三轮审查。
-- [ ] 审查全部通过后运行训练。
-- [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-005_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
-- [ ] 生成 `experiments/06_framework_flows/ABL-005_disable_conditional_text.md`，记录代码框架图、流程说明和本实验数据。
-- [ ] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
-- [ ] 更新 `backlog.md`。
+- [x] 审查全部通过后运行训练。
+- [x] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-005_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
+- [x] 生成 `experiments/06_framework_flows/ABL-005_disable_conditional_text.md`，记录代码框架图、流程说明和本实验数据。
+- [x] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
+- [x] 更新 `backlog.md`。
