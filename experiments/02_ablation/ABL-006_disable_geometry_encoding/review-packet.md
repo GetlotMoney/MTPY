@@ -5,6 +5,7 @@
 - 实验编号：`ABL-006`
 - 实验名称：去掉几何感知编码
 - 当前分支：`experiment/batch-ablation-cub-20260605`
+- Git checkpoint：`e59d5e9`，提交信息 `Prepare ABL-006 workflow checkpoint`
 - 实验记录：`experiments/02_ablation/ABL-006_disable_geometry_encoding/README.md`
 - 实验配置：`experiments/02_ablation/ABL-006_disable_geometry_encoding/config.yaml`
 - 基线配置：`config/VGSR_cub_gzsl.yaml`
@@ -13,6 +14,8 @@
 ## 审查请求
 
 请审查当前实验准备是否允许进入训练阶段。不要修改代码，不要运行训练。
+
+Codex 自审结果：`ACCEPTED`。理由：当前准备只新增 ABL-006 实验目录并更新队列状态，实验配置只把 `use_fae.value` 从 `True` 改为 `False`，同时保持 `lastvit_select_k=32`、`use_conditional_text=True`、`conditional_text_ratio=0.005`、`lambda_msdn=0.05`、`lambda_topo_pearson=0.05`、`use_ag_jepa=True`、`random_seed=5` 和严格连续训练流程；未修改模型核心代码或根目录基线配置。
 
 必须执行固定三轮审查：
 
