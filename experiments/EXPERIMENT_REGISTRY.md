@@ -54,7 +54,7 @@ experiments/04_cross_dataset/XDS-001_awa2_main_framework/
 | `ABL-001` | 已完成 | 1 | 消融 | 去掉局部补丁选择 | 32 个局部补丁信息瓶颈是否是核心贡献 | `02_ablation/ABL-001_disable_patch_selection/` | seed=5: U=74.22, S=69.07, H=71.55, ZS=81.84；较主基线 H=72.91 下降 1.36 |
 | `ABL-002` | 已完成 | 2 | 消融 | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `02_ablation/ABL-002_disable_ag_jepa/` | seed=5: U=76.00, S=66.76, H=71.08, ZS=81.66；较主基线 H=72.91 下降 1.83 |
 | `ABL-003` | 已完成 | 3 | 消融 | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `02_ablation/ABL-003_disable_text_topology/` | seed=5: U=74.54, S=65.97, H=70.00, ZS=81.64；较主基线 H=72.91 下降 2.91 |
-| `ABL-004` | 计划中 | 4 | 消融 | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | `02_ablation/ABL-004_disable_branch_distillation/` | - |
+| `ABL-004` | 进行中 | 4 | 消融 | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | `02_ablation/ABL-004_disable_branch_distillation/` | 已创建实验配置，等待审查放行 |
 | `ABL-005` | 计划中 | 5 | 消融 | 去掉条件文本扰动 | 图像条件化文本是否帮助 GZSL | `02_ablation/ABL-005_disable_conditional_text/` | - |
 | `ABL-006` | 计划中 | 6 | 消融 | 去掉几何感知编码 | 选中补丁后是否还需要位置关系建模 | `02_ablation/ABL-006_disable_geometry_encoding/` | - |
 | `TUNE-001` | 计划中 | 7 | 调参 | AG-JEPA 权重扫描 | 辅助训练权重是否最优 | `03_hyperparam_tuning/TUNE-001_ag_jepa_weight_sweep/` | - |
