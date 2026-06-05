@@ -4,7 +4,7 @@
 
 类型：消融实验
 
-状态：进行中，等待 Claude Code 审查放行
+状态：进行中，Claude Code 审查已放行，等待训练
 
 ## 1. 实验目的
 
@@ -53,7 +53,7 @@
 |---|---|---|
 | Git checkpoint | 已完成 | `69df8b9`，提交信息：`Prepare ABL-005 workflow checkpoint` |
 | Codex 自查 | ACCEPTED | 配置只关闭条件文本扰动，保留其它主框架变量；训练命令、seed、日志命名和结果记录计划完整 |
-| Claude Code 三轮审查 | 待执行 | 通过 `claude_code_worker` MCP 的默认 `cli` 模式执行 |
+| Claude Code 三轮审查 | ACCEPTED | MCP job `ABL-005.round-1.97b714de`，三轮均为 `ACCEPTED` |
 
 审查通过前不允许运行训练。
 
@@ -73,7 +73,7 @@
 
 - [x] 创建 ABL-005 实验前 Git checkpoint。
 - [x] Codex 自审。
-- [ ] Claude Code 固定三轮审查。
+- [x] Claude Code 固定三轮审查。
 - [ ] 审查全部通过后运行训练。
 - [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-005_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
 - [ ] 生成 `experiments/06_framework_flows/ABL-005_disable_conditional_text.md`，记录代码框架图、流程说明和本实验数据。
