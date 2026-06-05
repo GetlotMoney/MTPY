@@ -12,13 +12,13 @@
 |---|---|---|---|---|---|---|
 | `ABL-001` | done | 去掉局部补丁选择 | 32 个局部补丁选择是否是当前 CUB GZSL 结果的核心贡献来源 | `experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | seed=5 最佳 H=71.55，较主基线 72.91 下降 1.36；支持保留局部补丁选择 |
 | `ABL-002` | done | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | seed=5 最佳 H=71.08，较主基线 72.91 下降 1.83；支持保留 AG-JEPA |
-| `ABL-003` | running | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | 批量计数器 10 中的第 2 个实验；先审查，通过后再训练 |
+| `ABL-003` | done | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | seed=5 最佳 H=70.00，较主基线 72.91 下降 2.91；支持保留文本拓扑保持 |
+| `ABL-004` | open | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | 待创建 | 待确认 | ABL-003 已完成；批量计数器剩余 8 时优先准备 |
 
 ## P1
 
 | ID | 状态 | 实验 | 假设 | 配置 | 运行命令 | 备注 |
 |---|---|---|---|---|---|---|
-| `ABL-004` | open | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | 待创建 | 待确认 | 论文消融候选 |
 
 ## 更新规则
 

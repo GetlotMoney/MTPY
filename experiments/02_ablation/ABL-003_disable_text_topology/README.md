@@ -4,7 +4,7 @@
 
 类型：消融实验
 
-状态：进行中，等待审查放行
+状态：已完成
 
 ## 1. 实验目的
 
@@ -44,7 +44,7 @@
 | 对比对象 | 口径 | H |
 |---|---|---:|
 | 当前主基线 | 严格连续训练，seed 候选池取最高 H，来源 seed=5 | 72.91 |
-| 本实验 | 待运行 | - |
+| 本实验 | seed=5，严格连续训练，关闭文本拓扑保持 | 70.00 |
 
 ## 6. 审查记录
 
@@ -59,21 +59,23 @@
 
 | seed | U | S | H | ZS | 最佳轮次 | 原始日志 | 实验日志副本 |
 |---:|---:|---:|---:|---:|---:|---|---|
-| 5 |  |  |  |  |  |  |  |
+| 5 | 74.54 | 65.97 | 70.00 | 81.64 | 9 | `train_log/CUB/training_log_CUB_2026-06-05_23-51-48.txt` | `experiments/02_ablation/ABL-003_disable_text_topology/logs/ABL-003_CUB_seed5_20260605-235148.txt` |
 
 ## 8. 结论
 
-状态：待定
+状态：完成。
 
-决策：待训练和结果分析后填写。
+观察事实：关闭文本拓扑保持后，seed=5 的最佳 H 为 70.00，低于当前主基线 H=72.91，下降 2.91。
+
+结论：在当前 CUB 设置下，文本类别原型拓扑保持是关键约束；关闭后 seen/unseen 平衡明显变差。该实验支持继续保留 `lambda_topo_pearson=0.05`，后续可以做权重扫描确认最优强度。
 
 ## 9. 后续动作
 
 - [x] 创建 ABL-003 实验前 Git checkpoint。
 - [x] Codex 自审。
 - [x] Claude Code 固定三轮审查。
-- [ ] 审查全部通过后运行训练。
-- [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-003_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
-- [ ] 生成 `experiments/06_framework_flows/ABL-003_disable_text_topology.md`，记录代码框架图、流程说明和本实验数据。
-- [ ] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
-- [ ] 更新 `backlog.md`。
+- [x] 审查全部通过后运行训练。
+- [x] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-003_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
+- [x] 生成 `experiments/06_framework_flows/ABL-003_disable_text_topology.md`，记录代码框架图、流程说明和本实验数据。
+- [x] 更新 `experiments/EXPERIMENT_REGISTRY.md`。
+- [x] 更新 `backlog.md`。
