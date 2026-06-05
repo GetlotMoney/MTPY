@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|---|
 | `ABL-001` | done | 去掉局部补丁选择 | 32 个局部补丁选择是否是当前 CUB GZSL 结果的核心贡献来源 | `experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | seed=5 最佳 H=71.55，较主基线 72.91 下降 1.36；支持保留局部补丁选择 |
 | `ABL-002` | done | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | seed=5 最佳 H=71.08，较主基线 72.91 下降 1.83；支持保留 AG-JEPA |
-| `ABL-003` | open | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | 待创建 | 待确认 | ABL-002 已完成；批量计数器剩余 9 时优先准备 |
+| `ABL-003` | running | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | 批量计数器 10 中的第 2 个实验；先审查，通过后再训练 |
 
 ## P1
 
