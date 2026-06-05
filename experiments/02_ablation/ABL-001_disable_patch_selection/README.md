@@ -51,7 +51,7 @@
 | 审查项 | 结果 | 备注 |
 |---|---|---|
 | Codex 自查 | ACCEPTED | 仅使用实验目录配置；未修改模型核心代码；checkpoint `0874c5d` 已建立 |
-| Claude Code 三轮审查 | 待执行 | 通过 `claude_code_worker` MCP 的默认 `cli` 模式执行 |
+| Claude Code 三轮审查 | ACCEPTED | MCP job `ABL-001.round-1.bdc20be6`；三轮均为 ACCEPTED |
 
 审查通过前不允许运行训练。
 
@@ -71,7 +71,7 @@
 
 - [x] 启动 skill 后创建实验前 Git checkpoint。
 - [x] Codex 自审。
-- [ ] Claude Code 固定三轮审查。
+- [x] Claude Code 固定三轮审查。
 - [ ] 审查全部通过后运行训练。
 - [ ] 复制训练日志到本实验 `logs/` 目录，并使用 `ABL-001_CUB_seed5_<YYYYMMDD-HHMMSS>.txt` 命名。
 - [ ] 生成 `experiments/06_framework_flows/ABL-001_disable_patch_selection.md`，记录代码框架图、流程说明和本实验数据。

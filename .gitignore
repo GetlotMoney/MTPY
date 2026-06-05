@@ -55,6 +55,7 @@ Thumbs.db
 
 # Agent / MCP runtime artifacts
 experiments/.agent-queue/
+experiments/.agent-state/
 experiments/MCP-SMOKE.*
 mcp/codex-gateway/
 
