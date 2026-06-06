@@ -8,16 +8,23 @@
 
 当前 baseline：局部补丁选择 + 几何感知编码 + 双向视觉-文本交互 + 条件文本扰动 + AG-JEPA 辅助训练；CUB GZSL seed=5，U=73.30，S=72.53，H=72.91，ZS=81.72。后续新增模块、消融和调参实验默认与该 baseline 比较。
 
+## 分支归属
+
+后续实验按大模块分支维护，`main` 只保留当前 baseline 代码、主配置和总说明。
+
+| 分支 | 用途 |
+|---|---|
+| `experiment/ablation` | 消融实验，包含 `ABL-001` 到 `ABL-006` 的完整记录 |
+| `experiment/innovation` | 新增创新模块和模块替换实验 |
+| `experiment/tuning` | 超参数、loss 权重、top-K、训练日程扫描 |
+| `experiment/cross-dataset` | AWA2 / SUN 等跨数据集迁移 |
+| `experiment/final-runs` | 最终多 seed 复核、热重启上限、正式结果表 |
+
 ## P0
 
 | ID | 状态 | 实验 | 假设 | 配置 | 运行命令 | 备注 |
 |---|---|---|---|---|---|---|
-| `ABL-001` | done | 去掉局部补丁选择 | 32 个局部补丁选择是否是当前 CUB GZSL 结果的核心贡献来源 | `experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml` | seed=5 最佳 H=71.55，较主基线 72.91 下降 1.36；支持保留局部补丁选择 |
-| `ABL-002` | done | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-002_disable_ag_jepa/config.yaml` | seed=5 最佳 H=71.08，较主基线 72.91 下降 1.83；支持保留 AG-JEPA |
-| `ABL-003` | done | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-003_disable_text_topology/config.yaml` | seed=5 最佳 H=70.00，较主基线 72.91 下降 2.91；支持保留文本拓扑保持 |
-| `ABL-004` | done | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | `experiments/02_ablation/ABL-004_disable_branch_distillation/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-004_disable_branch_distillation/config.yaml` | seed=5 最佳 H=71.00，较主基线 72.91 下降 1.91；支持保留双分支互蒸馏 |
-| `ABL-005` | done | 去掉条件文本扰动 | 图像条件化文本是否帮助 GZSL | `experiments/02_ablation/ABL-005_disable_conditional_text/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-005_disable_conditional_text/config.yaml` | seed=5 最佳 H=72.12，较主基线 72.91 下降 0.79；支持保留条件文本扰动 |
-| `ABL-006` | done | 去掉几何感知编码 | 选中补丁后是否还需要位置关系建模 | `experiments/02_ablation/ABL-006_disable_geometry_encoding/config.yaml` | `F:\Anaconda\envs\dvsr_gpu\python.exe train_VGSR_CUB.py --config experiments/02_ablation/ABL-006_disable_geometry_encoding/config.yaml` | seed=5 最佳 H=70.95，较主基线 72.91 下降 1.96；支持保留几何感知编码 |
+| - | - | - | - | - | - | main 不排队具体实验；到对应大模块分支维护 |
 
 ## P1
 

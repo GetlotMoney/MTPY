@@ -4,6 +4,17 @@
 
 长期实验总表见 `EXPERIMENT_REGISTRY.md`。所有实验必须先在注册表里获得稳定 ID，再创建实验文件夹。
 
+当前 Git 分支按实验大模块拆分：
+
+| 分支 | 用途 |
+|---|---|
+| `main` | 当前 baseline 代码、主配置和总说明 |
+| `experiment/ablation` | 消融实验记录 |
+| `experiment/innovation` | 新增创新模块和模块替换 |
+| `experiment/tuning` | 超参数扫描 |
+| `experiment/cross-dataset` | 跨数据集实验 |
+| `experiment/final-runs` | 最终复核和正式结果 |
+
 ## 目录说明
 
 | 目录 | 用途 |

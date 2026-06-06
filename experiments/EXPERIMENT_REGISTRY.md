@@ -47,54 +47,24 @@ experiments/04_cross_dataset/XDS-001_awa2_main_framework/
 | 当前主框架 | 局部补丁选择 + 几何感知编码 + 双向视觉-文本交互 + AG-JEPA 辅助训练，seed 候选池取最高 H | 72.91 |
 | 最高值来源 | 同上，seed=5 | 72.91 |
 
-## 3. 实验总表
+## 3. 实验分支总表
 
-| ID | 状态 | 优先级 | 类型 | 实验名称 | 核心问题 | 实验目录 | 当前结果 |
-|---|---|---:|---|---|---|---|---|
-| `ABL-001` | 已完成 | 1 | 消融 | 去掉局部补丁选择 | 32 个局部补丁信息瓶颈是否是核心贡献 | `02_ablation/ABL-001_disable_patch_selection/` | seed=5: U=74.22, S=69.07, H=71.55, ZS=81.84；较主基线 H=72.91 下降 1.36 |
-| `ABL-002` | 已完成 | 2 | 消融 | 去掉 AG-JEPA 辅助训练 | AG-JEPA 是否带来真实增益 | `02_ablation/ABL-002_disable_ag_jepa/` | seed=5: U=76.00, S=66.76, H=71.08, ZS=81.66；较主基线 H=72.91 下降 1.83 |
-| `ABL-003` | 已完成 | 3 | 消融 | 去掉文本拓扑保持 | 文本语义结构约束是否有效 | `02_ablation/ABL-003_disable_text_topology/` | seed=5: U=74.54, S=65.97, H=70.00, ZS=81.64；较主基线 H=72.91 下降 2.91 |
-| `ABL-004` | 已完成 | 4 | 消融 | 去掉双分支互蒸馏 | 两条视觉-文本分支是否需要互相约束 | `02_ablation/ABL-004_disable_branch_distillation/` | seed=5: U=73.30, S=68.83, H=71.00, ZS=81.52；较主基线 H=72.91 下降 1.91 |
-| `ABL-005` | 已完成 | 5 | 消融 | 去掉条件文本扰动 | 图像条件化文本是否帮助 GZSL | `02_ablation/ABL-005_disable_conditional_text/` | seed=5: U=72.97, S=71.29, H=72.12, ZS=81.86；较主基线 H=72.91 下降 0.79 |
-| `ABL-006` | 已完成 | 6 | 消融 | 去掉几何感知编码 | 选中补丁后是否还需要位置关系建模 | `02_ablation/ABL-006_disable_geometry_encoding/` | seed=5: U=73.60, S=68.49, H=70.95, ZS=81.51；较主基线 H=72.91 下降 1.96 |
-| `TUNE-001` | 计划中 | 7 | 调参 | AG-JEPA 权重扫描 | 辅助训练权重是否最优 | `03_hyperparam_tuning/TUNE-001_ag_jepa_weight_sweep/` | - |
-| `TUNE-002` | 计划中 | 8 | 调参 | 负文本 margin 权重扫描 | 负类文本约束是否过强或过弱 | `03_hyperparam_tuning/TUNE-002_ag_jepa_negative_weight_sweep/` | - |
-| `TUNE-003` | 计划中 | 9 | 调参 | 局部补丁数量补充扫描 | 32 是否优于 24 / 48 / 96 | `03_hyperparam_tuning/TUNE-003_patch_count_extended_sweep/` | - |
-| `XDS-001` | 计划中 | 10 | 跨数据集 | AWA2 主框架迁移 | 当前框架是否迁移到属性数据集 | `04_cross_dataset/XDS-001_awa2_main_framework/` | - |
-| `XDS-002` | 计划中 | 11 | 跨数据集 | SUN 主框架迁移 | 当前框架是否迁移到场景数据集 | `04_cross_dataset/XDS-002_sun_main_framework/` | - |
-| `MOD-001` | 计划中 | 12 | 替换模块 | 动态频域尺度 | 每张图是否需要自适应补丁平滑尺度 | `01_module_replacement/MOD-001_dynamic_frequency_scale/` | - |
-| `MOD-002` | 计划中 | 13 | 替换模块 | 类别条件补丁选择 | 补丁选择是否应由类别文本引导 | `01_module_replacement/MOD-002_class_conditioned_patch_selection/` | - |
-| `FINAL-001` | 计划中 | 14 | 最终结果 | 严格连续 seed 候选池复核 | 多个 seed 中寻找严格连续最高 H | `05_final_runs/FINAL-001_strict_multiseed_verification/` | - |
-| `FINAL-002` | 计划中 | 15 | 最终结果 | 热重启 seed 候选池 | 多个 seed 中寻找热重启性能上限 | `05_final_runs/FINAL-002_warm_restart_multiseed/` | - |
+`main` 只维护当前 baseline 代码、主配置和总说明。具体实验记录按大模块分支维护：
 
-## 4. 第一批建议执行
+| 分支 | 类型 | 目录 | 当前内容 |
+|---|---|---|---|
+| `experiment/ablation` | 消融 | `02_ablation/`、`06_framework_flows/` | `ABL-001` 到 `ABL-006` 完整记录 |
+| `experiment/innovation` | 新增模块 / 替换模块 | `01_module_replacement/` | 后续创新模块实验 |
+| `experiment/tuning` | 调参 | `03_hyperparam_tuning/` | AG-JEPA 权重、负文本 margin、patch 数量等扫描 |
+| `experiment/cross-dataset` | 跨数据集 | `04_cross_dataset/` | AWA2 / SUN 主框架迁移 |
+| `experiment/final-runs` | 最终结果 | `05_final_runs/` | 严格多 seed 复核、热重启上限、正式结果表 |
 
-只维护最近要跑的 3 到 5 个实验。每完成一个实验，就从这里移除，并从实验总表里选择下一个“计划中”且优先级最高的实验补进来。
+## 4. main 分支规则
 
-当前消融批次已完成：
-
-| 顺序 | ID | 实验 |
-|---:|---|---|
-| 1 | `ABL-004` | 去掉双分支互蒸馏 |
-| 2 | `ABL-005` | 去掉条件文本扰动 |
-| 3 | `ABL-006` | 去掉几何感知编码 |
-
-结论：
-
-- `ABL-001` 已完成，结果支持保留局部补丁选择。
-- `ABL-002` 已完成，结果支持保留 AG-JEPA。
-- `ABL-003` 已完成，结果支持保留文本拓扑保持。
-- `ABL-004` 已完成，结果支持保留双分支互蒸馏。
-- `ABL-005` 已完成，结果支持保留条件文本扰动。
-- `ABL-006` 已完成，结果支持保留几何感知编码。
-
-下一批非消融候选：
-
-| 顺序 | ID | 实验 |
-|---:|---|---|
-| 1 | `TUNE-001` | AG-JEPA 权重扫描 |
-
-原因：`TUNE-001` 进一步验证 AG-JEPA 权重是否还有上升空间，但不属于本次“跑完消融实验”的范围。
+- `main` 是当前 baseline，不承载具体实验目录。
+- 已完成消融记录见 `experiment/ablation`。
+- 新增实验必须先选择对应大模块分支，再创建实验目录和配置副本。
+- 如果某个分支结果成为新主框架，先在该分支复核，再按用户确认更新 `main`。
 
 ## 5. 单个实验文件夹规范
 
