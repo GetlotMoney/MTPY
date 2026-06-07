@@ -54,5 +54,18 @@ After training, always update:
 - Logs copy.
 - `experiments/EXPERIMENT_REGISTRY.md`.
 - `experiments/08_framework_flow_records/<EXP-ID>_<slug>.md`.
+- `report/FRAMEWORK_DIAGRAM_<EXP-ID>_<slug>.html`.
 - External idea tree and human-readable view.
 - Category queue and `backlog.md`.
+
+The framework diagram must be an HTML visualization page for the current experiment module itself, following the style and completeness of `report/FRAMEWORK_DIAGRAM_BASELINE.html`. It is not a whole-project framework diagram, a training-step diagram, or an agent workflow diagram.
+
+Each experiment README must include a `当前实验模块框架图` section that links to the HTML file. The HTML page must explain:
+
+- Module inputs: source baseline node, variable names, tensor/data meaning.
+- Internal module structure: submodules, computations, losses, gates, scores, or replacement logic.
+- Module output: loss, logits, feature, gate, score, or config decision.
+- Integration point: file, class, function, and config keys.
+- Baseline relationship: added, replaced, disabled, combined, or reviewed.
+- Disabled path: how turning the config off returns to baseline.
+- Result data: seed, U, S, H, ZS, best epoch, original log path, and experiment log copy.
