@@ -81,6 +81,20 @@ XDS-xxx       跨数据集实验
 FINAL-xxx     最终复核
 ```
 
+对应 GitHub 总控分支：
+
+| 实验类型 | 分支 |
+|---|---|
+| `MOD-xxx` | `experiment/mod` |
+| `COMBO-xxx` | `experiment/combo` |
+| `REV-MOD-xxx` | `experiment/rev-mod` |
+| `TUNE-xxx` | `experiment/tune` |
+| `ABL-xxx` | `experiment/abl` |
+| `XDS-xxx` | `experiment/xds` |
+| `FINAL-xxx` | `experiment/final` |
+
+旧分支 `experiment/innovation`、`experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 只作为历史兼容入口；新实验按上表 7 类分支执行。
+
 ## 实验自动化框架
 
 当前项目采用“创新树驱动实验”的闭环框架。创新想法、论文证据和长期队列放在外部创新指导清单；本仓库只保存当前执行窗口、实验记录、审查结果、日志副本和代码框架图。

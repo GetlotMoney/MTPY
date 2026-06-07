@@ -61,11 +61,13 @@ docs/experiment_workflow/
 
 默认规则：
 
-- `MOD` / `COMBO` / `REV-MOD` 从 `experiment/innovation` 派生 `exp/<EXP-ID>_<slug>`。
-- `ABL` 从 `experiment/ablation` 派生。
-- `TUNE` 从 `experiment/tuning` 派生。
-- `XDS` 从 `experiment/cross-dataset` 派生。
-- `FINAL` 从 `experiment/final-runs` 派生。
+- `MOD` 从 `experiment/mod` 派生 `exp/<EXP-ID>_<slug>`。
+- `COMBO` 从 `experiment/combo` 派生 `exp/<EXP-ID>_<slug>`。
+- `REV-MOD` 从 `experiment/rev-mod` 派生 `exp/<EXP-ID>_<slug>`。
+- `TUNE` 从 `experiment/tune` 派生 `exp/<EXP-ID>_<slug>`。
+- `ABL` 从 `experiment/abl` 派生 `exp/<EXP-ID>_<slug>`。
+- `XDS` 从 `experiment/xds` 派生 `exp/<EXP-ID>_<slug>`。
+- `FINAL` 从 `experiment/final` 派生 `exp/<EXP-ID>_<slug>`。
 
 若当前分支已有用户未提交改动，先汇报，不静默纳入实验。
 
@@ -80,4 +82,3 @@ docs/experiment_workflow/
 - 创新树 `idea_tree.json` 和 `创意树.md`。
 - 对应分类队列。
 - `backlog.md`。
-

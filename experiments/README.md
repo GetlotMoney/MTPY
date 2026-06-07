@@ -9,11 +9,15 @@
 | 分支 | 用途 |
 |---|---|
 | `main` | 当前 baseline 代码、主配置和总说明 |
-| `experiment/ablation` | 消融实验记录 |
-| `experiment/innovation` | 新增创新模块和模块替换 |
-| `experiment/tuning` | 超参数扫描 |
-| `experiment/cross-dataset` | 跨数据集实验 |
-| `experiment/final-runs` | 最终复核和正式结果 |
+| `experiment/mod` | `MOD-xxx` 单模块创新实验 |
+| `experiment/combo` | `COMBO-xxx` 组合模块实验 |
+| `experiment/rev-mod` | `REV-MOD-xxx` 单模块复核 |
+| `experiment/tune` | `TUNE-xxx` 调参实验 |
+| `experiment/abl` | `ABL-xxx` 消融实验 |
+| `experiment/xds` | `XDS-xxx` 跨数据集实验 |
+| `experiment/final` | `FINAL-xxx` 最终复核和正式结果 |
+
+历史兼容分支 `experiment/innovation`、`experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 只作为旧实验记录入口；新实验优先使用上表 7 类分支。
 
 ## 目录说明
 

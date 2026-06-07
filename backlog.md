@@ -48,11 +48,15 @@
 
 | 实验分类 | 分支 | 分类队列 | 实验目录 |
 |---|---|---|---|
-| 创新模块 | `experiment/innovation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
-| 消融实验 | `experiment/ablation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md` | `experiments/02_ablation/` |
-| 调参实验 | `experiment/tuning` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md` | `experiments/03_hyperparam_tuning/` |
-| 跨数据集 | `experiment/cross-dataset` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md` | `experiments/04_cross_dataset/` |
-| 最终复核 | `experiment/final-runs` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md` | `experiments/05_final_runs/` |
+| `MOD-xxx` 单模块创新实验 | `experiment/mod` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
+| `COMBO-xxx` 组合模块实验 | `experiment/combo` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
+| `REV-MOD-xxx` 单模块复核 | `experiment/rev-mod` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
+| `TUNE-xxx` 调参实验 | `experiment/tune` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md` | `experiments/03_hyperparam_tuning/` |
+| `ABL-xxx` 消融实验 | `experiment/abl` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md` | `experiments/02_ablation/` |
+| `XDS-xxx` 跨数据集 | `experiment/xds` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md` | `experiments/04_cross_dataset/` |
+| `FINAL-xxx` 最终复核 | `experiment/final` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md` | `experiments/05_final_runs/` |
+
+历史兼容分支：`experiment/innovation`、`experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 保留为旧记录入口；新实验按上表 7 类分支执行。
 
 ## P0
 

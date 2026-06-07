@@ -28,6 +28,18 @@ Core rule:
 GitHub docs are the project truth. The local skill is only the executor.
 ```
 
+Use the 7 official controller branches:
+
+```text
+MOD      -> experiment/mod
+COMBO    -> experiment/combo
+REV-MOD  -> experiment/rev-mod
+TUNE     -> experiment/tune
+ABL      -> experiment/abl
+XDS      -> experiment/xds
+FINAL    -> experiment/final
+```
+
 Do not run training until:
 
 - Git status and branch are checked.
@@ -44,4 +56,3 @@ After training, always update:
 - `experiments/06_framework_flows/<EXP-ID>_<slug>.md`.
 - External idea tree and human-readable view.
 - Category queue and `backlog.md`.
-

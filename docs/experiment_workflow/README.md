@@ -66,6 +66,20 @@ Claude 固定三轮审查
 | `skill_cv_experiment.md` | `$cv实验` skill 应该如何执行本项目工作流。 |
 | `runbook.md` | 用户实际怎么启动、检查和收尾。 |
 
+## GitHub 总控分支
+
+| 实验类型 | 分支 |
+|---|---|
+| `MOD-xxx` 单模块创新实验 | `experiment/mod` |
+| `COMBO-xxx` 组合模块实验 | `experiment/combo` |
+| `REV-MOD-xxx` 单模块复核 | `experiment/rev-mod` |
+| `TUNE-xxx` 调参实验 | `experiment/tune` |
+| `ABL-xxx` 消融实验 | `experiment/abl` |
+| `XDS-xxx` 跨数据集实验 | `experiment/xds` |
+| `FINAL-xxx` 最终复核 | `experiment/final` |
+
+具体单次实验再从对应总控分支派生 `exp/<EXP-ID>_<slug>`。
+
 ## 项目内外文件边界
 
 DVSR 仓库内维护：
@@ -90,4 +104,3 @@ C:\Users\Administrator\Desktop\项目\创新指导清单
 - `queues/*.md`
 
 如果以后需要 GitHub 完整同步创新指导清单，应把它迁入本仓库、建单独 repo，或作为 submodule 管理；不能只依赖本机路径。
-
