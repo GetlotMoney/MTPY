@@ -8,11 +8,13 @@
 
 | 前缀 | 类型 | 目录 |
 |---|---|---|
-| `MOD` | 替换模块 | `01_module_replacement/` |
-| `ABL` | 消融实验 | `02_ablation/` |
+| `MOD` | 单模块创新实验 / 模块替换 | `01_module_replacement/` |
+| `COMBO` | 组合模块实验 | `01_module_replacement/`，若以后单独建目录则为 `07_combo/` |
+| `REV-MOD` | 单模块复核 | `01_module_replacement/` |
 | `TUNE` | 调参实验 | `03_hyperparam_tuning/` |
+| `ABL` | 消融实验 | `02_ablation/` |
 | `XDS` | 跨数据集实验 | `04_cross_dataset/` |
-| `FINAL` | 最终正式结果 | `05_final_runs/` |
+| `FINAL` | 最终复核 / 正式结果 | `05_final_runs/` |
 
 命名格式：
 
@@ -23,10 +25,24 @@
 例子：
 
 ```text
+experiments/01_module_replacement/MOD-007_attribute_prompt_router/
+experiments/01_module_replacement/COMBO-001_attr_ot_plus_cf_negative/
+experiments/01_module_replacement/REV-MOD-004-001_attr_patch_ot_seed_review/
 experiments/02_ablation/ABL-001_disable_patch_selection/
 experiments/03_hyperparam_tuning/TUNE-001_ag_jepa_weight_sweep/
 experiments/04_cross_dataset/XDS-001_awa2_main_framework/
+experiments/05_final_runs/FINAL-001_cub_main_framework_review/
 ```
+
+`COMBO` 实验必须登记组成模块、协同假设、冲突分析和对照表。对照表至少包含 `baseline`、每个组成模块单独结果和组合结果，并计算：
+
+```text
+combo_gain = COMBO_H - max(baseline_H, module_A_H, module_B_H, ...)
+```
+
+只有 `combo_gain > 0`，才说明组合超过 baseline 和各单模块最好结果。
+
+`REV-MOD` 用于复核 `near_tie`、`win` 或用户指定的单模块候选。复核必须写清原始 `MOD` ID、继承的代码/config、预注册 seed 列表和补跑范围，不能事后临时挑 seed。
 
 状态字段：
 

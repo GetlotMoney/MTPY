@@ -2,7 +2,14 @@
 
 日期:
 
-类型: 替换模块 / 消融 / 调参 / 跨数据集 / 最终 seed 候选池
+类型: MOD / COMBO / REV-MOD / TUNE / ABL / XDS / FINAL
+
+关联创意树节点:
+
+- 节点 ID:
+- 节点标题:
+- 分类:
+- 当前节点状态:
 
 ## 1. 实验目的
 
@@ -53,6 +60,8 @@
 
 - [ ] 
 - [ ] 生成或更新 `experiments/06_framework_flows/<EXP-ID>_<slug>.md`，包含代码框架图、流程说明和本实验数据。
+- [ ] 更新创新树节点权重、状态、metrics、source_materials 和 history。
+- [ ] 在本 README 写入“创新树反馈意见”。
 
 ## 8. 配置管理流程
 
@@ -66,3 +75,23 @@
 - 实验跑完并分析后，必须在 `experiments/06_framework_flows/` 中为该实验生成一份 Markdown。
 - 文件名使用 `<EXP-ID>_<slug>.md`。
 - 文件必须包含 Mermaid 流程图、图的含义、本实验改动位置、结果数据表、原始日志路径、实验日志副本路径和结论。
+
+## 10. 创新树反馈意见
+
+实验结束后必须反馈到创新树，不能只停留在实验 README。
+
+| 项 | 结论 |
+|---|---|
+| 关联节点 |  |
+| 结果分级 | win / near_tie / soft_negative / hard_negative / blocked |
+| 对节点状态的影响 | validated / weakened / rejected / testing / candidate |
+| 对模块权重的影响 | 上调 / 下调 / 保持 |
+| 对类别权重的影响 | 上调 / 下调 / 保持 |
+| 新增证据 | local_experiment / code_observation / user_idea |
+| 下一步建议 | REV-MOD / COMBO / MOD / TUNE / ABL / XDS / FINAL / 暂停 |
+
+需要同步更新：
+
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\paper-idea-tree\idea_tree.json`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\paper-idea-tree\创意树.md`
+- 对应分类队列，例如 `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md`

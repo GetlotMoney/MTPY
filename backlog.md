@@ -6,12 +6,12 @@
 
 长期想法和分类待做清单放在：
 
-- `创新指导清单/paper-idea-tree/创意树.md`
-- `创新指导清单/queues/01_module_replacement.md`
-- `创新指导清单/queues/02_ablation.md`
-- `创新指导清单/queues/03_hyperparam_tuning.md`
-- `创新指导清单/queues/04_cross_dataset.md`
-- `创新指导清单/queues/05_final_runs.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\paper-idea-tree\创意树.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md`
+- `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md`
 
 ## 当前目标
 
@@ -30,15 +30,29 @@
 - 多 seed 结果必须全部保留；是否按最高 `H` 作为项目选型参考，需要在该实验结论里单独标注，不能隐藏其它 seed。
 - 不使用“事后临时挑 seed”作为单个实验的正式结论。
 
+## 实验 ID 类型
+
+| 前缀 | 含义 | 当前窗口默认队列 |
+|---|---|---|
+| `MOD-xxx` | 单模块创新实验 | `queues/01_module_replacement.md` |
+| `COMBO-xxx` | 组合模块实验，需要写组成模块、协同假设、冲突分析和组合收益 | `queues/01_module_replacement.md` |
+| `REV-MOD-xxx` | 单模块复核，用于 near_tie、win 或用户指定模块 | `queues/01_module_replacement.md` |
+| `TUNE-xxx` | 调参实验 | `queues/03_hyperparam_tuning.md` |
+| `ABL-xxx` | 消融实验 | `queues/02_ablation.md` |
+| `XDS-xxx` | 跨数据集实验 | `queues/04_cross_dataset.md` |
+| `FINAL-xxx` | 最终复核 | `queues/05_final_runs.md` |
+
+执行优先级：`REV-MOD` 候选复核优先于有明确协同假设的 `COMBO`，`COMBO` 优先于新的 `MOD` 初筛，`TUNE` 默认在达到 `H >= 74` 后再系统执行，除非用户明确指定。
+
 ## 分支归属
 
 | 实验分类 | 分支 | 分类队列 | 实验目录 |
 |---|---|---|---|
-| 创新模块 | `experiment/innovation` | `创新指导清单/queues/01_module_replacement.md` | `experiments/01_module_replacement/` |
-| 消融实验 | `experiment/ablation` | `创新指导清单/queues/02_ablation.md` | `experiments/02_ablation/` |
-| 调参实验 | `experiment/tuning` | `创新指导清单/queues/03_hyperparam_tuning.md` | `experiments/03_hyperparam_tuning/` |
-| 跨数据集 | `experiment/cross-dataset` | `创新指导清单/queues/04_cross_dataset.md` | `experiments/04_cross_dataset/` |
-| 最终复核 | `experiment/final-runs` | `创新指导清单/queues/05_final_runs.md` | `experiments/05_final_runs/` |
+| 创新模块 | `experiment/innovation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
+| 消融实验 | `experiment/ablation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md` | `experiments/02_ablation/` |
+| 调参实验 | `experiment/tuning` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md` | `experiments/03_hyperparam_tuning/` |
+| 跨数据集 | `experiment/cross-dataset` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md` | `experiments/04_cross_dataset/` |
+| 最终复核 | `experiment/final-runs` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md` | `experiments/05_final_runs/` |
 
 ## P0
 
