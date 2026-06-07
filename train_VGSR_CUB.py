@@ -123,6 +123,7 @@ print_log(f"│  use_geo_attr  : {getattr(config, 'use_geo_attr_routing', False)
 print_log(f"│  lambda_geo_attr: {getattr(config, 'lambda_geo_attr_routing', 0.0)}")
 print_log(f"│  use_text_reservoir: {getattr(config, 'use_text_attr_reservoir', False)}")
 print_log(f"│  text_reservoir_ratio: {getattr(config, 'text_attr_reservoir_ratio', 0.0)}")
+print_log(f"│  use_msdn_gate: {getattr(config, 'use_uncertainty_msdn_gate', False)}")
 print_log("├─ Resume ────────────────────────────────────────────────┤")
 print_log(f"│  resume_from        : {getattr(config, 'resume_from', '')!r}")
 print_log(f"│  resume_lr_schedule : {getattr(config, 'resume_lr_schedule', 'continue')}")
@@ -713,6 +714,7 @@ for epoch in range(start_epoch, total_epochs + 1):
             as_v   = loss_pack.get('loss_aux_s2v',         torch.tensor(0.)).item()
             av_v   = loss_pack.get('loss_aux_v2s',         torch.tensor(0.)).item()
             ms_v   = loss_pack.get('loss_msdn',            torch.tensor(0.)).item()
+            mg_v   = loss_pack.get('loss_msdn_gate',       torch.tensor(1.)).item()
             bi_v   = loss_pack.get('loss_bias',            torch.tensor(0.)).item()
             jp_v   = loss_pack.get('loss_jepa',            torch.tensor(0.)).item()
             jn_v   = loss_pack.get('loss_jepa_neg',        torch.tensor(0.)).item()
@@ -723,7 +725,7 @@ for epoch in range(start_epoch, total_epochs + 1):
                       f"L2SP: {l2_v:.4f}  Topo: {topo_v:.4f}  "
                       f"VA: {va_v:.4f}  TA: {ta_v:.4f}  Dist: {di_v:.4f}  "
                       f"AuxS2V: {as_v:.3f}  AuxV2S: {av_v:.3f}  "
-                      f"MSDN: {ms_v:.4f}  Bias: {bi_v:.4f}  "
+                      f"MSDN: {ms_v:.4f}  MGate: {mg_v:.3f}  Bias: {bi_v:.4f}  "
                       f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}  "
                       f"GeoAttr: {ga_v:.4f}")
 

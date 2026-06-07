@@ -95,6 +95,7 @@ experiments/00_templates/experiment_README_template.md
 |---|---|---|---|---|
 | MOD-001 | 已完成 | `experiments/01_module_replacement/MOD-001_geometry_attribute_routing/` | FAE 后增加几何感知属性路由辅助 loss，默认主配置关闭，实验配置打开 | seed=5: U=73.24, S=71.68, H=72.45, ZS=81.49；低于 baseline H=72.91，当前版本不保留 |
 | MOD-002 | 已完成 | `experiments/01_module_replacement/MOD-002_topology_aware_text_reservoir/` | 在 200 类文本原型上增加受限 CUB 属性 reservoir 低秩残差，并继续用 Pearson topology loss 约束 | seed=5: U=75.39, S=64.02, H=69.24, ZS=80.78；低于 baseline H=72.91，当前版本不保留 |
+| MOD-003 | 已完成 | `experiments/01_module_replacement/MOD-003_uncertainty_gated_branch_distillation/` | 给现有 MSDN 双分支互蒸馏 loss 增加不确定性/分歧门控，默认主配置关闭 | seed=5: U=72.83, S=72.39, H=72.61, ZS=81.15；低于 baseline H=72.91，当前版本不保留 |
 
 ## 6. 更新规则
 

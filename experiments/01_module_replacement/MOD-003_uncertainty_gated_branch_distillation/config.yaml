@@ -513,7 +513,7 @@ text_attr_reservoir_hidden:
 # === [MOD-003] 不确定性门控的分支一致性蒸馏 ===
 # 关闭时完全沿用固定 lambda_msdn；打开后根据分支熵和 JS 分歧缩放 MSDN loss。
 use_uncertainty_msdn_gate:
-  value: False
+  value: True
 msdn_gate_min:
   value: 0.2
 msdn_gate_js_alpha:

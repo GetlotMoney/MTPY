@@ -1774,6 +1774,7 @@ class VGSR(nn.Module):
         #   L_msdn = (T²/2) [ KL(p_s2v.detach() || p_v2s) + KL(p_v2s.detach() || p_s2v) ]
         # 注意 .detach() 防梯度循环, 一边教另一边
         loss_msdn = torch.tensor(0.0, device=logits.device)
+        loss_msdn_gate = torch.tensor(1.0, device=logits.device)
         lambda_msdn = self.config.__dict__.get('lambda_msdn', 0)
         if (lambda_msdn > 0 and score_s2v is not None and score_v2s is not None):
             T_msdn = self.config.__dict__.get('msdn_temp', 2.0)
@@ -1790,7 +1791,28 @@ class VGSR(nn.Module):
             # KL(p_v2s.detach() || p_s2v): v2s 教 s2v
             kl_v2s_to_s2v = F.kl_div(log_p_s2v, p_v2s.detach(), reduction='batchmean')
             loss_msdn = (T_msdn * T_msdn / 2.0) * (kl_s2v_to_v2s + kl_v2s_to_s2v)
-            loss = loss + lambda_msdn * loss_msdn
+            if bool(self.config.__dict__.get('use_uncertainty_msdn_gate', False)):
+                # MOD-003: 两个分支都确定且彼此接近时加强互蒸馏；
+                # 分支高熵或互相冲突时降低权重，避免错误共识互相强化。
+                with torch.no_grad():
+                    p_s = F.softmax(s2v_seen.detach(), dim=-1)
+                    p_v = F.softmax(v2s_seen.detach(), dim=-1)
+                    eps = 1e-8
+                    norm = np.log(max(2, p_s.size(1)))
+                    ent_s = -(p_s * (p_s + eps).log()).sum(dim=1) / norm
+                    ent_v = -(p_v * (p_v + eps).log()).sum(dim=1) / norm
+                    confidence = (1.0 - 0.5 * (ent_s + ent_v)).clamp(0.0, 1.0)
+                    mix = 0.5 * (p_s + p_v)
+                    js = 0.5 * (
+                        F.kl_div((mix + eps).log(), p_s, reduction='none').sum(dim=1)
+                        + F.kl_div((mix + eps).log(), p_v, reduction='none').sum(dim=1)
+                    )
+                    alpha = float(self.config.__dict__.get('msdn_gate_js_alpha', 4.0))
+                    agreement = torch.exp(-alpha * js).clamp(0.0, 1.0)
+                    gate_min = float(self.config.__dict__.get('msdn_gate_min', 0.2))
+                    sample_gate = gate_min + (1.0 - gate_min) * confidence * agreement
+                    loss_msdn_gate = sample_gate.mean()
+            loss = loss + lambda_msdn * loss_msdn_gate * loss_msdn
 
         # ========== [CGC C5] Seen-Unseen Margin (反事实校准最小可行版) ==========
         # 直接对全 200 类 logits 做"max_seen - max_unseen"约束, 防止长训 unseen 漂移
@@ -1823,6 +1845,7 @@ class VGSR(nn.Module):
             'loss_aux_s2v': loss_aux_s2v,
             'loss_aux_v2s': loss_aux_v2s,
             'loss_msdn': loss_msdn,
+            'loss_msdn_gate': loss_msdn_gate,
             'loss_bias': loss_bias,
             'loss_jepa': loss_jepa,
             'loss_jepa_neg': loss_jepa_neg,

@@ -51,7 +51,7 @@
 | ID | 状态 | 分类 | 实验 | 来源队列 | 备注 |
 |---|---|---|---|---|---|
 | MOD-002 | done | 创新模块 | 拓扑感知的自适应文本属性库 | `queues/01_module_replacement.md` | seed=5 H=69.24，低于 baseline 72.91，当前版本不保留 |
-| MOD-003 | open | 创新模块 | 带不确定性门控的分支一致性蒸馏 | `queues/01_module_replacement.md` | 低侵入，基于 ABL-004 |
+| MOD-003 | done | 创新模块 | 带不确定性门控的分支一致性蒸馏 | `queues/01_module_replacement.md` | seed=5 H=72.61，低于 baseline 72.91，当前版本不保留 |
 
 ## 更新规则
 
