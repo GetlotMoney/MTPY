@@ -98,6 +98,7 @@ experiments/00_templates/experiment_README_template.md
 | MOD-003 | 已完成 | `experiments/01_module_replacement/MOD-003_uncertainty_gated_branch_distillation/` | 给现有 MSDN 双分支互蒸馏 loss 增加不确定性/分歧门控，默认主配置关闭 | seed=5: U=72.83, S=72.39, H=72.61, ZS=81.15；低于 baseline H=72.91，当前版本不保留 |
 | MOD-004 | 已完成 | `experiments/01_module_replacement/MOD-004_attribute_guided_patch_ot/` | FAE 后局部 patch 与当前类别 top-K 属性文本原型做 Sinkhorn 软 OT 辅助对齐 | seed=5: U=72.86, S=72.95, H=72.90, ZS=81.61；基本持平但低于 baseline H=72.91，当前版本不保留 |
 | MOD-005 | 已完成 | `experiments/01_module_replacement/MOD-005_semantic_patch_jepa_v2/` | 在现有 AG-JEPA 中新增默认关闭的 v2 目标构造：用类别文本和近邻类别原型选择判别 patch，并用 hard neighbor 作为负文本 | seed=5: U=73.10, S=72.03, H=72.56, ZS=81.55；低于 baseline H=72.91，当前版本不保留 |
+| MOD-006 | 已完成 | `experiments/01_module_replacement/MOD-006_counterfactual_negative_text_mining/` | 在 GPT 文本原型上挖 seen 近邻负类，对 `logits_200` 加轻量反事实 margin loss，默认主配置关闭 | seed=5: U=72.65, S=72.13, H=72.39, ZS=81.44；低于 baseline H=72.91，当前版本不保留 |
 
 ## 6. 更新规则
 

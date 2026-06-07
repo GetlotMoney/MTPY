@@ -416,9 +416,9 @@ jepa_v2_neighbor_weight:
 # 打开时从当前 text_source 的类别文本原型里找 seen 近邻负类，
 # 对 logits_200 加轻量 margin loss，不改主干和评估。
 use_cf_neg_text:
-  value: False
+  value: True
 lambda_cf_neg_text:
-  value: 0.0
+  value: 0.03
 cf_neg_topk:
   value: 5
 cf_neg_margin:

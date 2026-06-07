@@ -1727,6 +1727,33 @@ class VGSR(nn.Module):
                 loss = loss + lambda_jepa * loss_jepa
                 loss = loss + lambda_jepa_neg * loss_jepa_neg
 
+        # ========== [MOD-006] 反事实负文本挖掘 margin loss ==========
+        # 从 GPT/CLIP 文本原型里为当前类别找 seen 近邻负类，只在训练期对 logits_200 加轻量 margin。
+        loss_cf_neg_text = torch.tensor(0.0, device=logits.device)
+        lambda_cf_neg_text = self.config.__dict__.get('lambda_cf_neg_text', 0)
+        if self.config.__dict__.get('use_cf_neg_text', False) and lambda_cf_neg_text > 0:
+            logits_200_cf = in_package.get('logits_200', None)
+            all_text_cf = in_package.get('all_text', None)
+            if logits_200_cf is not None and all_text_cf is not None:
+                seen = self.seenclass.to(device=logits.device, dtype=torch.long)
+                labels_cf = labels.to(device=logits.device, dtype=torch.long)
+                with torch.no_grad():
+                    text_n = F.normalize(all_text_cf.float(), dim=1)
+                    label_text = text_n[labels_cf]                       # [B, 768]
+                    seen_text = text_n[seen]                             # [150, 768]
+                    neg_score = label_text @ seen_text.T                 # [B, 150]
+                    same_class = labels_cf.unsqueeze(1).eq(seen.unsqueeze(0))
+                    neg_score = neg_score.masked_fill(same_class, -float("inf"))
+                    neg_k = int(self.config.__dict__.get('cf_neg_topk', 5))
+                    neg_k = max(1, min(neg_k, seen.numel() - 1))
+                    neg_idx = neg_score.topk(k=neg_k, dim=1).indices
+                    neg_cls = seen[neg_idx]                              # [B, K]
+                pos_logits = logits_200_cf.gather(1, labels_cf.unsqueeze(1))
+                neg_logits = logits_200_cf.gather(1, neg_cls)
+                margin = float(self.config.__dict__.get('cf_neg_margin', 0.2))
+                loss_cf_neg_text = F.relu(neg_logits - pos_logits + margin).mean()
+                loss = loss + lambda_cf_neg_text * loss_cf_neg_text
+
         # ========== [MOD-001] 几何感知属性路由辅助 loss ==========
         # 对每个训练样本, 取其类别专家属性向量中 top-K 属性作为正属性集合。
         # FAE 后的局部视觉 memory 必须把概率质量路由到这些属性原型上。
@@ -1922,6 +1949,7 @@ class VGSR(nn.Module):
             'loss_bias': loss_bias,
             'loss_jepa': loss_jepa,
             'loss_jepa_neg': loss_jepa_neg,
+            'loss_cf_neg_text': loss_cf_neg_text,
             'loss_geo_attr': loss_geo_attr,
             'loss_attr_patch_ot': loss_attr_patch_ot,
         }

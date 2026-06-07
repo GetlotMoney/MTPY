@@ -126,6 +126,8 @@ print_log(f"│  text_reservoir_ratio: {getattr(config, 'text_attr_reservoir_rat
 print_log(f"│  use_msdn_gate: {getattr(config, 'use_uncertainty_msdn_gate', False)}")
 print_log(f"│  use_attr_patch_ot: {getattr(config, 'use_attr_patch_ot', False)}")
 print_log(f"│  use_ag_jepa_v2: {getattr(config, 'use_ag_jepa_v2', False)}")
+print_log(f"│  use_cf_neg_text: {getattr(config, 'use_cf_neg_text', False)}")
+print_log(f"│  lambda_cf_neg_text: {getattr(config, 'lambda_cf_neg_text', 0.0)}")
 print_log("├─ Resume ────────────────────────────────────────────────┤")
 print_log(f"│  resume_from        : {getattr(config, 'resume_from', '')!r}")
 print_log(f"│  resume_lr_schedule : {getattr(config, 'resume_lr_schedule', 'continue')}")
@@ -720,6 +722,7 @@ for epoch in range(start_epoch, total_epochs + 1):
             bi_v   = loss_pack.get('loss_bias',            torch.tensor(0.)).item()
             jp_v   = loss_pack.get('loss_jepa',            torch.tensor(0.)).item()
             jn_v   = loss_pack.get('loss_jepa_neg',        torch.tensor(0.)).item()
+            cf_v   = loss_pack.get('loss_cf_neg_text',     torch.tensor(0.)).item()
             ga_v   = loss_pack.get('loss_geo_attr',        torch.tensor(0.)).item()
             ao_v   = loss_pack.get('loss_attr_patch_ot',   torch.tensor(0.)).item()
             print_log(f"  Step [{step+1:3d}/{iters_per_epoch}] | "
@@ -729,7 +732,7 @@ for epoch in range(start_epoch, total_epochs + 1):
                       f"VA: {va_v:.4f}  TA: {ta_v:.4f}  Dist: {di_v:.4f}  "
                       f"AuxS2V: {as_v:.3f}  AuxV2S: {av_v:.3f}  "
                       f"MSDN: {ms_v:.4f}  MGate: {mg_v:.3f}  Bias: {bi_v:.4f}  "
-                      f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}  "
+                      f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}  CFNeg: {cf_v:.4f}  "
                       f"GeoAttr: {ga_v:.4f}  AttrOT: {ao_v:.4f}")
 
     # 更新学习率
