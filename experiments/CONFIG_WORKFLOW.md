@@ -1,4 +1,4 @@
-# 实验配置管理流程
+﻿# 实验配置管理流程
 
 本项目把根目录配置作为可复用基线。所有受管理的实验都必须使用实验文件夹内的配置副本运行。
 
@@ -15,19 +15,19 @@
 CUB:
 
 ```powershell
-python train_VGSR_CUB.py --config experiments/02_ablation/ABL-001_disable_patch_selection/config.yaml
+python train_VGSR_CUB.py --config experiments/05_ablation/ABL-001_disable_patch_selection/config.yaml
 ```
 
 AWA2:
 
 ```powershell
-python train_VGSR_AWA2.py --config experiments/04_cross_dataset/XDS-001_awa2_main_framework/config.yaml
+python train_VGSR_AWA2.py --config experiments/06_cross_dataset/XDS-001_awa2_main_framework/config.yaml
 ```
 
 SUN:
 
 ```powershell
-python train_VGSR_SUN.py --config experiments/04_cross_dataset/XDS-002_sun_main_framework/config.yaml
+python train_VGSR_SUN.py --config experiments/06_cross_dataset/XDS-002_sun_main_framework/config.yaml
 ```
 
 ## 严格连续训练流程

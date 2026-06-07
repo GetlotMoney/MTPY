@@ -1,16 +1,16 @@
-# 实验 ID 与多模块规范
+﻿# 实验 ID 与多模块规范
 
 ## 实验类型
 
 | 前缀 | 类型 | 默认目录 | 目的 |
 |---|---|---|---|
-| `MOD-xxx` | 单模块创新实验 | `experiments/01_module_replacement/` | 判断单个机制是否有独立贡献。 |
-| `COMBO-xxx` | 组合模块实验 | `experiments/01_module_replacement/`，必要时可建 `experiments/07_combo/` | 判断两个或多个机制是否有协同贡献。 |
-| `REV-MOD-xxx` | 单模块复核 | `experiments/01_module_replacement/` | 对 near_tie、win 或用户指定模块做多 seed / 同配置复查。 |
-| `TUNE-xxx` | 调参实验 | `experiments/03_hyperparam_tuning/` | 扫超参、loss 权重、top-K、margin、训练日程。 |
-| `ABL-xxx` | 消融实验 | `experiments/02_ablation/` | 验证已有模块、loss 或路径是否必须保留。 |
-| `XDS-xxx` | 跨数据集实验 | `experiments/04_cross_dataset/` | 验证 AWA2 / SUN 等泛化能力。 |
-| `FINAL-xxx` | 最终复核 | `experiments/05_final_runs/` | 服务正式汇报、论文表格或最终主结果。 |
+| `MOD-xxx` | 单模块创新实验 | `experiments/01_single_module_innovation/` | 判断单个机制是否有独立贡献。 |
+| `COMBO-xxx` | 组合模块实验 | `experiments/02_module_combination/` | 判断两个或多个机制是否有协同贡献。 |
+| `REV-MOD-xxx` | 单模块复核 | `experiments/03_single_module_review/` | 对 near_tie、win 或用户指定模块做多 seed / 同配置复查。 |
+| `TUNE-xxx` | 调参实验 | `experiments/04_hyperparameter_tuning/` | 扫超参、loss 权重、top-K、margin、训练日程。 |
+| `ABL-xxx` | 消融实验 | `experiments/05_ablation/` | 验证已有模块、loss 或路径是否必须保留。 |
+| `XDS-xxx` | 跨数据集实验 | `experiments/06_cross_dataset/` | 验证 AWA2 / SUN 等泛化能力。 |
+| `FINAL-xxx` | 最终复核 | `experiments/07_final_review/` | 服务正式汇报、论文表格或最终主结果。 |
 
 ## 默认选择顺序
 
@@ -98,4 +98,3 @@ combo_gain = COMBO_H - max(baseline_H, module_A_H, module_B_H, ...)
 - seed 列表。
 - 需要补跑的 seed。
 - 判断口径：仍看候选 seed 最大 `H`，但保留所有 seed。
-

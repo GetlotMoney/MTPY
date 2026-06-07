@@ -1,4 +1,4 @@
-# `$cv实验` skill 行为规范
+﻿# `$cv实验` skill 行为规范
 
 ## 定位
 
@@ -78,7 +78,7 @@ docs/experiment_workflow/
 - 实验 README。
 - 实验日志副本。
 - `experiments/EXPERIMENT_REGISTRY.md`。
-- `experiments/06_framework_flows/<EXP-ID>_<slug>.md`。
+- `experiments/08_framework_flow_records/<EXP-ID>_<slug>.md`。
 - 创新树 `idea_tree.json` 和 `创意树.md`。
 - 对应分类队列。
 - `backlog.md`。

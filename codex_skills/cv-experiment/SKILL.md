@@ -1,4 +1,4 @@
----
+﻿---
 name: cv-experiment
 description: Execute the DVSR computer-vision experiment workflow. Use when running MOD, COMBO, REV-MOD, TUNE, ABL, XDS, or FINAL experiments; coordinating Codex implementation, Git checkpoint branches, Claude review, training, result recording, framework diagrams, and idea-tree feedback.
 ---
@@ -53,6 +53,6 @@ After training, always update:
 - Experiment README.
 - Logs copy.
 - `experiments/EXPERIMENT_REGISTRY.md`.
-- `experiments/06_framework_flows/<EXP-ID>_<slug>.md`.
+- `experiments/08_framework_flow_records/<EXP-ID>_<slug>.md`.
 - External idea tree and human-readable view.
 - Category queue and `backlog.md`.

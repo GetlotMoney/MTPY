@@ -1,4 +1,4 @@
-# DVSR / VGSR: 基于 CLIP + Adapter + GPT 的零样本图像分类
+﻿# DVSR / VGSR: 基于 CLIP + Adapter + GPT 的零样本图像分类
 
 广义零样本学习 (GZSL) 研究项目，基于 VDT-TransZero 思路，使用 CLIP ViT-L/14@336px 作为骨干。
 
@@ -132,7 +132,7 @@ Claude 固定三轮审查
 - 新模块默认关闭，只在实验 `config.yaml` 中打开；关闭后必须退回 baseline。
 - Claude 审查固定三轮：代码/配置正确性、实验设计与可复现性、最终运行计划。
 - 实验结果不取多 seed 平均值；项目选型看预注册候选 seed 中的最大 `H`，但所有 seed 结果必须完整记录。
-- 每个实验结束后必须生成 `experiments/06_framework_flows/<EXP-ID>_<slug>.md`，沉淀代码框架图、流程说明和数据。
+- 每个实验结束后必须生成 `experiments/08_framework_flow_records/<EXP-ID>_<slug>.md`，沉淀代码框架图、流程说明和数据。
 - 实验结束后必须反馈创新树，更新节点状态、权重、证据和下一步建议。
 
 默认选择顺序：

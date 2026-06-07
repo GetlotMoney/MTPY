@@ -1,4 +1,4 @@
-# 当前实验执行窗口
+﻿# 当前实验执行窗口
 
 更新时间：2026-06-07
 
@@ -48,13 +48,13 @@
 
 | 实验分类 | 分支 | 分类队列 | 实验目录 |
 |---|---|---|---|
-| `MOD-xxx` 单模块创新实验 | `experiment/single-module-innovation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
-| `COMBO-xxx` 组合模块实验 | `experiment/module-combination` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
-| `REV-MOD-xxx` 单模块复核 | `experiment/single-module-review` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_module_replacement/` |
-| `TUNE-xxx` 调参实验 | `experiment/hyperparameter-tuning` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md` | `experiments/03_hyperparam_tuning/` |
-| `ABL-xxx` 消融实验 | `experiment/ablation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md` | `experiments/02_ablation/` |
-| `XDS-xxx` 跨数据集 | `experiment/cross-dataset` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md` | `experiments/04_cross_dataset/` |
-| `FINAL-xxx` 最终复核 | `experiment/final-review` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md` | `experiments/05_final_runs/` |
+| `MOD-xxx` 单模块创新实验 | `experiment/single-module-innovation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/01_single_module_innovation/` |
+| `COMBO-xxx` 组合模块实验 | `experiment/module-combination` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/02_module_combination/` |
+| `REV-MOD-xxx` 单模块复核 | `experiment/single-module-review` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\01_module_replacement.md` | `experiments/03_single_module_review/` |
+| `TUNE-xxx` 调参实验 | `experiment/hyperparameter-tuning` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\03_hyperparam_tuning.md` | `experiments/04_hyperparameter_tuning/` |
+| `ABL-xxx` 消融实验 | `experiment/ablation` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\02_ablation.md` | `experiments/05_ablation/` |
+| `XDS-xxx` 跨数据集 | `experiment/cross-dataset` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\04_cross_dataset.md` | `experiments/06_cross_dataset/` |
+| `FINAL-xxx` 最终复核 | `experiment/final-review` | `C:\Users\Administrator\Desktop\项目\创新指导清单\queues\05_final_runs.md` | `experiments/07_final_review/` |
 
 历史兼容分支：`experiment/innovation`、`experiment/tuning`、`experiment/final-runs` 保留为旧记录入口；`experiment/ablation` 和 `experiment/cross-dataset` 名字已经完整，继续作为正式分支使用。
 
