@@ -1,4 +1,4 @@
-# DVSR / VGSR: 基于 CLIP + Adapter + GPT 的零样本图像分类
+﻿# DVSR / VGSR: 基于 CLIP + Adapter + GPT 的零样本图像分类
 
 广义零样本学习 (GZSL) 研究项目，基于 VDT-TransZero 思路，使用 CLIP ViT-L/14@336px 作为骨干。
 
@@ -56,10 +56,114 @@
 ├── train_VGSR_CUB.py          # CUB 训练入口
 ├── train_VGSR_AWA2.py
 ├── train_VGSR_SUN.py
-├── experiments/               # 后续实验管理区：替换模块 / 消融 / 调参 / 跨数据集 / 最终结果
+├── experiments/               # 实验结果、审查、日志副本和框架图
 ├── Guide/                     # 详细代码讲解文档
-└── 创新指导清单/              # 模块创新效果记录
+└── backlog.md                 # 当前实验执行窗口
 ```
+
+创新指导清单已独立到项目上级目录：
+
+```text
+C:\Users\Administrator\Desktop\项目\创新指导清单
+```
+
+其中维护论文、创意树和长期分类队列；本仓库内只保留 `backlog.md` 当前执行窗口和 `experiments/` 实验结果。
+
+实验 ID 分类规范见 `experiments/EXPERIMENT_REGISTRY.md`，当前固定类型包括：
+
+```text
+MOD-xxx       单模块创新实验
+COMBO-xxx     组合模块实验
+REV-MOD-xxx   单模块复核
+TUNE-xxx      调参实验
+ABL-xxx       消融实验
+XDS-xxx       跨数据集实验
+FINAL-xxx     最终复核
+```
+
+对应 GitHub 总控分支：
+
+| 实验类型 | 分支 |
+|---|---|
+| `MOD-xxx` | `experiment/single-module-innovation` |
+| `COMBO-xxx` | `experiment/module-combination` |
+| `REV-MOD-xxx` | `experiment/single-module-review` |
+| `TUNE-xxx` | `experiment/hyperparameter-tuning` |
+| `ABL-xxx` | `experiment/ablation` |
+| `XDS-xxx` | `experiment/cross-dataset` |
+| `FINAL-xxx` | `experiment/final-review` |
+
+旧分支 `experiment/innovation`、`experiment/tuning`、`experiment/final-runs` 只作为历史兼容入口；`experiment/ablation` 和 `experiment/cross-dataset` 名字已经完整，继续作为正式分支使用。
+
+## 实验自动化框架
+
+当前项目采用“创新树驱动实验”的闭环框架。创新想法、论文证据和长期队列放在外部创新指导清单；本仓库只保存当前执行窗口、实验记录、审查结果、日志副本和代码框架图。
+
+```text
+创新指导清单 / 创意树
+  ↓
+分类队列 queues/*.md
+  ↓
+backlog.md 当前执行窗口
+  ↓
+Git 本地 checkpoint
+  ↓
+Codex 实现最小代码或配置改动
+  ↓
+Codex 自审
+  ↓
+Claude 固定三轮审查
+  ↓
+审查通过后运行实验
+  ↓
+记录 README / logs / EXPERIMENT_REGISTRY / framework flow
+  ↓
+反馈 idea_tree.json / 创意树.md
+  ↓
+创新树给下一步意见
+  ↓
+更新分类队列和 backlog
+```
+
+关键约束：
+
+- 每个实验必须先绑定创意树节点；如果是临时用户指定实验，跑完后必须回填创意树。
+- 代码实现前必须检查 Git 状态并创建本地 checkpoint，方便回滚。
+- 新模块默认关闭，只在实验 `config.yaml` 中打开；关闭后必须退回 baseline。
+- Claude 审查固定三轮：代码/配置正确性、实验设计与可复现性、最终运行计划。
+- 实验结果不取多 seed 平均值；项目选型看预注册候选 seed 中的最大 `H`，但所有 seed 结果必须完整记录。
+- 每个实验结束后必须生成 `experiments/08_framework_flow_records/<EXP-ID>_<slug>.md`，沉淀代码框架图、流程说明和数据。
+- 实验结束后必须反馈创新树，更新节点状态、权重、证据和下一步建议。
+
+默认选择顺序：
+
+```text
+REV-MOD 单模块复核
+  ↓
+COMBO 有明确协同假设的组合实验
+  ↓
+MOD 新单模块初筛
+  ↓
+TUNE 调参
+  ↓
+XDS / FINAL
+```
+
+使用 Codex skill 时可以直接说：
+
+```text
+使用 $cv实验 跑 5 个创新模块实验
+```
+
+该 skill 会读取外部创新指导清单、同步 `backlog.md`、执行审查和实验记录流程。不会自动 push；push 需要用户明确要求。
+
+完整项目级规范位于：
+
+```text
+docs/experiment_workflow/
+```
+
+其中 `README.md` 是总入口，`github_branching.md` 规定 GitHub 分支和 push 规则，`experiment_taxonomy.md` 规定 `MOD / COMBO / REV-MOD / TUNE / ABL / XDS / FINAL`，`idea_tree_feedback.md` 规定实验如何反哺创新树。
 
 ## 环境
 

@@ -551,6 +551,8 @@ class CrossModalTransformer(nn.Module):
             self.attn_pool = nn.Linear(dim_com, 1)
 
     def forward(self, patches, text, cls_token=None, unseen_idx=None,
+                attr_text=None,
+                return_attr_patch_sim=False,
                 weight_s2v_dyn=None, pool_lambda_dyn=None,
                 lastvit_select_k=0, lastvit_select_sigma=0.0,
                 lastvit_select_largest=True,
@@ -560,6 +562,7 @@ class CrossModalTransformer(nn.Module):
             patches:   [B, 576, 768]  CLIP patch 特征 (不含 CLS)
             text:      [N_cls, 768]   原始文本特征
             cls_token: [B, 768]       CLIP CLS token (保留接口兼容)
+            attr_text: [N_attr, 768]   可选属性文本原型, MOD-001 属性路由辅助项用
             unseen_idx: [N_unseen]    可选; 若提供, t_enh 在 proj_text
                                        前对 unseen 列 detach, 防止 unseen
                                        无监督梯度流入 decoder_v2s/FAE 上层
@@ -616,6 +619,21 @@ class CrossModalTransformer(nn.Module):
 
         txt_com   = self.embed_text(text)                        # [N_cls, dim_com]
         txt_batch = txt_com.unsqueeze(0).expand(B, -1, -1)       # [B, N_cls, dim_com]
+
+        # ========== MOD-001: 几何感知属性路由辅助分数 ==========
+        # 用 FAE 后的 geometry-aware local memory 去匹配属性文本原型。
+        # 对每个属性取最相关 patch 的相似度, 得到 [B, N_attr]。
+        attr_route_score = None
+        attr_patch_sim = None
+        if attr_text is not None:
+            attr_com = self.embed_text(attr_text.to(device=memory.device,
+                                                    dtype=text.dtype))  # [N_attr, dim_com]
+            mem_n = F.normalize(memory.float(), dim=-1)
+            attr_n = F.normalize(attr_com.float(), dim=-1)
+            patch_attr_sim = mem_n @ attr_n.T                           # [B, N_patch, N_attr]
+            attr_route_score = patch_attr_sim.max(dim=1).values.to(memory.dtype)
+            if return_attr_patch_sim:
+                attr_patch_sim = patch_attr_sim.to(memory.dtype)
 
         # ========== v2s 分支: 文本 Query 视觉 ==========
         # 每个类的文本去 576 个 patch 里找相关视觉区域
@@ -740,6 +758,8 @@ class CrossModalTransformer(nn.Module):
             # ★ 单独导出双分支分数, cosine_only + 辅助 CE 用
             'score_s2v': score_s2v,  # [B, N_cls]
             'score_v2s': score_v2s,  # [B, N_cls]
+            'attr_route_score': attr_route_score,  # [B, N_attr] or None
+            'attr_patch_sim': attr_patch_sim,  # [B, N_patch, N_attr] or None
         }
 
 
@@ -766,7 +786,9 @@ class VGSR(nn.Module):
     """
     def __init__(self, config, seenclass, unseenclass,
                  seen_text_embeds,       # [150, 768]
-                 unseen_text_embeds):    # [50,  768]
+                 unseen_text_embeds,     # [50,  768]
+                 class_attr=None,        # [200, 312]
+                 attr_text_embeds=None): # [312, 768]
         super().__init__()
         self.config = config
         self.nclass = config.num_class   # 200
@@ -779,6 +801,50 @@ class VGSR(nn.Module):
             F.normalize(seen_text_embeds,   dim=1), requires_grad=False)
         self.unseen_text_embeds = nn.Parameter(
             F.normalize(unseen_text_embeds, dim=1), requires_grad=False)
+
+        # ---- MOD-001: 几何感知属性路由所需的固定属性材料 ----
+        self.use_geo_attr_routing = bool(getattr(config, 'use_geo_attr_routing', False))
+        if class_attr is not None:
+            self.register_buffer('class_attr', class_attr.float(), persistent=False)
+        else:
+            self.class_attr = None
+        if attr_text_embeds is not None:
+            self.register_buffer(
+                'attr_text_embeds',
+                F.normalize(attr_text_embeds.float(), dim=1),
+                persistent=False)
+        else:
+            self.attr_text_embeds = None
+        if self.use_geo_attr_routing and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_geo_attr_routing=True requires class_attr and attr_text_embeds.")
+
+        # ---- MOD-002: 拓扑感知的自适应文本属性库 ----
+        self.use_text_attr_reservoir = bool(
+            getattr(config, 'use_text_attr_reservoir', False))
+        if self.use_text_attr_reservoir and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_text_attr_reservoir=True requires class_attr and attr_text_embeds.")
+        if self.use_text_attr_reservoir:
+            reservoir_hidden = int(getattr(config, 'text_attr_reservoir_hidden', 256))
+            self.text_attr_reservoir_proj = nn.Sequential(
+                nn.Linear(self.dim_f, reservoir_hidden),
+                nn.GELU(),
+                nn.Linear(reservoir_hidden, self.dim_f),
+            )
+            # zero init: 打开模块的训练初始点仍等价于未加 reservoir 的文本原型。
+            with torch.no_grad():
+                self.text_attr_reservoir_proj[-1].weight.zero_()
+                self.text_attr_reservoir_proj[-1].bias.zero_()
+
+        # ---- MOD-004: 属性引导局部补丁 OT 对齐 ----
+        self.use_attr_patch_ot = bool(getattr(config, 'use_attr_patch_ot', False))
+        if self.use_attr_patch_ot and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_attr_patch_ot=True requires class_attr and attr_text_embeds.")
 
         # ---- Adapter (语义端轻量增强) ----
         self.adapter_ratio = getattr(config, 'adapter_ratio', 0.2)
@@ -830,6 +896,9 @@ class VGSR(nn.Module):
         self.use_ag_jepa = bool(getattr(config, 'use_ag_jepa', False))
         self.jepa_topk = int(getattr(config, 'jepa_topk', 8))
         self.jepa_neg_margin = float(getattr(config, 'jepa_neg_margin', 0.2))
+        self.use_ag_jepa_v2 = bool(getattr(config, 'use_ag_jepa_v2', False))
+        self.jepa_v2_neighbor_topk = int(getattr(config, 'jepa_v2_neighbor_topk', 5))
+        self.jepa_v2_neighbor_weight = float(getattr(config, 'jepa_v2_neighbor_weight', 0.2))
         if self.use_ag_jepa:
             jepa_hidden = int(getattr(config, 'jepa_hidden', tf_common_dim))
             self.jepa_predictor = nn.Sequential(
@@ -1028,6 +1097,39 @@ class VGSR(nn.Module):
                   (1.0 - self.adapter_ratio) * x
         return F.normalize(adapted, dim=1)
 
+    def _apply_text_attr_reservoir(self, all_text):
+        """
+        MOD-002: 用 CUB 属性文本原型构造受限 text reservoir 残差。
+
+        class_attr 给出每个类别对应 312 个专家属性的强度；这里只取 top-K
+        属性形成类别属性原型，再经过一个低秩投影产生小幅文本残差。
+        现有 Pearson topology loss 会约束输出后的 all_text，防止 seen-only
+        训练把 unseen 语义拓扑拉散。
+        """
+        if not self.use_text_attr_reservoir:
+            return all_text
+
+        device = all_text.device
+        dtype = all_text.dtype
+        attr_score = self.class_attr.to(device=device, dtype=torch.float32)  # [C, A]
+        attr_text = self.attr_text_embeds.to(device=device, dtype=dtype)     # [A, D]
+
+        k_attr = int(getattr(self.config, 'text_attr_reservoir_topk', 32))
+        k_attr = max(1, min(k_attr, attr_score.size(1)))
+        temp = float(getattr(self.config, 'text_attr_reservoir_temp', 10.0))
+
+        top_val, top_idx = attr_score.topk(k=k_attr, dim=1)
+        top_weight = F.softmax(top_val * temp, dim=1).to(dtype)
+        sparse_weight = torch.zeros(attr_score.size(0), attr_score.size(1),
+                                    device=device, dtype=dtype)
+        sparse_weight.scatter_(1, top_idx, top_weight)
+
+        reservoir_proto = sparse_weight @ attr_text                         # [C, D]
+        reservoir_proto = F.normalize(reservoir_proto, dim=-1)
+        residual = self.text_attr_reservoir_proj(reservoir_proto)
+        ratio = float(getattr(self.config, 'text_attr_reservoir_ratio', 0.05))
+        return F.normalize(all_text + ratio * residual.to(dtype), dim=-1)
+
     def _topology_pearson_loss(self, enh_text=None):
         """
         类别角度拓扑保持 Pearson loss:
@@ -1110,11 +1212,27 @@ class VGSR(nn.Module):
         k = max(1, min(int(self.jepa_topk), N - 1))
         labels = labels.to(device=device, dtype=torch.long)
         class_text = all_text[labels].to(device=device, dtype=patches.dtype)
+        neighbor_text = None
 
         with torch.no_grad():
             patch_n = F.normalize(patches.float(), dim=-1)
             text_n = F.normalize(class_text.float(), dim=-1)
             patch_score = torch.einsum('bnd,bd->bn', patch_n, text_n)
+            if self.use_ag_jepa_v2:
+                seen = self.seenclass.to(device=device, dtype=torch.long)
+                seen_text = all_text[seen].to(device=device, dtype=patches.dtype)
+                seen_text_n = F.normalize(seen_text.float(), dim=-1)
+                neighbor_score = text_n @ seen_text_n.T
+                same_class = labels.unsqueeze(1).eq(seen.unsqueeze(0))
+                neighbor_score = neighbor_score.masked_fill(same_class, -float("inf"))
+                n_neighbor = max(1, min(int(self.jepa_v2_neighbor_topk), seen.numel() - 1))
+                neighbor_idx = neighbor_score.topk(k=n_neighbor, dim=1).indices
+                neighbor_cls = seen[neighbor_idx]
+                neighbor_text = all_text[neighbor_cls.reshape(-1)].to(
+                    device=device, dtype=patches.dtype).view(B, n_neighbor, -1).mean(dim=1)
+                neighbor_n = F.normalize(neighbor_text.float(), dim=-1)
+                neighbor_patch_score = torch.einsum('bnd,bd->bn', patch_n, neighbor_n)
+                patch_score = patch_score - self.jepa_v2_neighbor_weight * neighbor_patch_score
             _, masked_idx = torch.topk(patch_score, k=k, dim=1, largest=True)
 
         mask = torch.zeros(B, N, dtype=torch.bool, device=device)
@@ -1126,18 +1244,24 @@ class VGSR(nn.Module):
 
         keep_f = keep.unsqueeze(-1).to(patch_z.dtype)
         context = (patch_z * keep_f).sum(dim=1) / keep_f.sum(dim=1).clamp_min(1.0)
-        text_z = self.cross_tf.embed_text(class_text)
+        text_condition = class_text
+        if self.use_ag_jepa_v2 and neighbor_text is not None:
+            text_condition = class_text - self.jepa_v2_neighbor_weight * neighbor_text
+        text_z = self.cross_tf.embed_text(text_condition)
 
         pred = self.jepa_predictor(torch.cat([context, text_z], dim=-1))
         pos_sim = F.cosine_similarity(pred, target, dim=-1)
         loss_jepa = (1.0 - pos_sim).mean()
 
-        seen = self.seenclass.to(device=device)
-        label_pos = torch.zeros_like(labels)
-        for i, cls_idx in enumerate(seen):
-            label_pos[labels == cls_idx] = i
-        neg_pos = (label_pos + 1) % seen.numel()
-        neg_text = all_text[seen[neg_pos]].to(device=device, dtype=patches.dtype)
+        if self.use_ag_jepa_v2 and neighbor_text is not None:
+            neg_text = neighbor_text
+        else:
+            seen = self.seenclass.to(device=device)
+            label_pos = torch.zeros_like(labels)
+            for i, cls_idx in enumerate(seen):
+                label_pos[labels == cls_idx] = i
+            neg_pos = (label_pos + 1) % seen.numel()
+            neg_text = all_text[seen[neg_pos]].to(device=device, dtype=patches.dtype)
         neg_text_z = self.cross_tf.embed_text(neg_text)
         pred_neg = self.jepa_predictor(torch.cat([context.detach(), neg_text_z], dim=-1))
         neg_sim = F.cosine_similarity(pred_neg, target, dim=-1)
@@ -1271,6 +1395,10 @@ class VGSR(nn.Module):
                                device=patches.device, dtype=patches.dtype)
         all_text[self.seenclass]   = seen_text
         all_text[self.unseenclass] = self.unseen_text_embeds
+        text_reservoir_features = None
+        if self.use_text_attr_reservoir:
+            all_text = self._apply_text_attr_reservoir(all_text)
+            text_reservoir_features = all_text
 
         # ── 基线分数: CLIP 原始余弦相似度 (完全不动, 保留零样本能力) ──
         if cls_token is not None:
@@ -1333,7 +1461,11 @@ class VGSR(nn.Module):
                 and self.cross_tf.pool_method == 'dmp'
                 and cls_token is not None):
             pool_lambda_dyn = torch.sigmoid(self.pool_net(cls_token))  # [B, 1]
+        attr_text = self.attr_text_embeds if (
+            self.use_geo_attr_routing or self.use_attr_patch_ot) else None
         cm_out = self.cross_tf(patches, all_text, cls_token,
+                               attr_text=attr_text,
+                               return_attr_patch_sim=self.use_attr_patch_ot,
                                weight_s2v_dyn=weight_s2v_dyn,
                                pool_lambda_dyn=pool_lambda_dyn,
                                lastvit_select_k=getattr(self, 'lastvit_select_k', 0),
@@ -1345,7 +1477,7 @@ class VGSR(nn.Module):
         # ── 计分模式选择 ──
         # 'add' (默认): logits = base_logits + β × local_score      （CrossModal 是补丁）
         # 'cosine_only': logits = cosine(v_enh, t_enh) × scale      （CrossModal 唯一决定）
-        topology_text = None
+        topology_text = text_reservoir_features
         if self.score_mode == 'cosine_only':
             v_enh_raw = cm_out['v_enh']                          # [B, 768]
             t_enh_raw = cm_out['t_enh']                          # [B, 200, 768]
@@ -1472,6 +1604,8 @@ class VGSR(nn.Module):
             # ★ G2 MSDN 互蒸馏 + cosine_only 双分支辅助 CE 用 (add 模式也透传)
             'score_s2v':   cm_out.get('score_s2v'),  # [B, 200]
             'score_v2s':   cm_out.get('score_v2s'),  # [B, 200]
+            'attr_route_score': cm_out.get('attr_route_score'),  # [B, 312] or None
+            'attr_patch_sim': cm_out.get('attr_patch_sim'),  # [B, N_patch, 312] or None
             'jepa_patches': patches,
             'all_text':     all_text,
         }
@@ -1593,6 +1727,84 @@ class VGSR(nn.Module):
                 loss = loss + lambda_jepa * loss_jepa
                 loss = loss + lambda_jepa_neg * loss_jepa_neg
 
+        # ========== [MOD-006] 反事实负文本挖掘 margin loss ==========
+        # 从 GPT/CLIP 文本原型里为当前类别找 seen 近邻负类，只在训练期对 logits_200 加轻量 margin。
+        loss_cf_neg_text = torch.tensor(0.0, device=logits.device)
+        lambda_cf_neg_text = self.config.__dict__.get('lambda_cf_neg_text', 0)
+        if self.config.__dict__.get('use_cf_neg_text', False) and lambda_cf_neg_text > 0:
+            logits_200_cf = in_package.get('logits_200', None)
+            all_text_cf = in_package.get('all_text', None)
+            if logits_200_cf is not None and all_text_cf is not None:
+                seen = self.seenclass.to(device=logits.device, dtype=torch.long)
+                labels_cf = labels.to(device=logits.device, dtype=torch.long)
+                with torch.no_grad():
+                    text_n = F.normalize(all_text_cf.float(), dim=1)
+                    label_text = text_n[labels_cf]                       # [B, 768]
+                    seen_text = text_n[seen]                             # [150, 768]
+                    neg_score = label_text @ seen_text.T                 # [B, 150]
+                    same_class = labels_cf.unsqueeze(1).eq(seen.unsqueeze(0))
+                    neg_score = neg_score.masked_fill(same_class, -float("inf"))
+                    neg_k = int(self.config.__dict__.get('cf_neg_topk', 5))
+                    neg_k = max(1, min(neg_k, seen.numel() - 1))
+                    neg_idx = neg_score.topk(k=neg_k, dim=1).indices
+                    neg_cls = seen[neg_idx]                              # [B, K]
+                pos_logits = logits_200_cf.gather(1, labels_cf.unsqueeze(1))
+                neg_logits = logits_200_cf.gather(1, neg_cls)
+                margin = float(self.config.__dict__.get('cf_neg_margin', 0.2))
+                loss_cf_neg_text = F.relu(neg_logits - pos_logits + margin).mean()
+                loss = loss + lambda_cf_neg_text * loss_cf_neg_text
+
+        # ========== [MOD-001] 几何感知属性路由辅助 loss ==========
+        # 对每个训练样本, 取其类别专家属性向量中 top-K 属性作为正属性集合。
+        # FAE 后的局部视觉 memory 必须把概率质量路由到这些属性原型上。
+        loss_geo_attr = torch.tensor(0.0, device=logits.device)
+        lambda_geo_attr = self.config.__dict__.get('lambda_geo_attr_routing', 0)
+        attr_route_score = in_package.get('attr_route_score', None)  # [B, 312]
+        if lambda_geo_attr > 0 and attr_route_score is not None:
+            target_attr = self.class_attr.to(
+                device=logits.device, dtype=attr_route_score.dtype)[labels]  # [B, 312]
+            k_attr = int(self.config.__dict__.get('geo_attr_route_topk', 16))
+            k_attr = max(1, min(k_attr, target_attr.size(1)))
+            pos_idx = target_attr.topk(k=k_attr, dim=1).indices
+            temp = float(self.config.__dict__.get('geo_attr_route_temp', 14.28))
+            attr_logp = F.log_softmax(attr_route_score.float() * temp, dim=-1)
+            pos_logp = attr_logp.gather(1, pos_idx)
+            loss_geo_attr = -torch.logsumexp(pos_logp, dim=1).mean()
+            loss = loss + lambda_geo_attr * loss_geo_attr
+
+        # ========== [MOD-004] 属性引导的局部补丁 OT 对齐 ==========
+        # 从当前类别专家属性中取 top-K 属性，与 FAE 后局部 patch 做 Sinkhorn 软匹配。
+        # 目标是让局部视觉证据和类别属性 token 形成更细粒度的可解释对齐。
+        loss_attr_patch_ot = torch.tensor(0.0, device=logits.device)
+        lambda_attr_patch_ot = self.config.__dict__.get('lambda_attr_patch_ot', 0)
+        attr_patch_sim = in_package.get('attr_patch_sim', None)  # [B, N_patch, 312]
+        if lambda_attr_patch_ot > 0 and attr_patch_sim is not None:
+            target_attr = self.class_attr.to(
+                device=logits.device, dtype=attr_patch_sim.dtype)[labels]  # [B, 312]
+            k_attr = int(self.config.__dict__.get('attr_patch_ot_topk', 16))
+            k_attr = max(1, min(k_attr, target_attr.size(1)))
+            pos_idx = target_attr.topk(k=k_attr, dim=1).indices
+            gather_idx = pos_idx.unsqueeze(1).expand(-1, attr_patch_sim.size(1), -1)
+            sim = attr_patch_sim.gather(2, gather_idx).float()  # [B, N_patch, K]
+            temp = float(self.config.__dict__.get('attr_patch_ot_temp', 10.0))
+            kernel = torch.exp((sim * temp).clamp(min=-20.0, max=20.0))
+            B_ot, N_patch, K_attr = kernel.shape
+            a = torch.full((B_ot, N_patch), 1.0 / N_patch,
+                           device=kernel.device, dtype=kernel.dtype)
+            b = torch.full((B_ot, K_attr), 1.0 / K_attr,
+                           device=kernel.device, dtype=kernel.dtype)
+            u = torch.ones_like(a)
+            v = torch.ones_like(b)
+            sinkhorn_iter = int(self.config.__dict__.get('attr_patch_ot_iter', 3))
+            eps = 1e-8
+            for _ in range(max(1, sinkhorn_iter)):
+                u = a / (torch.bmm(kernel, v.unsqueeze(-1)).squeeze(-1) + eps)
+                v = b / (torch.bmm(kernel.transpose(1, 2), u.unsqueeze(-1)).squeeze(-1) + eps)
+            transport = u.unsqueeze(-1) * kernel * v.unsqueeze(1)
+            expected_sim = (transport * sim).sum(dim=(1, 2))
+            loss_attr_patch_ot = (1.0 - expected_sim).mean()
+            loss = loss + lambda_attr_patch_ot * loss_attr_patch_ot
+
         loss_v_anchor       = torch.tensor(0.0, device=logits.device)
         loss_t_unseen_anchor = torch.tensor(0.0, device=logits.device)
         loss_distill        = torch.tensor(0.0, device=logits.device)
@@ -1662,6 +1874,7 @@ class VGSR(nn.Module):
         #   L_msdn = (T²/2) [ KL(p_s2v.detach() || p_v2s) + KL(p_v2s.detach() || p_s2v) ]
         # 注意 .detach() 防梯度循环, 一边教另一边
         loss_msdn = torch.tensor(0.0, device=logits.device)
+        loss_msdn_gate = torch.tensor(1.0, device=logits.device)
         lambda_msdn = self.config.__dict__.get('lambda_msdn', 0)
         if (lambda_msdn > 0 and score_s2v is not None and score_v2s is not None):
             T_msdn = self.config.__dict__.get('msdn_temp', 2.0)
@@ -1678,7 +1891,28 @@ class VGSR(nn.Module):
             # KL(p_v2s.detach() || p_s2v): v2s 教 s2v
             kl_v2s_to_s2v = F.kl_div(log_p_s2v, p_v2s.detach(), reduction='batchmean')
             loss_msdn = (T_msdn * T_msdn / 2.0) * (kl_s2v_to_v2s + kl_v2s_to_s2v)
-            loss = loss + lambda_msdn * loss_msdn
+            if bool(self.config.__dict__.get('use_uncertainty_msdn_gate', False)):
+                # MOD-003: 两个分支都确定且彼此接近时加强互蒸馏；
+                # 分支高熵或互相冲突时降低权重，避免错误共识互相强化。
+                with torch.no_grad():
+                    p_s = F.softmax(s2v_seen.detach(), dim=-1)
+                    p_v = F.softmax(v2s_seen.detach(), dim=-1)
+                    eps = 1e-8
+                    norm = np.log(max(2, p_s.size(1)))
+                    ent_s = -(p_s * (p_s + eps).log()).sum(dim=1) / norm
+                    ent_v = -(p_v * (p_v + eps).log()).sum(dim=1) / norm
+                    confidence = (1.0 - 0.5 * (ent_s + ent_v)).clamp(0.0, 1.0)
+                    mix = 0.5 * (p_s + p_v)
+                    js = 0.5 * (
+                        F.kl_div((mix + eps).log(), p_s, reduction='none').sum(dim=1)
+                        + F.kl_div((mix + eps).log(), p_v, reduction='none').sum(dim=1)
+                    )
+                    alpha = float(self.config.__dict__.get('msdn_gate_js_alpha', 4.0))
+                    agreement = torch.exp(-alpha * js).clamp(0.0, 1.0)
+                    gate_min = float(self.config.__dict__.get('msdn_gate_min', 0.2))
+                    sample_gate = gate_min + (1.0 - gate_min) * confidence * agreement
+                    loss_msdn_gate = sample_gate.mean()
+            loss = loss + lambda_msdn * loss_msdn_gate * loss_msdn
 
         # ========== [CGC C5] Seen-Unseen Margin (反事实校准最小可行版) ==========
         # 直接对全 200 类 logits 做"max_seen - max_unseen"约束, 防止长训 unseen 漂移
@@ -1711,7 +1945,11 @@ class VGSR(nn.Module):
             'loss_aux_s2v': loss_aux_s2v,
             'loss_aux_v2s': loss_aux_v2s,
             'loss_msdn': loss_msdn,
+            'loss_msdn_gate': loss_msdn_gate,
             'loss_bias': loss_bias,
             'loss_jepa': loss_jepa,
             'loss_jepa_neg': loss_jepa_neg,
+            'loss_cf_neg_text': loss_cf_neg_text,
+            'loss_geo_attr': loss_geo_attr,
+            'loss_attr_patch_ot': loss_attr_patch_ot,
         }

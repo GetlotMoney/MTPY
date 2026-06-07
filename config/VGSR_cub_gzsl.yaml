@@ -403,6 +403,26 @@ lambda_jepa_neg:
   value: 0.02
 jepa_neg_margin:
   value: 0.2
+# MOD-005: AG-JEPA v2 默认关闭。关闭时沿用原 AG-JEPA：
+# 用类别文本选 top-K patch，循环 next seen 类作为负文本。
+# 打开时用近邻类别原型构造更判别的 patch 分数和 hard negative。
+use_ag_jepa_v2:
+  value: False
+jepa_v2_neighbor_topk:
+  value: 5
+jepa_v2_neighbor_weight:
+  value: 0.2
+# MOD-006: 反事实负文本挖掘默认关闭。
+# 打开时从当前 text_source 的类别文本原型里找 seen 近邻负类，
+# 对 logits_200 加轻量 margin loss，不改主干和评估。
+use_cf_neg_text:
+  value: False
+lambda_cf_neg_text:
+  value: 0.0
+cf_neg_topk:
+  value: 5
+cf_neg_margin:
+  value: 0.2
 
 use_aug_cache:
   value: False
@@ -485,3 +505,49 @@ bias_delta:
 #   单 epoch 预期 30s → 15-18s, 15 epoch 总训练 7-8 分 → 4-5 分
 use_amp:
   value: False
+
+# === [MOD-001] 几何感知属性路由辅助 loss ===
+# 关闭时不改变主框架输出；打开后用 FAE 后的局部视觉 memory 匹配 312 个 CUB 属性原型。
+use_geo_attr_routing:
+  value: False
+lambda_geo_attr_routing:
+  value: 0.0
+geo_attr_route_topk:
+  value: 16
+geo_attr_route_temp:
+  value: 14.28
+
+# === [MOD-002] 拓扑感知的自适应文本属性库 ===
+# 关闭时不改变主框架文本原型；打开后用 CUB 属性文本原型生成低秩文本残差。
+use_text_attr_reservoir:
+  value: False
+text_attr_reservoir_ratio:
+  value: 0.0
+text_attr_reservoir_topk:
+  value: 32
+text_attr_reservoir_temp:
+  value: 10.0
+text_attr_reservoir_hidden:
+  value: 256
+
+# === [MOD-003] 不确定性门控的分支一致性蒸馏 ===
+# 关闭时完全沿用固定 lambda_msdn；打开后根据分支熵和 JS 分歧缩放 MSDN loss。
+use_uncertainty_msdn_gate:
+  value: False
+msdn_gate_min:
+  value: 0.2
+msdn_gate_js_alpha:
+  value: 4.0
+
+# === [MOD-004] 属性引导的局部补丁 OT 对齐 ===
+# 关闭时不传属性文本矩阵，不计算 patch-attribute OT loss。
+use_attr_patch_ot:
+  value: False
+lambda_attr_patch_ot:
+  value: 0.0
+attr_patch_ot_topk:
+  value: 16
+attr_patch_ot_temp:
+  value: 10.0
+attr_patch_ot_iter:
+  value: 3
