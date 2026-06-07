@@ -500,9 +500,9 @@ geo_attr_route_temp:
 # === [MOD-002] 拓扑感知的自适应文本属性库 ===
 # 关闭时不改变主框架文本原型；打开后用 CUB 属性文本原型生成低秩文本残差。
 use_text_attr_reservoir:
-  value: False
+  value: True
 text_attr_reservoir_ratio:
-  value: 0.0
+  value: 0.05
 text_attr_reservoir_topk:
   value: 32
 text_attr_reservoir_temp:

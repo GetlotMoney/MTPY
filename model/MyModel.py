@@ -815,6 +815,25 @@ class VGSR(nn.Module):
             raise ValueError(
                 "use_geo_attr_routing=True requires class_attr and attr_text_embeds.")
 
+        # ---- MOD-002: 拓扑感知的自适应文本属性库 ----
+        self.use_text_attr_reservoir = bool(
+            getattr(config, 'use_text_attr_reservoir', False))
+        if self.use_text_attr_reservoir and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_text_attr_reservoir=True requires class_attr and attr_text_embeds.")
+        if self.use_text_attr_reservoir:
+            reservoir_hidden = int(getattr(config, 'text_attr_reservoir_hidden', 256))
+            self.text_attr_reservoir_proj = nn.Sequential(
+                nn.Linear(self.dim_f, reservoir_hidden),
+                nn.GELU(),
+                nn.Linear(reservoir_hidden, self.dim_f),
+            )
+            # zero init: 打开模块的训练初始点仍等价于未加 reservoir 的文本原型。
+            with torch.no_grad():
+                self.text_attr_reservoir_proj[-1].weight.zero_()
+                self.text_attr_reservoir_proj[-1].bias.zero_()
+
         # ---- Adapter (语义端轻量增强) ----
         self.adapter_ratio = getattr(config, 'adapter_ratio', 0.2)
         self.text_adapter  = Adapter(self.dim_f, reduction=4)
@@ -1063,6 +1082,39 @@ class VGSR(nn.Module):
                   (1.0 - self.adapter_ratio) * x
         return F.normalize(adapted, dim=1)
 
+    def _apply_text_attr_reservoir(self, all_text):
+        """
+        MOD-002: 用 CUB 属性文本原型构造受限 text reservoir 残差。
+
+        class_attr 给出每个类别对应 312 个专家属性的强度；这里只取 top-K
+        属性形成类别属性原型，再经过一个低秩投影产生小幅文本残差。
+        现有 Pearson topology loss 会约束输出后的 all_text，防止 seen-only
+        训练把 unseen 语义拓扑拉散。
+        """
+        if not self.use_text_attr_reservoir:
+            return all_text
+
+        device = all_text.device
+        dtype = all_text.dtype
+        attr_score = self.class_attr.to(device=device, dtype=torch.float32)  # [C, A]
+        attr_text = self.attr_text_embeds.to(device=device, dtype=dtype)     # [A, D]
+
+        k_attr = int(getattr(self.config, 'text_attr_reservoir_topk', 32))
+        k_attr = max(1, min(k_attr, attr_score.size(1)))
+        temp = float(getattr(self.config, 'text_attr_reservoir_temp', 10.0))
+
+        top_val, top_idx = attr_score.topk(k=k_attr, dim=1)
+        top_weight = F.softmax(top_val * temp, dim=1).to(dtype)
+        sparse_weight = torch.zeros(attr_score.size(0), attr_score.size(1),
+                                    device=device, dtype=dtype)
+        sparse_weight.scatter_(1, top_idx, top_weight)
+
+        reservoir_proto = sparse_weight @ attr_text                         # [C, D]
+        reservoir_proto = F.normalize(reservoir_proto, dim=-1)
+        residual = self.text_attr_reservoir_proj(reservoir_proto)
+        ratio = float(getattr(self.config, 'text_attr_reservoir_ratio', 0.05))
+        return F.normalize(all_text + ratio * residual.to(dtype), dim=-1)
+
     def _topology_pearson_loss(self, enh_text=None):
         """
         类别角度拓扑保持 Pearson loss:
@@ -1306,6 +1358,10 @@ class VGSR(nn.Module):
                                device=patches.device, dtype=patches.dtype)
         all_text[self.seenclass]   = seen_text
         all_text[self.unseenclass] = self.unseen_text_embeds
+        text_reservoir_features = None
+        if self.use_text_attr_reservoir:
+            all_text = self._apply_text_attr_reservoir(all_text)
+            text_reservoir_features = all_text
 
         # ── 基线分数: CLIP 原始余弦相似度 (完全不动, 保留零样本能力) ──
         if cls_token is not None:
@@ -1382,7 +1438,7 @@ class VGSR(nn.Module):
         # ── 计分模式选择 ──
         # 'add' (默认): logits = base_logits + β × local_score      （CrossModal 是补丁）
         # 'cosine_only': logits = cosine(v_enh, t_enh) × scale      （CrossModal 唯一决定）
-        topology_text = None
+        topology_text = text_reservoir_features
         if self.score_mode == 'cosine_only':
             v_enh_raw = cm_out['v_enh']                          # [B, 768]
             t_enh_raw = cm_out['t_enh']                          # [B, 200, 768]
