@@ -143,6 +143,14 @@ XDS / FINAL
 
 该 skill 会读取外部创新指导清单、同步 `backlog.md`、执行审查和实验记录流程。不会自动 push；push 需要用户明确要求。
 
+完整项目级规范位于：
+
+```text
+docs/experiment_workflow/
+```
+
+其中 `README.md` 是总入口，`github_branching.md` 规定 GitHub 分支和 push 规则，`experiment_taxonomy.md` 规定 `MOD / COMBO / REV-MOD / TUNE / ABL / XDS / FINAL`，`idea_tree_feedback.md` 规定实验如何反哺创新树。
+
 ## 环境
 
 - 操作系统：Windows
