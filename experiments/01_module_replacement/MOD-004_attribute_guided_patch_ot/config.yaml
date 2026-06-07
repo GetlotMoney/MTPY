@@ -522,9 +522,9 @@ msdn_gate_js_alpha:
 # === [MOD-004] 属性引导的局部补丁 OT 对齐 ===
 # 关闭时不传属性文本矩阵，不计算 patch-attribute OT loss。
 use_attr_patch_ot:
-  value: False
+  value: True
 lambda_attr_patch_ot:
-  value: 0.0
+  value: 0.02
 attr_patch_ot_topk:
   value: 16
 attr_patch_ot_temp:

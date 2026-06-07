@@ -552,6 +552,7 @@ class CrossModalTransformer(nn.Module):
 
     def forward(self, patches, text, cls_token=None, unseen_idx=None,
                 attr_text=None,
+                return_attr_patch_sim=False,
                 weight_s2v_dyn=None, pool_lambda_dyn=None,
                 lastvit_select_k=0, lastvit_select_sigma=0.0,
                 lastvit_select_largest=True,
@@ -623,6 +624,7 @@ class CrossModalTransformer(nn.Module):
         # 用 FAE 后的 geometry-aware local memory 去匹配属性文本原型。
         # 对每个属性取最相关 patch 的相似度, 得到 [B, N_attr]。
         attr_route_score = None
+        attr_patch_sim = None
         if attr_text is not None:
             attr_com = self.embed_text(attr_text.to(device=memory.device,
                                                     dtype=text.dtype))  # [N_attr, dim_com]
@@ -630,6 +632,8 @@ class CrossModalTransformer(nn.Module):
             attr_n = F.normalize(attr_com.float(), dim=-1)
             patch_attr_sim = mem_n @ attr_n.T                           # [B, N_patch, N_attr]
             attr_route_score = patch_attr_sim.max(dim=1).values.to(memory.dtype)
+            if return_attr_patch_sim:
+                attr_patch_sim = patch_attr_sim.to(memory.dtype)
 
         # ========== v2s 分支: 文本 Query 视觉 ==========
         # 每个类的文本去 576 个 patch 里找相关视觉区域
@@ -755,6 +759,7 @@ class CrossModalTransformer(nn.Module):
             'score_s2v': score_s2v,  # [B, N_cls]
             'score_v2s': score_v2s,  # [B, N_cls]
             'attr_route_score': attr_route_score,  # [B, N_attr] or None
+            'attr_patch_sim': attr_patch_sim,  # [B, N_patch, N_attr] or None
         }
 
 
@@ -833,6 +838,13 @@ class VGSR(nn.Module):
             with torch.no_grad():
                 self.text_attr_reservoir_proj[-1].weight.zero_()
                 self.text_attr_reservoir_proj[-1].bias.zero_()
+
+        # ---- MOD-004: 属性引导局部补丁 OT 对齐 ----
+        self.use_attr_patch_ot = bool(getattr(config, 'use_attr_patch_ot', False))
+        if self.use_attr_patch_ot and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_attr_patch_ot=True requires class_attr and attr_text_embeds.")
 
         # ---- Adapter (语义端轻量增强) ----
         self.adapter_ratio = getattr(config, 'adapter_ratio', 0.2)
@@ -1424,9 +1436,11 @@ class VGSR(nn.Module):
                 and self.cross_tf.pool_method == 'dmp'
                 and cls_token is not None):
             pool_lambda_dyn = torch.sigmoid(self.pool_net(cls_token))  # [B, 1]
-        attr_text = self.attr_text_embeds if self.use_geo_attr_routing else None
+        attr_text = self.attr_text_embeds if (
+            self.use_geo_attr_routing or self.use_attr_patch_ot) else None
         cm_out = self.cross_tf(patches, all_text, cls_token,
                                attr_text=attr_text,
+                               return_attr_patch_sim=self.use_attr_patch_ot,
                                weight_s2v_dyn=weight_s2v_dyn,
                                pool_lambda_dyn=pool_lambda_dyn,
                                lastvit_select_k=getattr(self, 'lastvit_select_k', 0),
@@ -1566,6 +1580,7 @@ class VGSR(nn.Module):
             'score_s2v':   cm_out.get('score_s2v'),  # [B, 200]
             'score_v2s':   cm_out.get('score_v2s'),  # [B, 200]
             'attr_route_score': cm_out.get('attr_route_score'),  # [B, 312] or None
+            'attr_patch_sim': cm_out.get('attr_patch_sim'),  # [B, N_patch, 312] or None
             'jepa_patches': patches,
             'all_text':     all_text,
         }
@@ -1704,6 +1719,39 @@ class VGSR(nn.Module):
             pos_logp = attr_logp.gather(1, pos_idx)
             loss_geo_attr = -torch.logsumexp(pos_logp, dim=1).mean()
             loss = loss + lambda_geo_attr * loss_geo_attr
+
+        # ========== [MOD-004] 属性引导的局部补丁 OT 对齐 ==========
+        # 从当前类别专家属性中取 top-K 属性，与 FAE 后局部 patch 做 Sinkhorn 软匹配。
+        # 目标是让局部视觉证据和类别属性 token 形成更细粒度的可解释对齐。
+        loss_attr_patch_ot = torch.tensor(0.0, device=logits.device)
+        lambda_attr_patch_ot = self.config.__dict__.get('lambda_attr_patch_ot', 0)
+        attr_patch_sim = in_package.get('attr_patch_sim', None)  # [B, N_patch, 312]
+        if lambda_attr_patch_ot > 0 and attr_patch_sim is not None:
+            target_attr = self.class_attr.to(
+                device=logits.device, dtype=attr_patch_sim.dtype)[labels]  # [B, 312]
+            k_attr = int(self.config.__dict__.get('attr_patch_ot_topk', 16))
+            k_attr = max(1, min(k_attr, target_attr.size(1)))
+            pos_idx = target_attr.topk(k=k_attr, dim=1).indices
+            gather_idx = pos_idx.unsqueeze(1).expand(-1, attr_patch_sim.size(1), -1)
+            sim = attr_patch_sim.gather(2, gather_idx).float()  # [B, N_patch, K]
+            temp = float(self.config.__dict__.get('attr_patch_ot_temp', 10.0))
+            kernel = torch.exp((sim * temp).clamp(min=-20.0, max=20.0))
+            B_ot, N_patch, K_attr = kernel.shape
+            a = torch.full((B_ot, N_patch), 1.0 / N_patch,
+                           device=kernel.device, dtype=kernel.dtype)
+            b = torch.full((B_ot, K_attr), 1.0 / K_attr,
+                           device=kernel.device, dtype=kernel.dtype)
+            u = torch.ones_like(a)
+            v = torch.ones_like(b)
+            sinkhorn_iter = int(self.config.__dict__.get('attr_patch_ot_iter', 3))
+            eps = 1e-8
+            for _ in range(max(1, sinkhorn_iter)):
+                u = a / (torch.bmm(kernel, v.unsqueeze(-1)).squeeze(-1) + eps)
+                v = b / (torch.bmm(kernel.transpose(1, 2), u.unsqueeze(-1)).squeeze(-1) + eps)
+            transport = u.unsqueeze(-1) * kernel * v.unsqueeze(1)
+            expected_sim = (transport * sim).sum(dim=(1, 2))
+            loss_attr_patch_ot = (1.0 - expected_sim).mean()
+            loss = loss + lambda_attr_patch_ot * loss_attr_patch_ot
 
         loss_v_anchor       = torch.tensor(0.0, device=logits.device)
         loss_t_unseen_anchor = torch.tensor(0.0, device=logits.device)
@@ -1850,4 +1898,5 @@ class VGSR(nn.Module):
             'loss_jepa': loss_jepa,
             'loss_jepa_neg': loss_jepa_neg,
             'loss_geo_attr': loss_geo_attr,
+            'loss_attr_patch_ot': loss_attr_patch_ot,
         }
