@@ -119,6 +119,8 @@ print_log(f"│  lambda_topo   : {getattr(config, 'lambda_topo_pearson', 0.0)}")
 print_log(f"│  lambda_aux_s2v: {getattr(config, 'lambda_aux_s2v', 0.0)}")
 print_log(f"│  lambda_aux_v2s: {getattr(config, 'lambda_aux_v2s', 0.0)}")
 print_log(f"│  aux_temp      : {getattr(config, 'aux_temp', 14.28)}")
+print_log(f"│  use_geo_attr  : {getattr(config, 'use_geo_attr_routing', False)}")
+print_log(f"│  lambda_geo_attr: {getattr(config, 'lambda_geo_attr_routing', 0.0)}")
 print_log("├─ Resume ────────────────────────────────────────────────┤")
 print_log(f"│  resume_from        : {getattr(config, 'resume_from', '')!r}")
 print_log(f"│  resume_lr_schedule : {getattr(config, 'resume_lr_schedule', 'continue')}")
@@ -373,6 +375,8 @@ model = VGSR(
     dataloader.unseenclasses,
     seen_text_embeds=seen_gpt_embeds,       # [150, 768] seen 类 GPT 文本
     unseen_text_embeds=unseen_clip_embeds,  # [50, 768]  unseen 类原始 CLIP 文本
+    class_attr=dataloader.att,              # [200, 312] CUB 专家属性
+    attr_text_embeds=dataloader.clip_att,    # [312, 768] CLIP 属性文本原型
 ).to(config.device)
 
 total_params = sum(p.numel() for p in model.parameters())
@@ -710,6 +714,7 @@ for epoch in range(start_epoch, total_epochs + 1):
             bi_v   = loss_pack.get('loss_bias',            torch.tensor(0.)).item()
             jp_v   = loss_pack.get('loss_jepa',            torch.tensor(0.)).item()
             jn_v   = loss_pack.get('loss_jepa_neg',        torch.tensor(0.)).item()
+            ga_v   = loss_pack.get('loss_geo_attr',        torch.tensor(0.)).item()
             print_log(f"  Step [{step+1:3d}/{iters_per_epoch}] | "
                       f"Loss: {loss.item():.4f} | Avg: {avg_loss:.4f} | "
                       f"CE: {ce_v:.3f}  Cons: {cons_v:.3f}  "
@@ -717,7 +722,8 @@ for epoch in range(start_epoch, total_epochs + 1):
                       f"VA: {va_v:.4f}  TA: {ta_v:.4f}  Dist: {di_v:.4f}  "
                       f"AuxS2V: {as_v:.3f}  AuxV2S: {av_v:.3f}  "
                       f"MSDN: {ms_v:.4f}  Bias: {bi_v:.4f}  "
-                      f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}")
+                      f"JEPA: {jp_v:.4f}  JNeg: {jn_v:.4f}  "
+                      f"GeoAttr: {ga_v:.4f}")
 
     # 更新学习率
     scheduler.step()

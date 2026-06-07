@@ -489,9 +489,9 @@ use_amp:
 # === [MOD-001] 几何感知属性路由辅助 loss ===
 # 关闭时不改变主框架输出；打开后用 FAE 后的局部视觉 memory 匹配 312 个 CUB 属性原型。
 use_geo_attr_routing:
-  value: False
+  value: True
 lambda_geo_attr_routing:
-  value: 0.0
+  value: 0.05
 geo_attr_route_topk:
   value: 16
 geo_attr_route_temp:

@@ -551,6 +551,7 @@ class CrossModalTransformer(nn.Module):
             self.attn_pool = nn.Linear(dim_com, 1)
 
     def forward(self, patches, text, cls_token=None, unseen_idx=None,
+                attr_text=None,
                 weight_s2v_dyn=None, pool_lambda_dyn=None,
                 lastvit_select_k=0, lastvit_select_sigma=0.0,
                 lastvit_select_largest=True,
@@ -560,6 +561,7 @@ class CrossModalTransformer(nn.Module):
             patches:   [B, 576, 768]  CLIP patch 特征 (不含 CLS)
             text:      [N_cls, 768]   原始文本特征
             cls_token: [B, 768]       CLIP CLS token (保留接口兼容)
+            attr_text: [N_attr, 768]   可选属性文本原型, MOD-001 属性路由辅助项用
             unseen_idx: [N_unseen]    可选; 若提供, t_enh 在 proj_text
                                        前对 unseen 列 detach, 防止 unseen
                                        无监督梯度流入 decoder_v2s/FAE 上层
@@ -616,6 +618,18 @@ class CrossModalTransformer(nn.Module):
 
         txt_com   = self.embed_text(text)                        # [N_cls, dim_com]
         txt_batch = txt_com.unsqueeze(0).expand(B, -1, -1)       # [B, N_cls, dim_com]
+
+        # ========== MOD-001: 几何感知属性路由辅助分数 ==========
+        # 用 FAE 后的 geometry-aware local memory 去匹配属性文本原型。
+        # 对每个属性取最相关 patch 的相似度, 得到 [B, N_attr]。
+        attr_route_score = None
+        if attr_text is not None:
+            attr_com = self.embed_text(attr_text.to(device=memory.device,
+                                                    dtype=text.dtype))  # [N_attr, dim_com]
+            mem_n = F.normalize(memory.float(), dim=-1)
+            attr_n = F.normalize(attr_com.float(), dim=-1)
+            patch_attr_sim = mem_n @ attr_n.T                           # [B, N_patch, N_attr]
+            attr_route_score = patch_attr_sim.max(dim=1).values.to(memory.dtype)
 
         # ========== v2s 分支: 文本 Query 视觉 ==========
         # 每个类的文本去 576 个 patch 里找相关视觉区域
@@ -740,6 +754,7 @@ class CrossModalTransformer(nn.Module):
             # ★ 单独导出双分支分数, cosine_only + 辅助 CE 用
             'score_s2v': score_s2v,  # [B, N_cls]
             'score_v2s': score_v2s,  # [B, N_cls]
+            'attr_route_score': attr_route_score,  # [B, N_attr] or None
         }
 
 
@@ -766,7 +781,9 @@ class VGSR(nn.Module):
     """
     def __init__(self, config, seenclass, unseenclass,
                  seen_text_embeds,       # [150, 768]
-                 unseen_text_embeds):    # [50,  768]
+                 unseen_text_embeds,     # [50,  768]
+                 class_attr=None,        # [200, 312]
+                 attr_text_embeds=None): # [312, 768]
         super().__init__()
         self.config = config
         self.nclass = config.num_class   # 200
@@ -779,6 +796,24 @@ class VGSR(nn.Module):
             F.normalize(seen_text_embeds,   dim=1), requires_grad=False)
         self.unseen_text_embeds = nn.Parameter(
             F.normalize(unseen_text_embeds, dim=1), requires_grad=False)
+
+        # ---- MOD-001: 几何感知属性路由所需的固定属性材料 ----
+        self.use_geo_attr_routing = bool(getattr(config, 'use_geo_attr_routing', False))
+        if class_attr is not None:
+            self.register_buffer('class_attr', class_attr.float(), persistent=False)
+        else:
+            self.class_attr = None
+        if attr_text_embeds is not None:
+            self.register_buffer(
+                'attr_text_embeds',
+                F.normalize(attr_text_embeds.float(), dim=1),
+                persistent=False)
+        else:
+            self.attr_text_embeds = None
+        if self.use_geo_attr_routing and (
+                self.class_attr is None or self.attr_text_embeds is None):
+            raise ValueError(
+                "use_geo_attr_routing=True requires class_attr and attr_text_embeds.")
 
         # ---- Adapter (语义端轻量增强) ----
         self.adapter_ratio = getattr(config, 'adapter_ratio', 0.2)
@@ -1333,7 +1368,9 @@ class VGSR(nn.Module):
                 and self.cross_tf.pool_method == 'dmp'
                 and cls_token is not None):
             pool_lambda_dyn = torch.sigmoid(self.pool_net(cls_token))  # [B, 1]
+        attr_text = self.attr_text_embeds if self.use_geo_attr_routing else None
         cm_out = self.cross_tf(patches, all_text, cls_token,
+                               attr_text=attr_text,
                                weight_s2v_dyn=weight_s2v_dyn,
                                pool_lambda_dyn=pool_lambda_dyn,
                                lastvit_select_k=getattr(self, 'lastvit_select_k', 0),
@@ -1472,6 +1509,7 @@ class VGSR(nn.Module):
             # ★ G2 MSDN 互蒸馏 + cosine_only 双分支辅助 CE 用 (add 模式也透传)
             'score_s2v':   cm_out.get('score_s2v'),  # [B, 200]
             'score_v2s':   cm_out.get('score_v2s'),  # [B, 200]
+            'attr_route_score': cm_out.get('attr_route_score'),  # [B, 312] or None
             'jepa_patches': patches,
             'all_text':     all_text,
         }
@@ -1592,6 +1630,24 @@ class VGSR(nn.Module):
                     jepa_patches, all_text_jepa, labels)
                 loss = loss + lambda_jepa * loss_jepa
                 loss = loss + lambda_jepa_neg * loss_jepa_neg
+
+        # ========== [MOD-001] 几何感知属性路由辅助 loss ==========
+        # 对每个训练样本, 取其类别专家属性向量中 top-K 属性作为正属性集合。
+        # FAE 后的局部视觉 memory 必须把概率质量路由到这些属性原型上。
+        loss_geo_attr = torch.tensor(0.0, device=logits.device)
+        lambda_geo_attr = self.config.__dict__.get('lambda_geo_attr_routing', 0)
+        attr_route_score = in_package.get('attr_route_score', None)  # [B, 312]
+        if lambda_geo_attr > 0 and attr_route_score is not None:
+            target_attr = self.class_attr.to(
+                device=logits.device, dtype=attr_route_score.dtype)[labels]  # [B, 312]
+            k_attr = int(self.config.__dict__.get('geo_attr_route_topk', 16))
+            k_attr = max(1, min(k_attr, target_attr.size(1)))
+            pos_idx = target_attr.topk(k=k_attr, dim=1).indices
+            temp = float(self.config.__dict__.get('geo_attr_route_temp', 14.28))
+            attr_logp = F.log_softmax(attr_route_score.float() * temp, dim=-1)
+            pos_logp = attr_logp.gather(1, pos_idx)
+            loss_geo_attr = -torch.logsumexp(pos_logp, dim=1).mean()
+            loss = loss + lambda_geo_attr * loss_geo_attr
 
         loss_v_anchor       = torch.tensor(0.0, device=logits.device)
         loss_t_unseen_anchor = torch.tensor(0.0, device=logits.device)
@@ -1714,4 +1770,5 @@ class VGSR(nn.Module):
             'loss_bias': loss_bias,
             'loss_jepa': loss_jepa,
             'loss_jepa_neg': loss_jepa_neg,
+            'loss_geo_attr': loss_geo_attr,
         }
