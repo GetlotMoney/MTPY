@@ -9,25 +9,25 @@ main
 experiment/innovation
   历史兼容分支：旧创新实验记录入口。
 
-experiment/mod
+experiment/single-module-innovation
   MOD-xxx 单模块创新实验总控分支。
 
-experiment/combo
+experiment/module-combination
   COMBO-xxx 组合模块实验总控分支。
 
-experiment/rev-mod
+experiment/single-module-review
   REV-MOD-xxx 单模块复核总控分支。
 
-experiment/tune
+experiment/hyperparameter-tuning
   TUNE-xxx 调参实验总控分支。
 
-experiment/abl
+experiment/ablation
   ABL-xxx 消融实验总控分支。
 
-experiment/xds
+experiment/cross-dataset
   XDS-xxx 跨数据集实验总控分支。
 
-experiment/final
+experiment/final-review
   FINAL-xxx 最终复核和正式结果分支。
 
 experiment/workflow-spec
@@ -37,7 +37,7 @@ exp/<EXP-ID>_<slug>
   单个实验代码分支。
 ```
 
-历史兼容分支 `experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 保留旧记录；新实验按 `experiment/mod`、`experiment/combo`、`experiment/rev-mod`、`experiment/tune`、`experiment/abl`、`experiment/xds`、`experiment/final` 执行。
+历史兼容分支 `experiment/tuning`、`experiment/final-runs` 保留旧记录；新实验按 `experiment/single-module-innovation`、`experiment/module-combination`、`experiment/single-module-review`、`experiment/hyperparameter-tuning`、`experiment/ablation`、`experiment/cross-dataset`、`experiment/final-review` 执行。
 
 ## 单个实验的分支流程
 

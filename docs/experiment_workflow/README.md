@@ -70,13 +70,13 @@ Claude 固定三轮审查
 
 | 实验类型 | 分支 |
 |---|---|
-| `MOD-xxx` 单模块创新实验 | `experiment/mod` |
-| `COMBO-xxx` 组合模块实验 | `experiment/combo` |
-| `REV-MOD-xxx` 单模块复核 | `experiment/rev-mod` |
-| `TUNE-xxx` 调参实验 | `experiment/tune` |
-| `ABL-xxx` 消融实验 | `experiment/abl` |
-| `XDS-xxx` 跨数据集实验 | `experiment/xds` |
-| `FINAL-xxx` 最终复核 | `experiment/final` |
+| `MOD-xxx` 单模块创新实验 | `experiment/single-module-innovation` |
+| `COMBO-xxx` 组合模块实验 | `experiment/module-combination` |
+| `REV-MOD-xxx` 单模块复核 | `experiment/single-module-review` |
+| `TUNE-xxx` 调参实验 | `experiment/hyperparameter-tuning` |
+| `ABL-xxx` 消融实验 | `experiment/ablation` |
+| `XDS-xxx` 跨数据集实验 | `experiment/cross-dataset` |
+| `FINAL-xxx` 最终复核 | `experiment/final-review` |
 
 具体单次实验再从对应总控分支派生 `exp/<EXP-ID>_<slug>`。
 

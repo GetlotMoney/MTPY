@@ -31,13 +31,13 @@ GitHub docs are the project truth. The local skill is only the executor.
 Use the 7 official controller branches:
 
 ```text
-MOD      -> experiment/mod
-COMBO    -> experiment/combo
-REV-MOD  -> experiment/rev-mod
-TUNE     -> experiment/tune
-ABL      -> experiment/abl
-XDS      -> experiment/xds
-FINAL    -> experiment/final
+MOD      -> experiment/single-module-innovation
+COMBO    -> experiment/module-combination
+REV-MOD  -> experiment/single-module-review
+TUNE     -> experiment/hyperparameter-tuning
+ABL      -> experiment/ablation
+XDS      -> experiment/cross-dataset
+FINAL    -> experiment/final-review
 ```
 
 Do not run training until:

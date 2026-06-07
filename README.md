@@ -85,15 +85,15 @@ FINAL-xxx     最终复核
 
 | 实验类型 | 分支 |
 |---|---|
-| `MOD-xxx` | `experiment/mod` |
-| `COMBO-xxx` | `experiment/combo` |
-| `REV-MOD-xxx` | `experiment/rev-mod` |
-| `TUNE-xxx` | `experiment/tune` |
-| `ABL-xxx` | `experiment/abl` |
-| `XDS-xxx` | `experiment/xds` |
-| `FINAL-xxx` | `experiment/final` |
+| `MOD-xxx` | `experiment/single-module-innovation` |
+| `COMBO-xxx` | `experiment/module-combination` |
+| `REV-MOD-xxx` | `experiment/single-module-review` |
+| `TUNE-xxx` | `experiment/hyperparameter-tuning` |
+| `ABL-xxx` | `experiment/ablation` |
+| `XDS-xxx` | `experiment/cross-dataset` |
+| `FINAL-xxx` | `experiment/final-review` |
 
-旧分支 `experiment/innovation`、`experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 只作为历史兼容入口；新实验按上表 7 类分支执行。
+旧分支 `experiment/innovation`、`experiment/tuning`、`experiment/final-runs` 只作为历史兼容入口；`experiment/ablation` 和 `experiment/cross-dataset` 名字已经完整，继续作为正式分支使用。
 
 ## 实验自动化框架
 

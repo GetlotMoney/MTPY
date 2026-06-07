@@ -61,13 +61,13 @@ docs/experiment_workflow/
 
 默认规则：
 
-- `MOD` 从 `experiment/mod` 派生 `exp/<EXP-ID>_<slug>`。
-- `COMBO` 从 `experiment/combo` 派生 `exp/<EXP-ID>_<slug>`。
-- `REV-MOD` 从 `experiment/rev-mod` 派生 `exp/<EXP-ID>_<slug>`。
-- `TUNE` 从 `experiment/tune` 派生 `exp/<EXP-ID>_<slug>`。
-- `ABL` 从 `experiment/abl` 派生 `exp/<EXP-ID>_<slug>`。
-- `XDS` 从 `experiment/xds` 派生 `exp/<EXP-ID>_<slug>`。
-- `FINAL` 从 `experiment/final` 派生 `exp/<EXP-ID>_<slug>`。
+- `MOD` 从 `experiment/single-module-innovation` 派生 `exp/<EXP-ID>_<slug>`。
+- `COMBO` 从 `experiment/module-combination` 派生 `exp/<EXP-ID>_<slug>`。
+- `REV-MOD` 从 `experiment/single-module-review` 派生 `exp/<EXP-ID>_<slug>`。
+- `TUNE` 从 `experiment/hyperparameter-tuning` 派生 `exp/<EXP-ID>_<slug>`。
+- `ABL` 从 `experiment/ablation` 派生 `exp/<EXP-ID>_<slug>`。
+- `XDS` 从 `experiment/cross-dataset` 派生 `exp/<EXP-ID>_<slug>`。
+- `FINAL` 从 `experiment/final-review` 派生 `exp/<EXP-ID>_<slug>`。
 
 若当前分支已有用户未提交改动，先汇报，不静默纳入实验。
 

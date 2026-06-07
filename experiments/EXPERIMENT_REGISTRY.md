@@ -69,20 +69,20 @@ combo_gain = COMBO_H - max(baseline_H, module_A_H, module_B_H, ...)
 
 | 分支 | 类型 | 目录 | 当前内容 |
 |---|---|---|---|
-| `experiment/mod` | `MOD-xxx` 单模块创新 | `01_module_replacement/` | 判断单个机制是否有独立贡献 |
-| `experiment/combo` | `COMBO-xxx` 组合模块 | `01_module_replacement/` | 判断两个或多个模块是否有协同收益 |
-| `experiment/rev-mod` | `REV-MOD-xxx` 单模块复核 | `01_module_replacement/` | near_tie、win 或用户指定模块的多 seed / 同配置复核 |
-| `experiment/tune` | `TUNE-xxx` 调参 | `03_hyperparam_tuning/` | AG-JEPA 权重、负文本 margin、patch 数量等扫描 |
-| `experiment/abl` | `ABL-xxx` 消融 | `02_ablation/`、`06_framework_flows/` | 验证已有模块或 loss 是否必须保留 |
-| `experiment/xds` | `XDS-xxx` 跨数据集 | `04_cross_dataset/` | AWA2 / SUN 主框架迁移 |
-| `experiment/final` | `FINAL-xxx` 最终复核 | `05_final_runs/` | 严格多 seed 复核、热重启上限、正式结果表 |
+| `experiment/single-module-innovation` | `MOD-xxx` 单模块创新 | `01_module_replacement/` | 判断单个机制是否有独立贡献 |
+| `experiment/module-combination` | `COMBO-xxx` 组合模块 | `01_module_replacement/` | 判断两个或多个模块是否有协同收益 |
+| `experiment/single-module-review` | `REV-MOD-xxx` 单模块复核 | `01_module_replacement/` | near_tie、win 或用户指定模块的多 seed / 同配置复核 |
+| `experiment/hyperparameter-tuning` | `TUNE-xxx` 调参 | `03_hyperparam_tuning/` | AG-JEPA 权重、负文本 margin、patch 数量等扫描 |
+| `experiment/ablation` | `ABL-xxx` 消融 | `02_ablation/`、`06_framework_flows/` | 验证已有模块或 loss 是否必须保留 |
+| `experiment/cross-dataset` | `XDS-xxx` 跨数据集 | `04_cross_dataset/` | AWA2 / SUN 主框架迁移 |
+| `experiment/final-review` | `FINAL-xxx` 最终复核 | `05_final_runs/` | 严格多 seed 复核、热重启上限、正式结果表 |
 
-历史兼容分支：`experiment/innovation`、`experiment/ablation`、`experiment/tuning`、`experiment/cross-dataset`、`experiment/final-runs` 保留旧实验记录，不作为新实验首选分支。
+历史兼容分支：`experiment/innovation`、`experiment/tuning`、`experiment/final-runs` 保留旧实验记录，不作为新实验首选分支。
 
 ## 4. main 分支规则
 
 - `main` 是当前 baseline，不承载具体实验目录。
-- 已完成旧消融记录可见 `experiment/ablation`；新消融实验优先使用 `experiment/abl`。
+- 已完成消融记录和新消融实验都使用 `experiment/ablation`。
 - 新增实验必须先选择对应 7 类总控分支，再创建实验目录和配置副本。
 - 如果某个分支结果成为新主框架，先在该分支复核，再按用户确认更新 `main`。
 
