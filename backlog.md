@@ -53,7 +53,7 @@
 | MOD-002 | done | 创新模块 | 拓扑感知的自适应文本属性库 | `queues/01_module_replacement.md` | seed=5 H=69.24，低于 baseline 72.91，当前版本不保留 |
 | MOD-003 | done | 创新模块 | 带不确定性门控的分支一致性蒸馏 | `queues/01_module_replacement.md` | seed=5 H=72.61，低于 baseline 72.91，当前版本不保留 |
 | MOD-004 | done | 创新模块 | 属性引导的局部补丁 OT 对齐 | `queues/01_module_replacement.md` | seed=5 H=72.90，基本持平但低于 baseline 72.91，当前版本不保留；方向保留为中性候选 |
-| MOD-005 | open | 创新模块 | 语义补丁 JEPA v2 | `queues/01_module_replacement.md` | 下一项 P1，先梳理现有 AG-JEPA 代码 |
+| MOD-005 | done | 创新模块 | 语义补丁 JEPA v2 | `queues/01_module_replacement.md` | seed=5 H=72.56，低于 baseline 72.91；当前 v2 不保留 |
 | MOD-006 | open | 创新模块 | 反事实负文本挖掘 | `queues/01_module_replacement.md` | P2 轻量方向，先离线检查描述质量和相似类列表 |
 
 ## 更新规则

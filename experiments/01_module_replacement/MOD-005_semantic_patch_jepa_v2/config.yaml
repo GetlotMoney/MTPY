@@ -407,7 +407,7 @@ jepa_neg_margin:
 # 用类别文本选 top-K patch，循环 next seen 类作为负文本。
 # 打开时用近邻类别原型构造更判别的 patch 分数和 hard negative。
 use_ag_jepa_v2:
-  value: False
+  value: True
 jepa_v2_neighbor_topk:
   value: 5
 jepa_v2_neighbor_weight:

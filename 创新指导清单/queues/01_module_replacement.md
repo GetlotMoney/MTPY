@@ -17,7 +17,7 @@
 | MOD-002 | done | 拓扑感知的自适应文本属性库 | 在现有 topo Pearson 基础上增加受限属性库，可能保护 unseen 语义结构并提升 H | ABL-003；TPR | TPR PDF 下载不完整，官方代码 clone 失败；已标记 `未完整参考论文原文` / `未参考官方代码` | seed=5 H=69.24，低于 baseline 72.91，当前版本不保留 |
 | MOD-003 | done | 带不确定性门控的分支一致性蒸馏 | 互蒸馏按分支不确定性动态调节，可能减少错误共识 | ABL-004；MSDN++ | MSDN PDF 下载不完整，代码未能稳定访问；已标记 `未完整参考论文原文` / `未参考官方代码` | seed=5 H=72.61，低于 baseline 72.91，当前版本不保留 |
 | MOD-004 | done | 属性引导的局部补丁 OT 对齐 | patch 与属性 token 细粒度对齐，可能提升 CUB 局部语义 grounding | LaZSL；当前 patch 选择；信息瓶颈原则 | 已参考 LaZSL 本地论文；官方代码未能访问，标记 `未参考官方代码` | seed=5 H=72.90，基本持平但低于 baseline 72.91；当前版本不保留，方向保留为中性候选 |
-| MOD-005 | open | 语义补丁 JEPA v2 | 用类别语义和邻近类原型预测关键 patch，可能增强 AG-JEPA | ABL-002；当前 AG-JEPA | 先梳理现有 AG-JEPA 代码，再决定是否需要论文参考 | 避免和权重调参混在一起 |
+| MOD-005 | done | 语义补丁 JEPA v2 | 用类别语义和邻近类原型预测关键 patch，可能增强 AG-JEPA | ABL-002；当前 AG-JEPA | 已梳理现有 AG-JEPA 代码；本模块来源为本地实验和用户 idea，不需要外部论文优先复核 | seed=5 H=72.56，低于 baseline 72.91；当前 v2 不保留 |
 
 ## P2
 

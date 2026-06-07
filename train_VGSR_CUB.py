@@ -125,6 +125,7 @@ print_log(f"│  use_text_reservoir: {getattr(config, 'use_text_attr_reservoir',
 print_log(f"│  text_reservoir_ratio: {getattr(config, 'text_attr_reservoir_ratio', 0.0)}")
 print_log(f"│  use_msdn_gate: {getattr(config, 'use_uncertainty_msdn_gate', False)}")
 print_log(f"│  use_attr_patch_ot: {getattr(config, 'use_attr_patch_ot', False)}")
+print_log(f"│  use_ag_jepa_v2: {getattr(config, 'use_ag_jepa_v2', False)}")
 print_log("├─ Resume ────────────────────────────────────────────────┤")
 print_log(f"│  resume_from        : {getattr(config, 'resume_from', '')!r}")
 print_log(f"│  resume_lr_schedule : {getattr(config, 'resume_lr_schedule', 'continue')}")

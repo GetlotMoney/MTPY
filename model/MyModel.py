@@ -896,6 +896,9 @@ class VGSR(nn.Module):
         self.use_ag_jepa = bool(getattr(config, 'use_ag_jepa', False))
         self.jepa_topk = int(getattr(config, 'jepa_topk', 8))
         self.jepa_neg_margin = float(getattr(config, 'jepa_neg_margin', 0.2))
+        self.use_ag_jepa_v2 = bool(getattr(config, 'use_ag_jepa_v2', False))
+        self.jepa_v2_neighbor_topk = int(getattr(config, 'jepa_v2_neighbor_topk', 5))
+        self.jepa_v2_neighbor_weight = float(getattr(config, 'jepa_v2_neighbor_weight', 0.2))
         if self.use_ag_jepa:
             jepa_hidden = int(getattr(config, 'jepa_hidden', tf_common_dim))
             self.jepa_predictor = nn.Sequential(
@@ -1209,11 +1212,27 @@ class VGSR(nn.Module):
         k = max(1, min(int(self.jepa_topk), N - 1))
         labels = labels.to(device=device, dtype=torch.long)
         class_text = all_text[labels].to(device=device, dtype=patches.dtype)
+        neighbor_text = None
 
         with torch.no_grad():
             patch_n = F.normalize(patches.float(), dim=-1)
             text_n = F.normalize(class_text.float(), dim=-1)
             patch_score = torch.einsum('bnd,bd->bn', patch_n, text_n)
+            if self.use_ag_jepa_v2:
+                seen = self.seenclass.to(device=device, dtype=torch.long)
+                seen_text = all_text[seen].to(device=device, dtype=patches.dtype)
+                seen_text_n = F.normalize(seen_text.float(), dim=-1)
+                neighbor_score = text_n @ seen_text_n.T
+                same_class = labels.unsqueeze(1).eq(seen.unsqueeze(0))
+                neighbor_score = neighbor_score.masked_fill(same_class, -float("inf"))
+                n_neighbor = max(1, min(int(self.jepa_v2_neighbor_topk), seen.numel() - 1))
+                neighbor_idx = neighbor_score.topk(k=n_neighbor, dim=1).indices
+                neighbor_cls = seen[neighbor_idx]
+                neighbor_text = all_text[neighbor_cls.reshape(-1)].to(
+                    device=device, dtype=patches.dtype).view(B, n_neighbor, -1).mean(dim=1)
+                neighbor_n = F.normalize(neighbor_text.float(), dim=-1)
+                neighbor_patch_score = torch.einsum('bnd,bd->bn', patch_n, neighbor_n)
+                patch_score = patch_score - self.jepa_v2_neighbor_weight * neighbor_patch_score
             _, masked_idx = torch.topk(patch_score, k=k, dim=1, largest=True)
 
         mask = torch.zeros(B, N, dtype=torch.bool, device=device)
@@ -1225,18 +1244,24 @@ class VGSR(nn.Module):
 
         keep_f = keep.unsqueeze(-1).to(patch_z.dtype)
         context = (patch_z * keep_f).sum(dim=1) / keep_f.sum(dim=1).clamp_min(1.0)
-        text_z = self.cross_tf.embed_text(class_text)
+        text_condition = class_text
+        if self.use_ag_jepa_v2 and neighbor_text is not None:
+            text_condition = class_text - self.jepa_v2_neighbor_weight * neighbor_text
+        text_z = self.cross_tf.embed_text(text_condition)
 
         pred = self.jepa_predictor(torch.cat([context, text_z], dim=-1))
         pos_sim = F.cosine_similarity(pred, target, dim=-1)
         loss_jepa = (1.0 - pos_sim).mean()
 
-        seen = self.seenclass.to(device=device)
-        label_pos = torch.zeros_like(labels)
-        for i, cls_idx in enumerate(seen):
-            label_pos[labels == cls_idx] = i
-        neg_pos = (label_pos + 1) % seen.numel()
-        neg_text = all_text[seen[neg_pos]].to(device=device, dtype=patches.dtype)
+        if self.use_ag_jepa_v2 and neighbor_text is not None:
+            neg_text = neighbor_text
+        else:
+            seen = self.seenclass.to(device=device)
+            label_pos = torch.zeros_like(labels)
+            for i, cls_idx in enumerate(seen):
+                label_pos[labels == cls_idx] = i
+            neg_pos = (label_pos + 1) % seen.numel()
+            neg_text = all_text[seen[neg_pos]].to(device=device, dtype=patches.dtype)
         neg_text_z = self.cross_tf.embed_text(neg_text)
         pred_neg = self.jepa_predictor(torch.cat([context.detach(), neg_text_z], dim=-1))
         neg_sim = F.cosine_similarity(pred_neg, target, dim=-1)

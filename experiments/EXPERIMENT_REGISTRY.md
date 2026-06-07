@@ -97,6 +97,7 @@ experiments/00_templates/experiment_README_template.md
 | MOD-002 | 已完成 | `experiments/01_module_replacement/MOD-002_topology_aware_text_reservoir/` | 在 200 类文本原型上增加受限 CUB 属性 reservoir 低秩残差，并继续用 Pearson topology loss 约束 | seed=5: U=75.39, S=64.02, H=69.24, ZS=80.78；低于 baseline H=72.91，当前版本不保留 |
 | MOD-003 | 已完成 | `experiments/01_module_replacement/MOD-003_uncertainty_gated_branch_distillation/` | 给现有 MSDN 双分支互蒸馏 loss 增加不确定性/分歧门控，默认主配置关闭 | seed=5: U=72.83, S=72.39, H=72.61, ZS=81.15；低于 baseline H=72.91，当前版本不保留 |
 | MOD-004 | 已完成 | `experiments/01_module_replacement/MOD-004_attribute_guided_patch_ot/` | FAE 后局部 patch 与当前类别 top-K 属性文本原型做 Sinkhorn 软 OT 辅助对齐 | seed=5: U=72.86, S=72.95, H=72.90, ZS=81.61；基本持平但低于 baseline H=72.91，当前版本不保留 |
+| MOD-005 | 已完成 | `experiments/01_module_replacement/MOD-005_semantic_patch_jepa_v2/` | 在现有 AG-JEPA 中新增默认关闭的 v2 目标构造：用类别文本和近邻类别原型选择判别 patch，并用 hard neighbor 作为负文本 | seed=5: U=73.10, S=72.03, H=72.56, ZS=81.55；低于 baseline H=72.91，当前版本不保留 |
 
 ## 6. 更新规则
 
