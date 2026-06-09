@@ -286,9 +286,9 @@ lambda_l2sp:
 # Topology-preserving Pearson loss (add 模式创新优化):
 # add 模式下约束 Adapter 后的 200 类文本原型拓扑, 保持 CLIP 原始类别角度关系
 # 目标: 在不破坏 base_logits 兜底的前提下, 缓解 seen-only Adapter 微调拉散 unseen 语义空间
-# 推荐先扫: 0.01, 0.05, 0.1；0 = 关闭
+# TUNE-004 结果: lambda_topo_pearson=0.1, seed=5, H=73.35，已提升为当前 baseline
 lambda_topo_pearson:
-  value: 0.05
+  value: 0.1
 
 # === [cosine_only 锚定三件套, 仅 score_mode='cosine_only' 生效] ===
 # L1 v_anchor: v_enh 不要离 CLIP CLS 太远 (修视觉端漂移)
