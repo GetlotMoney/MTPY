@@ -85,6 +85,7 @@ docs/experiment_workflow/
 - 批量调参如果需要单独分支，也必须从 `main` 派生 `exp/batch-<type>-<YYYYMMDD>` 或每个实验各自的 `exp/<EXP-ID>_<slug>`；不能从 `experiment/hyperparameter-tuning` 或其他 `experiment/*` 总控分支派生。
 - 每个候选配置必须有独立 ID、独立实验目录、独立日志副本。
 - 每个候选只改一个主超参；例如 `lambda_topo_pearson`、`lambda_msdn`、`lambda_jepa`、`conditional_text_ratio`、`local_weight`、`lr_stages`。
+- 每个候选必须同步更新调参总索引 `experiments/04_hyperparameter_tuning/README.md`，写清调参变量、old value、new value、状态、H 和实验目录。
 - 如果用户要求“跑 20 个调参实验”，skill 自动生成两批或一批 20 个串行候选，不需要 Claude 三轮审查。
 
 ## 分支选择

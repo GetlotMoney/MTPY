@@ -67,6 +67,7 @@ For baseline hyperparameter tuning:
 - Change one primary hyperparameter per candidate.
 - User-specified TUNE batches may run up to 20 serial candidates.
 - TUNE batches still use `main` as code origin; do not inherit from `experiment/hyperparameter-tuning`.
+- Always update `experiments/04_hyperparameter_tuning/README.md` with each candidate's variable, old value, new value, status, H, and experiment directory.
 
 After training, always update:
 
