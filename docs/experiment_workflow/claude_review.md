@@ -1,17 +1,16 @@
-# Codex 自审与 Claude 三轮审查
+# Codex 自审与风险分级审查
 
 ## 审查门
 
-实验运行前必须通过：
+实验运行前必须先选择范式。不同范式使用不同审查门：
 
-```text
-Codex 自审: ACCEPTED
-Claude 第 1 轮: ACCEPTED
-Claude 第 2 轮: ACCEPTED
-Claude 第 3 轮: ACCEPTED
-```
+| 范式 | 适用实验 | 运行前必须通过 |
+|---|---|---|
+| `TUNE-LITE` | 只改配置副本的调参实验；不改代码的复核实验 | Codex 自审: `ACCEPTED` |
+| `STANDARD` | 消融、跨数据集、只改已有开关或配置的最终复核 | Codex 自审: `ACCEPTED`；Claude 单轮: `ACCEPTED` |
+| `STRICT` | 新模块、组合模块、改 forward/loss/数据流/评估逻辑的实验 | Codex 自审: `ACCEPTED`；Claude 第 1/2/3 轮全部 `ACCEPTED` |
 
-任意一轮 `REJECTED`，都不能训练。
+任意必需审查返回 `REJECTED`，都不能训练。非必需审查可以跳过，但必须在 README 或 review packet 中写明当前范式。
 
 ## Codex 自审
 
@@ -24,6 +23,29 @@ Claude 第 3 轮: ACCEPTED
 - 实验 README 是否绑定创意树节点。
 - review packet 是否包含来源复核、模块关系、冲突分析和运行计划。
 - 日志命名、结果记录和创新树反馈是否有位置。
+
+`TUNE-LITE` 额外检查：
+
+- 是否只改实验目录里的 `config.yaml`。
+- 是否只改一个主变量。
+- 是否记录 old value 和 new value。
+- 是否保持 seed、数据集、评估逻辑和 baseline 代码不变。
+- 是否声明结果只是候选调参结果，不是最终多 seed 结论。
+
+## Claude 单轮
+
+`STANDARD` 范式使用 Claude 单轮。单轮必须同时检查：
+
+- 配置/代码改动是否只服务当前实验。
+- baseline 是否可回退。
+- seed、训练日程、评估 bias 和数据源是否可比。
+- 运行命令、日志路径、结果记录位置是否完整。
+
+单轮输出必须包含：
+
+- 决策：`ACCEPTED` 或 `REJECTED`。
+- 关键发现。
+- 是否允许开跑。
 
 ## Claude 固定三轮
 
@@ -41,6 +63,8 @@ Claude 第 3 轮: ACCEPTED
 - 发现或理由。
 
 ## Claude 通道
+
+只有 `STANDARD` 和 `STRICT` 需要 Claude。`TUNE-LITE` 默认不调用 Claude，除非用户明确要求或 Codex 自审发现风险。
 
 优先级：
 
