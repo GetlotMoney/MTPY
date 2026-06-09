@@ -9,7 +9,7 @@ Claude: 不需要，除非 Codex 自审发现代码或逻辑风险。
 
 ## Baseline
 
-main 9533b0d 当前 baseline 代码，seed=5，H=72.91。
+main 9533b0d 原始调参批次 baseline 代码，seed=5，H=72.91。当前主框架 baseline 已是 TUNE-004，H=73.35；本实验用于补齐旧批次，不替代当前 baseline。
 
 ## 改动范围
 

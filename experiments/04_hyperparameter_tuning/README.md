@@ -44,14 +44,16 @@ U=73.10, S=73.61, H=73.35, ZS=81.44
 | TUNE-010 | `lambda_jepa` | 0.05 | 0.10 | done | 72.48 | 提高 JEPA loss。 |
 | TUNE-011 | `lambda_jepa_neg` | 0.02 | 0.00 | done | 72.36 | 关闭 JEPA negative loss。 |
 | TUNE-012 | `lambda_jepa_neg` | 0.02 | 0.01 | done | 72.81 | 降低 JEPA negative loss。 |
-| TUNE-013 | `lambda_jepa_neg` | 0.02 | 0.05 | interrupted | - | 提高 JEPA negative loss，运行中断。 |
-| TUNE-014 | `conditional_text_ratio` | 0.005 | 0.00 | not_run | - | 关闭 conditional text ratio。 |
-| TUNE-015 | `conditional_text_ratio` | 0.005 | 0.001 | not_run | - | 降低 conditional text ratio。 |
-| TUNE-016 | `conditional_text_ratio` | 0.005 | 0.01 | not_run | - | 提高 conditional text ratio。 |
-| TUNE-017 | `local_weight` | 0.3 | 0.2 | not_run | - | 降低局部分支权重。 |
-| TUNE-018 | `local_weight` | 0.3 | 0.4 | not_run | - | 提高局部分支权重。 |
-| TUNE-019 | `lastvit_select_k` | 32 | 16 | not_run | - | 减少 patch 选择数量。 |
-| TUNE-020 | `lastvit_select_k` | 32 | 64 | not_run | - | 增加 patch 选择数量。 |
+| TUNE-013 | `lambda_jepa_neg` | 0.02 | 0.05 | done | 72.71 | 提高 JEPA negative loss，低于当前 TUNE-004 baseline。 |
+| TUNE-014 | `conditional_text_ratio` | 0.005 | 0.00 | done | 72.54 | 关闭 conditional text ratio，低于当前 TUNE-004 baseline。 |
+| TUNE-015 | `conditional_text_ratio` | 0.005 | 0.001 | done | 72.32 | 降低 conditional text ratio，低于当前 TUNE-004 baseline。 |
+| TUNE-016 | `conditional_text_ratio` | 0.005 | 0.01 | done | 72.82 | 提高 conditional text ratio，是 13-20 中最高，但仍低于当前 TUNE-004 baseline。 |
+| TUNE-017 | `local_weight` | 0.3 | 0.2 | done | 72.37 | 降低局部分支权重，低于当前 TUNE-004 baseline。 |
+| TUNE-018 | `local_weight` | 0.3 | 0.4 | done | 72.28 | 提高局部分支权重，低于当前 TUNE-004 baseline。 |
+| TUNE-019 | `lastvit_select_k` | 32 | 16 | done | 72.71 | 减少 patch 选择数量，低于当前 TUNE-004 baseline。 |
+| TUNE-020 | `lastvit_select_k` | 32 | 64 | done | 72.37 | 增加 patch 选择数量，低于当前 TUNE-004 baseline。 |
+
+注意：TUNE-013 到 TUNE-020 是补跑 `TUNE-BATCH-20260609` 的旧批次中断项，实验 config 仍为原始批次口径 `lambda_topo_pearson=0.05`。当前已提升 baseline 为 TUNE-004，`lambda_topo_pearson=0.1`，H=73.35；因此这些补跑结果只用于补全旧批次记录，不替代当前 baseline。
 
 ## 记录规范
 

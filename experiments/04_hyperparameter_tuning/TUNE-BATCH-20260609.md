@@ -18,11 +18,17 @@ new baseline: TUNE-004, `lambda_topo_pearson=0.1`, H=73.35, seed=5
 | TUNE-010 | lambda_jepa | 0.05 | 0.1 | 72.48 | done | experiments/04_hyperparameter_tuning/TUNE-010_jepa_01/ |
 | TUNE-011 | lambda_jepa_neg | 0.02 | 0.0 | 72.36 | done | experiments/04_hyperparameter_tuning/TUNE-011_jepa_neg_0/ |
 | TUNE-012 | lambda_jepa_neg | 0.02 | 0.01 | 72.81 | done | experiments/04_hyperparameter_tuning/TUNE-012_jepa_neg_001/ |
-| TUNE-013 | lambda_jepa_neg | 0.02 | 0.05 | - | interrupted | experiments/04_hyperparameter_tuning/TUNE-013_jepa_neg_005/ |
-| TUNE-014 | conditional_text_ratio | 0.005 | 0.0 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-014_conditional_text_0/ |
-| TUNE-015 | conditional_text_ratio | 0.005 | 0.001 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-015_conditional_text_0001/ |
-| TUNE-016 | conditional_text_ratio | 0.005 | 0.01 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-016_conditional_text_001/ |
-| TUNE-017 | local_weight | 0.3 | 0.2 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-017_local_weight_02/ |
-| TUNE-018 | local_weight | 0.3 | 0.4 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-018_local_weight_04/ |
-| TUNE-019 | lastvit_select_k | 32 | 16 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-019_patch_k_16/ |
-| TUNE-020 | lastvit_select_k | 32 | 64 | - | not_run | experiments/04_hyperparameter_tuning/TUNE-020_patch_k_64/ |
+| TUNE-013 | lambda_jepa_neg | 0.02 | 0.05 | 72.71 | done | experiments/04_hyperparameter_tuning/TUNE-013_jepa_neg_005/ |
+| TUNE-014 | conditional_text_ratio | 0.005 | 0.0 | 72.54 | done | experiments/04_hyperparameter_tuning/TUNE-014_conditional_text_0/ |
+| TUNE-015 | conditional_text_ratio | 0.005 | 0.001 | 72.32 | done | experiments/04_hyperparameter_tuning/TUNE-015_conditional_text_0001/ |
+| TUNE-016 | conditional_text_ratio | 0.005 | 0.01 | 72.82 | done | experiments/04_hyperparameter_tuning/TUNE-016_conditional_text_001/ |
+| TUNE-017 | local_weight | 0.3 | 0.2 | 72.37 | done | experiments/04_hyperparameter_tuning/TUNE-017_local_weight_02/ |
+| TUNE-018 | local_weight | 0.3 | 0.4 | 72.28 | done | experiments/04_hyperparameter_tuning/TUNE-018_local_weight_04/ |
+| TUNE-019 | lastvit_select_k | 32 | 16 | 72.71 | done | experiments/04_hyperparameter_tuning/TUNE-019_patch_k_16/ |
+| TUNE-020 | lastvit_select_k | 32 | 64 | 72.37 | done | experiments/04_hyperparameter_tuning/TUNE-020_patch_k_64/ |
+
+补跑说明：
+
+- TUNE-013 到 TUNE-020 是补齐本批次中断项，config 仍保持原始批次口径 `lambda_topo_pearson=0.05`。
+- 当前已提升 baseline 是 TUNE-004，`lambda_topo_pearson=0.1`，H=73.35。
+- 因此 TUNE-013 到 TUNE-020 只用于补全旧批次证据，不作为替代当前 baseline 的候选。

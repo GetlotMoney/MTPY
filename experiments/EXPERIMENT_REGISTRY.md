@@ -120,6 +120,21 @@ experiments/00_experiment_templates/experiment_README_template.md
 | MOD-005 | 已完成 | `experiments/01_single_module_innovation/MOD-005_semantic_patch_jepa_v2/` | 在现有 AG-JEPA 中新增默认关闭的 v2 目标构造：用类别文本和近邻类别原型选择判别 patch，并用 hard neighbor 作为负文本 | seed=5: U=73.10, S=72.03, H=72.56, ZS=81.55；低于 baseline H=72.91，当前版本不保留 |
 | MOD-006 | 已完成 | `experiments/01_single_module_innovation/MOD-006_counterfactual_negative_text_mining/` | 在 GPT 文本原型上挖 seen 近邻负类，对 `logits_200` 加轻量反事实 margin loss，默认主配置关闭 | seed=5: U=72.65, S=72.13, H=72.39, ZS=81.44；低于 baseline H=72.91，当前版本不保留 |
 
+## 5.2 调参实验
+
+TUNE-013 到 TUNE-020 是补齐 `TUNE-BATCH-20260609` 的中断项。注意：这些 config 仍保持原始批次口径 `lambda_topo_pearson=0.05`；当前主框架 baseline 已提升为 TUNE-004，`lambda_topo_pearson=0.1`，H=73.35。因此本批补跑只作为旧批次证据，不替代当前 baseline。
+
+| ID | 状态 | 目录 | 调参变量 | 当前结果 |
+|---|---|---|---|---|
+| TUNE-013 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-013_jepa_neg_005/` | `lambda_jepa_neg: 0.02 -> 0.05` | seed=5: U=72.74, S=72.68, H=72.71, ZS=81.47；低于当前 baseline H=73.35 |
+| TUNE-014 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-014_conditional_text_0/` | `conditional_text_ratio: 0.005 -> 0.0` | seed=5: U=72.09, S=73.00, H=72.54, ZS=81.75；低于当前 baseline H=73.35 |
+| TUNE-015 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-015_conditional_text_0001/` | `conditional_text_ratio: 0.005 -> 0.001` | seed=5: U=73.07, S=71.59, H=72.32, ZS=81.45；低于当前 baseline H=73.35 |
+| TUNE-016 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-016_conditional_text_001/` | `conditional_text_ratio: 0.005 -> 0.01` | seed=5: U=71.70, S=73.97, H=72.82, ZS=81.37；本批补跑最高，但低于当前 baseline H=73.35 |
+| TUNE-017 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-017_local_weight_02/` | `local_weight: 0.3 -> 0.2` | seed=5: U=72.48, S=72.26, H=72.37, ZS=81.40；低于当前 baseline H=73.35 |
+| TUNE-018 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-018_local_weight_04/` | `local_weight: 0.3 -> 0.4` | seed=5: U=73.16, S=71.42, H=72.28, ZS=81.65；低于当前 baseline H=73.35 |
+| TUNE-019 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-019_patch_k_16/` | `lastvit_select_k: 32 -> 16` | seed=5: U=72.73, S=72.68, H=72.71, ZS=81.69；低于当前 baseline H=73.35 |
+| TUNE-020 | 已完成 | `experiments/04_hyperparameter_tuning/TUNE-020_patch_k_64/` | `lastvit_select_k: 32 -> 64` | seed=5: U=74.01, S=70.79, H=72.37, ZS=81.35；U 高但 S 下降，低于当前 baseline H=73.35 |
+
 ## 6. 更新规则
 
 每次实验前：
