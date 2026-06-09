@@ -53,7 +53,7 @@ docs/experiment_workflow/
 4. 读取外部创新指导清单和分类队列。
 5. 同步近期候选到 `backlog.md`。
 6. 选择最高优先级实验。
-7. 根据实验 ID 创建或切换 `exp/<EXP-ID>_<slug>` 分支。
+7. 从当前 `main` baseline 创建或切换 `exp/<EXP-ID>_<slug>` 分支；不能从 `experiment/*` 总控分支创建新实验。
 8. 创建本地 checkpoint。
 9. 准备实验目录、`config.yaml`、README、review packet。
 10. 根据范式实现最小代码或配置改动。
@@ -82,6 +82,7 @@ docs/experiment_workflow/
 批量 `TUNE-LITE` 规则：
 
 - 默认从当前 `main` baseline 代码快照派生。
+- 批量调参如果需要单独分支，也必须从 `main` 派生 `exp/batch-<type>-<YYYYMMDD>` 或每个实验各自的 `exp/<EXP-ID>_<slug>`；不能从 `experiment/hyperparameter-tuning` 或其他 `experiment/*` 总控分支派生。
 - 每个候选配置必须有独立 ID、独立实验目录、独立日志副本。
 - 每个候选只改一个主超参；例如 `lambda_topo_pearson`、`lambda_msdn`、`lambda_jepa`、`conditional_text_ratio`、`local_weight`、`lr_stages`。
 - 如果用户要求“跑 20 个调参实验”，skill 自动生成两批或一批 20 个串行候选，不需要 Claude 三轮审查。
@@ -90,13 +91,10 @@ docs/experiment_workflow/
 
 默认规则：
 
-- `MOD` 从 `experiment/single-module-innovation` 派生 `exp/<EXP-ID>_<slug>`。
-- `COMBO` 从 `experiment/module-combination` 派生 `exp/<EXP-ID>_<slug>`。
-- `REV-MOD` 从 `experiment/single-module-review` 派生 `exp/<EXP-ID>_<slug>`。
-- `TUNE` 从 `experiment/hyperparameter-tuning` 派生 `exp/<EXP-ID>_<slug>`。
-- `ABL` 从 `experiment/ablation` 派生 `exp/<EXP-ID>_<slug>`。
-- `XDS` 从 `experiment/cross-dataset` 派生 `exp/<EXP-ID>_<slug>`。
-- `FINAL` 从 `experiment/final-review` 派生 `exp/<EXP-ID>_<slug>`。
+- 所有新实验默认从当前 `main` 派生 `exp/<EXP-ID>_<slug>`。
+- `experiment/single-module-innovation`、`experiment/module-combination`、`experiment/single-module-review`、`experiment/hyperparameter-tuning`、`experiment/ablation`、`experiment/cross-dataset`、`experiment/final-review` 只作为分类记录和结果汇总分支，不作为新实验代码起点。
+- 如果 `REV-MOD` 或用户明确要求继承某个旧实验，可以从该实验 commit 派生，但必须在实验 README 和 review packet 写清继承来源。
+- 如果某个实验被确认提升为新主框架，必须先合入 `main`；之后的新实验再从更新后的 `main` 派生。
 
 若当前分支已有用户未提交改动，先汇报，不静默纳入实验。
 

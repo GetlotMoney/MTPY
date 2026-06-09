@@ -14,7 +14,7 @@
 
 | 数据集 | seed | U | S | H | ZS |
 |---|---:|---:|---:|---:|---:|
-| CUB GZSL | 5 | 73.30 | 72.53 | 72.91 | 81.72 |
+| CUB GZSL | 5 | 73.10 | 73.61 | 73.35 | 81.44 |
 
 项目选型口径：
 
@@ -78,7 +78,7 @@ Claude 固定三轮审查
 | `XDS-xxx` 跨数据集实验 | `experiment/cross-dataset` |
 | `FINAL-xxx` 最终复核 | `experiment/final-review` |
 
-具体单次实验再从对应总控分支派生 `exp/<EXP-ID>_<slug>`。
+具体单次实验默认从当前 `main` baseline 派生 `exp/<EXP-ID>_<slug>`。上面的 `experiment/*` 总控分支只做分类记录和结果汇总，不作为新实验代码起点。
 
 ## 项目内外文件边界
 

@@ -40,6 +40,15 @@ XDS      -> experiment/cross-dataset
 FINAL    -> experiment/final-review
 ```
 
+Branch rule:
+
+- `main` is the current approved baseline and the default code origin for every new experiment.
+- Create `exp/<EXP-ID>_<slug>` from `main`, not from an `experiment/*` controller branch.
+- Batch experiment branches, if used, must also be created from `main`; use `exp/batch-<type>-<YYYYMMDD>`, not `experiment/batch-*`.
+- `experiment/*` controller branches are for category records and result summaries only.
+- If a `REV-MOD` or user-requested rerun must inherit an older experiment, record the source experiment/commit in README and review packet.
+- If an experiment becomes the new main framework, merge it into `main` first; future experiments then branch from the updated `main`.
+
 Do not run training until:
 
 - Git status and branch are checked.
@@ -57,6 +66,7 @@ For baseline hyperparameter tuning:
 - Only edit experiment-local `config.yaml`.
 - Change one primary hyperparameter per candidate.
 - User-specified TUNE batches may run up to 20 serial candidates.
+- TUNE batches still use `main` as code origin; do not inherit from `experiment/hyperparameter-tuning`.
 
 After training, always update:
 
