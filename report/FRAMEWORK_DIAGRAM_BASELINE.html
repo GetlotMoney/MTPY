@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DVSR 当前 Baseline 框架图</title>
+<style>
+  :root {
+    --ink: #172033;
+    --muted: #64748b;
+    --paper: #ffffff;
+    --line: #d9e2ef;
+    --blue: #2456a6;
+    --blue-2: #e7f0ff;
+    --green: #147a4c;
+    --green-2: #e8f7ee;
+    --amber: #a85b00;
+    --amber-2: #fff3d8;
+    --red: #a13d3d;
+    --red-2: #fff1f1;
+    --slate-2: #f4f7fb;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 18px 36px;
+    background:
+      linear-gradient(90deg, rgba(36,86,166,0.045) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(36,86,166,0.045) 1px, transparent 1px),
+      #f7f9fc;
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+
+  .wrap {
+    max-width: 1260px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    border-bottom: 3px solid var(--blue);
+  }
+
+  h1 {
+    margin: 0;
+    color: #173d7a;
+    font-size: 27px;
+    letter-spacing: 0;
+  }
+
+  .sub {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .best-card {
+    max-width: 990px;
+    margin: 0 auto 24px;
+    padding: 16px 22px;
+    border: 1px solid #f2b14c;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #fff7e6 0%, #ffecb8 100%);
+    box-shadow: 0 2px 8px rgba(168,91,0,0.13);
+  }
+
+  .best-card h2 {
+    margin: 0 0 10px;
+    color: #854100;
+    font-size: 17px;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .metric {
+    text-align: center;
+    padding: 10px 12px;
+    border: 1px solid #f0c46e;
+    border-radius: 7px;
+    background: #fff;
+  }
+
+  .metric .label {
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+
+  .metric .value {
+    margin-top: 2px;
+    color: #a85b00;
+    font: 700 23px/1.1 Consolas, "Cascadia Mono", monospace;
+  }
+
+  .metric.h .value { font-size: 25px; }
+
+  .metric .std {
+    margin-top: 2px;
+    color: #8a6a2f;
+    font-size: 11px;
+  }
+
+  .compare-line {
+    margin-top: 12px;
+    padding-top: 10px;
+    text-align: center;
+    color: #764300;
+    font-size: 13px;
+    border-top: 1px dashed #e8a63c;
+  }
+
+  .compare-line b {
+    color: var(--green);
+    font-size: 15px;
+  }
+
+  .diagram-box {
+    padding: 18px 14px 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    box-shadow: 0 1px 4px rgba(23,32,51,0.06);
+    overflow-x: auto;
+  }
+
+  .diagram-box h2,
+  .section-title {
+    margin: 0 0 12px;
+    padding-left: 9px;
+    border-left: 4px solid var(--blue);
+    color: #173d7a;
+    font-size: 17px;
+  }
+
+  svg {
+    display: block;
+    min-width: 1180px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(23,32,51,0.14);
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .loss-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .module {
+    padding: 12px 14px;
+    border-left: 4px solid var(--blue);
+    border-radius: 8px;
+    background: var(--paper);
+    box-shadow: 0 1px 3px rgba(23,32,51,0.05);
+  }
+
+  .module.frozen { border-left-color: #748095; }
+  .module.train { border-left-color: var(--blue); }
+  .module.star {
+    border-left-color: #e49a24;
+    background: #fffaf0;
+  }
+  .module.off {
+    border-left-color: #be6b6b;
+    background: #fff7f7;
+  }
+
+  .mod-title {
+    margin-bottom: 4px;
+    color: #173d7a;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .module.star .mod-title { color: #9a5200; }
+  .module.off .mod-title { color: #8f3434; }
+
+  .loss-card {
+    padding: 12px 14px;
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    background: var(--paper);
+    box-shadow: 0 1px 3px rgba(23,32,51,0.05);
+  }
+
+  .loss-card.aux {
+    border-left-color: #e49a24;
+    background: #fffaf0;
+  }
+
+  .loss-card.ce {
+    border-left-color: var(--blue);
+    background: #f8fbff;
+  }
+
+  .loss-title {
+    margin-bottom: 5px;
+    color: #173d7a;
+    font-weight: 800;
+    font-size: 13.5px;
+  }
+
+  .loss-card.aux .loss-title { color: #9a5200; }
+
+  .loss-formula {
+    margin: 4px 0 7px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f4f7fb;
+    color: #173d7a;
+    font-size: 12px;
+  }
+
+  .loss-card.aux .loss-formula {
+    background: #fff3d8;
+    color: #8d530e;
+  }
+
+  .loss-desc {
+    color: #45556b;
+    font-size: 12.2px;
+  }
+
+  .loss-desc b {
+    color: #172033;
+  }
+
+  .loss-vars {
+    margin-top: 7px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.72);
+    color: #45556b;
+    font-size: 11.6px;
+  }
+
+  .loss-vars b {
+    color: #172033;
+  }
+
+  .tag {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+
+  .tag.frozen { color: #586377; background: #eef2f7; }
+  .tag.train { color: #174b94; background: #dceafe; }
+  .tag.star { color: #854100; background: #ffedc2; }
+  .tag.off { color: #8f3434; background: #ffe2e2; }
+
+  .mod-desc {
+    color: #45556b;
+    font-size: 12.5px;
+  }
+
+  code {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #eef2f7;
+    color: #173d7a;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 11.5px;
+  }
+
+  .svg-math {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    text-align: center;
+    line-height: 1;
+    font-size: 9px;
+    font-family: "Cambria Math", "Times New Roman", serif;
+  }
+
+  .svg-math.green { color: #23835a; }
+  .svg-math.blue { color: #3d6cae; }
+  .svg-math.amber { color: #8d530e; }
+  .svg-math.muted { color: #64748b; }
+  .svg-math.small { font-size: 8.2px; }
+  .svg-math.tiny { font-size: 7.6px; }
+  .svg-math .mjx-container {
+    margin: 0 !important;
+  }
+
+  .note {
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    border: 1px solid #f0c46e;
+    border-radius: 8px;
+    background: #fffaf0;
+    color: #6f4b12;
+    font-size: 12.5px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  @media (max-width: 760px) {
+    body { padding: 18px 10px 28px; }
+    .metrics, .modules-grid, .loss-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 22px; }
+  }
+</style>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'none' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>DVSR / VGSR 当前 Baseline 框架图</h1>
+    <div class="sub">CLIP 冻结主干 + 文本适配器 + 频域局部补丁选择器 + 几何感知编码 + 双向跨模态交互 + 条件文本适配 + AG-JEPA · CUB-200-2011 GZSL · 2026-06-07</div>
+  </header>
+
+  <section class="best-card">
+    <h2>当前正式 baseline 数据 (CUB-200-2011)</h2>
+    <div class="metrics">
+      <div class="metric h">
+        <div class="label">H · 调和均值</div>
+        <div class="value">73.20</div>
+        <div class="std">seed=5 · 严格连续 60 轮</div>
+      </div>
+      <div class="metric">
+        <div class="label">U · Unseen Acc</div>
+        <div class="value">73.30</div>
+        <div class="std">50 unseen classes</div>
+      </div>
+      <div class="metric">
+        <div class="label">S · Seen Acc</div>
+        <div class="value">72.53</div>
+        <div class="std">150 seen classes</div>
+      </div>
+      <div class="metric">
+        <div class="label">ZS · Zero-Shot</div>
+        <div class="value">81.72</div>
+        <div class="std">unseen-only evaluation</div>
+      </div>
+    </div>
+    <div class="compare-line">
+      vs 纯 CLIP zero-shot H=61.28: <b>+11.92 H</b> · 框架结构保持当前 baseline 主路径
+    </div>
+  </section>
+
+  <section class="diagram-box">
+    <h2>整体数据流 (Forward Pipeline + Training Loss In-Graph)</h2>
+    <svg width="1180" height="820" viewBox="0 0 1180 820" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DVSR current baseline framework diagram">
+      <defs>
+        <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#2456a6"/>
+        </marker>
+        <marker id="arrow-amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#a85b00"/>
+        </marker>
+        <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#147a4c"/>
+        </marker>
+        <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1.4" flood-color="#172033" flood-opacity="0.14"/>
+        </filter>
+      </defs>
+
+      <rect x="12" y="8" width="1156" height="794" rx="14" fill="#ffffff" stroke="#d9e2ef"/>
+
+      <text x="190" y="35" font-size="13" font-weight="700" fill="#173d7a" text-anchor="middle">视觉输入</text>
+      <text x="990" y="35" font-size="13" font-weight="700" fill="#173d7a" text-anchor="middle">文本输入</text>
+
+      <rect x="95" y="52" width="190" height="50" rx="8" fill="#f4f7fb" stroke="#cdd8e8"/>
+      <text x="190" y="74" font-size="13" text-anchor="middle" fill="#172033">image / cache features</text>
+      <text x="190" y="91" font-size="10.5" text-anchor="middle" fill="#64748b">CLIP ViT-L/14 @ 336px, frozen</text>
+
+      <rect x="895" y="52" width="190" height="50" rx="8" fill="#f4f7fb" stroke="#cdd8e8"/>
+      <text x="990" y="74" font-size="13" text-anchor="middle" fill="#172033">200 类 GPT-5.5 描述</text>
+      <text x="990" y="91" font-size="10.5" text-anchor="middle" fill="#64748b">7 句/类 · cub_gpt55.pt</text>
+
+      <rect x="402" y="54" width="376" height="70" rx="10" fill="#eef2f7" stroke="#b8c7dc" filter="url(#soft-shadow)"/>
+      <text x="590" y="83" font-size="15" font-weight="700" text-anchor="middle" fill="#374151">CLIP visual encoder + text encoder</text>
+      <text x="590" y="104" font-size="11.5" text-anchor="middle" fill="#64748b">主干完全冻结, 输出 768 维视觉 patch / 文本原型</text>
+
+      <path d="M285 77 L402 88" fill="none" stroke="#2456a6" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+      <path d="M895 77 L778 88" fill="none" stroke="#2456a6" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+
+      <rect x="105" y="148" width="210" height="58" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="210" y="174" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">CLS + 576 patches</text>
+      <text x="210" y="192" font-size="10.5" text-anchor="middle" fill="#3d6cae">[B, 577, 768] · CLS 给全局分支</text>
+
+      <rect x="885" y="148" width="210" height="58" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="990" y="174" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">CLIP 文本原型 t_c</text>
+      <text x="990" y="192" font-size="10.5" text-anchor="middle" fill="#3d6cae">[200, 768] · GPT-5.5 prompt</text>
+
+      <path d="M402 106 L315 155" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M778 106 L885 155" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+
+      <rect x="105" y="238" width="210" height="62" rx="8" fill="#fff3d8" stroke="#e5ad55" filter="url(#soft-shadow)"/>
+      <text x="210" y="262" font-size="13" font-weight="800" text-anchor="middle" fill="#a85b00">频域局部补丁选择器</text>
+      <text x="210" y="280" font-size="10.8" text-anchor="middle" fill="#8d530e">FFT + 低通差异分数, topK=32</text>
+      <text x="210" y="295" font-size="10" text-anchor="middle" fill="#8d530e">零参数 · 只选 patch · K=32</text>
+
+      <rect x="105" y="328" width="210" height="58" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="210" y="353" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">FAE 子集 gather</text>
+      <text x="210" y="371" font-size="10.5" text-anchor="middle" fill="#3d6cae">几何感知编码 · use_fae=True</text>
+
+      <rect x="105" y="414" width="210" height="62" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="210" y="438" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">Cross-Modal Transformer</text>
+      <text x="210" y="456" font-size="10.5" text-anchor="middle" fill="#3d6cae">v2s + s2v · dim=512 · heads=4</text>
+      <text x="210" y="470" font-size="10" text-anchor="middle" fill="#3d6cae">weight_s2v=0.5</text>
+
+      <rect x="105" y="502" width="210" height="50" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="210" y="525" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">local_score</text>
+      <text x="210" y="542" font-size="10.5" text-anchor="middle" fill="#3d6cae">[B, 200] 局部分数</text>
+
+      <path d="M210 206 L210 238" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M210 300 L210 328" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M210 386 L210 414" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M210 476 L210 502" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+
+      <rect x="885" y="238" width="210" height="62" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="990" y="262" font-size="13" font-weight="800" text-anchor="middle" fill="#174b94">Adapter (text)</text>
+      <text x="990" y="280" font-size="10.8" text-anchor="middle" fill="#3d6cae">768 → 192 → 768 · ratio=0.2</text>
+      <text x="990" y="295" font-size="10" text-anchor="middle" fill="#3d6cae">约 295K 可训练参数</text>
+
+      <rect x="885" y="328" width="210" height="66" rx="8" fill="#fff3d8" stroke="#e5ad55" filter="url(#soft-shadow)"/>
+      <text x="990" y="352" font-size="13" font-weight="800" text-anchor="middle" fill="#a85b00">条件文本适配</text>
+      <text x="990" y="370" font-size="10.8" text-anchor="middle" fill="#8d530e">π(x)=meta_net(v_cls)</text>
+      <text x="990" y="386" font-size="10" text-anchor="middle" fill="#8d530e">t̃_c(x)=Norm(t_c+0.005·π(x))</text>
+
+      <rect x="885" y="422" width="210" height="54" rx="8" fill="#e7f0ff" stroke="#9eb9e2"/>
+      <text x="990" y="446" font-size="12" font-weight="700" text-anchor="middle" fill="#174b94">base_logits</text>
+      <text x="990" y="464" font-size="10.5" text-anchor="middle" fill="#3d6cae">[B, 200] 全局 cosine/dot 兜底</text>
+
+      <path d="M990 206 L990 238" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M990 300 L990 328" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+      <path d="M990 394 L990 422" fill="none" stroke="#2456a6" stroke-width="1.6" marker-end="url(#arrow-blue)"/>
+
+      <path d="M315 176 L885 176" fill="none" stroke="#2456a6" stroke-width="1.3" stroke-dasharray="5 5" marker-end="url(#arrow-blue)"/>
+      <text x="590" y="168" font-size="10.5" fill="#2456a6" text-anchor="middle">文本原型同时供 Adapter、Cross-Modal 与 AG-JEPA 使用</text>
+
+      <path d="M315 178 C450 190, 720 300, 885 344" fill="none" stroke="#a85b00" stroke-width="1.3" stroke-dasharray="5 5" marker-end="url(#arrow-amber)"/>
+      <text x="438" y="206" font-size="10" fill="#a85b00">v_cls 生成条件文本</text>
+
+      <rect x="450" y="245" width="280" height="82" rx="9" fill="#fff3d8" stroke="#e5ad55" filter="url(#soft-shadow)"/>
+      <text x="590" y="270" font-size="13" font-weight="800" text-anchor="middle" fill="#a85b00">AG-JEPA 辅助训练</text>
+      <text x="590" y="289" font-size="10.8" text-anchor="middle" fill="#8d530e">真实类文本选择 top-8 semantic patches</text>
+      <text x="590" y="305" font-size="10" text-anchor="middle" fill="#8d530e">MSE 预测 masked target + next seen 负文本 margin</text>
+      <text x="590" y="320" font-size="10" text-anchor="middle" fill="#8d530e">use_ag_jepa=True · topK=8 · margin=0.2</text>
+
+      <path d="M315 266 L450 278" fill="none" stroke="#a85b00" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#arrow-amber)"/>
+      <path d="M885 268 L730 278" fill="none" stroke="#a85b00" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#arrow-amber)"/>
+
+      <rect x="405" y="568" width="370" height="64" rx="10" fill="#fff3d8" stroke="#e5ad55" filter="url(#soft-shadow)"/>
+      <text x="590" y="592" font-size="14" font-weight="800" text-anchor="middle" fill="#a85b00">最终融合 (add 模式)</text>
+      <text x="590" y="612" font-size="12" text-anchor="middle" fill="#8d530e" font-family="Consolas, Cascadia Mono, monospace">logits = base_logits + 0.3 · local_score</text>
+      <text x="590" y="627" font-size="10" text-anchor="middle" fill="#8d530e">score_mode=add · gating=fixed · β=0.3</text>
+
+      <rect x="405" y="664" width="370" height="50" rx="9" fill="#e8f7ee" stroke="#8bc9a9"/>
+      <text x="590" y="687" font-size="13" font-weight="800" text-anchor="middle" fill="#147a4c">[B, 200] 全类别 logits</text>
+      <text x="590" y="704" font-size="10.5" text-anchor="middle" fill="#23835a">训练: seen CE · 测试: argmax over 150 seen + 50 unseen</text>
+
+      <path d="M315 527 L405 592" fill="none" stroke="#2456a6" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+      <path d="M885 449 L775 592" fill="none" stroke="#2456a6" stroke-width="1.8" marker-end="url(#arrow-blue)"/>
+      <path d="M590 632 L590 664" fill="none" stroke="#147a4c" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+
+      <path d="M885 258 C844 302, 792 368, 720 449" fill="none" stroke="#0f8a55" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+      <rect x="625" y="449" width="210" height="64" rx="7" fill="#ffffff" stroke="#8bc9a9"/>
+      <text x="730" y="468" font-size="10.5" font-weight="800" text-anchor="middle" fill="#147a4c">L_topo</text>
+      <text x="730" y="489" font-size="9.2" text-anchor="middle" fill="#23835a">约束文本类别拓扑</text>
+      <text x="730" y="505" font-size="8.5" text-anchor="middle" fill="#64748b">Adapter 不破坏 CLIP 语义结构</text>
+
+      <path d="M315 445 L342 445" fill="none" stroke="#0f8a55" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+      <rect x="342" y="410" width="214" height="70" rx="7" fill="#ffffff" stroke="#8bc9a9"/>
+      <text x="449" y="433" font-size="10.5" font-weight="800" text-anchor="middle" fill="#147a4c">L_msdn</text>
+      <text x="449" y="455" font-size="9.2" text-anchor="middle" fill="#23835a">约束 s2v / v2s 双分支一致</text>
+      <text x="449" y="472" font-size="8.5" text-anchor="middle" fill="#64748b">防止单一路径塌缩</text>
+
+      <path d="M558 327 L535 347" fill="none" stroke="#b46400" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-amber)"/>
+      <rect x="440" y="347" width="190" height="62" rx="7" fill="#fffaf0" stroke="#e5ad55"/>
+      <text x="535" y="365" font-size="10.5" font-weight="800" text-anchor="middle" fill="#a85b00">L_jepa</text>
+      <text x="535" y="386" font-size="9.1" text-anchor="middle" fill="#8d530e">预测 masked semantic patch</text>
+      <text x="535" y="402" font-size="8.4" text-anchor="middle" fill="#64748b">masked visual context + true text</text>
+
+      <path d="M672 327 L748 347" fill="none" stroke="#b46400" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-amber)"/>
+      <rect x="640" y="347" width="218" height="76" rx="7" fill="#fffaf0" stroke="#e5ad55"/>
+      <text x="749" y="365" font-size="10.5" font-weight="800" text-anchor="middle" fill="#a85b00">L_jepa_neg</text>
+      <text x="749" y="388" font-size="9.1" text-anchor="middle" fill="#8d530e">约束负文本远离 target</text>
+      <text x="749" y="405" font-size="8.4" text-anchor="middle" fill="#64748b">负文本不能解释 masked target</text>
+
+      <path d="M775 600 L802 600" fill="none" stroke="#0f8a55" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+      <rect x="802" y="564" width="200" height="70" rx="7" fill="#ffffff" stroke="#8bc9a9"/>
+      <text x="902" y="583" font-size="10.5" font-weight="800" text-anchor="middle" fill="#147a4c">L_consist</text>
+      <text x="902" y="606" font-size="9.2" text-anchor="middle" fill="#23835a">局部分支对齐全局分支</text>
+      <text x="902" y="624" font-size="8.4" text-anchor="middle" fill="#64748b">base 作为 teacher</text>
+
+      <path d="M775 688 L802 688" fill="none" stroke="#0f8a55" stroke-width="2.1" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+      <rect x="802" y="662" width="184" height="58" rx="7" fill="#ffffff" stroke="#9eb9e2"/>
+      <text x="894" y="681" font-size="10.5" font-weight="800" text-anchor="middle" fill="#174b94">L_CE_seen</text>
+      <text x="894" y="701" font-size="9.2" text-anchor="middle" fill="#3d6cae">seen 类主分类监督</text>
+      <text x="894" y="715" font-size="8.4" text-anchor="middle" fill="#64748b">训练最终 logits</text>
+
+      <rect x="270" y="742" width="640" height="42" rx="9" fill="#e8f7ee" stroke="#8bc9a9"/>
+      <text x="590" y="760" font-size="12" font-weight="800" text-anchor="middle" fill="#147a4c">总训练目标</text>
+      <text x="590" y="778" font-size="10.5" font-weight="700" text-anchor="middle" fill="#147a4c">分类监督 + 文本拓扑 + 分支一致性 + AG-JEPA 辅助约束</text>
+    </svg>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-box" style="background:#eef2f7;"></span>frozen / 输入特征</div>
+      <div class="legend-item"><span class="legend-box" style="background:#e7f0ff;"></span>可训练主路径</div>
+    <div class="legend-item"><span class="legend-box" style="background:#fff3d8;"></span>核心设计模块</div>
+      <div class="legend-item"><span class="legend-box" style="background:#e8f7ee;"></span>输出 / 损失</div>
+      <div class="legend-item"><span class="legend-box" style="background:#fff; border-style:dashed;"></span>辅助训练或条件支路</div>
+    </div>
+  </section>
+
+  <h2 class="section-title">损失函数约束与意义</h2>
+  <section class="loss-grid">
+    <div class="loss-card ce">
+      <div class="loss-title">1. Seen 分类监督 \( \mathcal{L}_{ce} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{ce}=\mathrm{CE}(z_{seen},y),\quad z_{seen}=logits_{200}[:,seen] \)</div>
+      <div class="loss-desc"><b>约束对象:</b> 最终融合后的 seen 类分类分数。<b>输入:</b> \(z_{seen}\in\mathbb{R}^{B\times150}\), \(y\in\mathbb{R}^{B}\)。<b>意义:</b> 提供主分类监督, 让融合后的 \(base\_logits+0.3\cdot local\_score\) 能正确区分 150 个 seen 类。</div>
+    </div>
+
+    <div class="loss-card">
+      <div class="loss-title">2. 文本拓扑保持 \( \mathcal{L}_{topo} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{topo}=1-\rho(\mathrm{vec}(C_{adapt}),\mathrm{vec}(C_{clip})),\quad C=TT^\top \)</div>
+      <div class="loss-desc"><b>约束对象:</b> Adapter/条件化后的文本类别结构。<b>输入:</b> \(T_{adapt},T_{clip}\in\mathbb{R}^{200\times768}\), 相似度矩阵 \(C\in\mathbb{R}^{200\times200}\)。<b>意义:</b> 让文本可适配, 但不破坏 CLIP 原始类别间语义拓扑。</div>
+    </div>
+
+    <div class="loss-card">
+      <div class="loss-title">3. 全局-局部一致性 \( \mathcal{L}_{cons} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{cons}=T^2D_{KL}(p_b^{det}\Vert p_l),\quad p=\mathrm{softmax}(z_{seen}/T) \)</div>
+      <div class="loss-desc"><b>约束对象:</b> Cross-Modal 局部分支的 seen 类分布。<b>输入:</b> \(base\_logits[:,seen]\in\mathbb{R}^{B\times150}\), \(local\_score[:,seen]\in\mathbb{R}^{B\times150}\)。<b>意义:</b> 用全局 CLIP 分支当老师, 防止局部分支学出和全局语义相反的排序。</div>
+    </div>
+
+    <div class="loss-card">
+      <div class="loss-title">4. 双向分支互蒸馏 \( \mathcal{L}_{msdn} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{msdn}=\frac{T^2}{2}[D_{KL}(p_s^{det}\Vert p_v)+D_{KL}(p_v^{det}\Vert p_s)] \)</div>
+      <div class="loss-desc"><b>约束对象:</b> s2v 与 v2s 两条 Cross-Modal 分支。<b>输入:</b> \(score\_s2v[:,seen]\), \(score\_v2s[:,seen]\in\mathbb{R}^{B\times150}\)。<b>意义:</b> 两个方向互相当老师, 抑制单一路径塌缩, 让局部视觉到语义、语义到视觉两路判断保持一致。</div>
+    </div>
+
+    <div class="loss-card aux">
+      <div class="loss-title">5. AG-JEPA 正目标预测 \( \mathcal{L}_{jepa} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{jepa}=1-\cos(\hat z,z_m^{det}),\quad \hat z=f_\theta(c,t_y) \)</div>
+      <div class="loss-desc"><b>约束对象:</b> JEPA predictor 对 masked semantic patch 的预测。<b>输入:</b> context \(c\in\mathbb{R}^{B\times512}\), 类文本 \(t_y\in\mathbb{R}^{B\times512}\), masked target \(z_m\in\mathbb{R}^{B\times512}\)。<b>意义:</b> 让剩余 patch 和真实类文本能预测被遮住的关键语义 patch, 强化局部语义建模。</div>
+      <div class="loss-vars"><b>变量说明:</b> \(f_\theta\) 是 JEPA predictor, 输入为拼接后的 \([c,t_y]\), 输出预测特征 \(\hat z\in\mathbb{R}^{B\times512}\)。\(c\) 是对视觉 patch 执行 mask 后保留下来的视觉上下文, 即去掉 top-8 target patch 后的剩余 patch_z 平均特征; \(t_y\) 是真实类别文本经过 embed_text 后的特征; \(z_m\) 是被 mask 的 top-8 semantic patch 平均特征, 在 loss 中 detach 作为预测目标。</div>
+    </div>
+
+    <div class="loss-card aux">
+      <div class="loss-title">6. AG-JEPA 负文本约束 \( \mathcal{L}_{neg} \)</div>
+      <div class="loss-formula">\( \mathcal{L}_{neg}=\mathrm{ReLU}(\cos(\hat z_n,z_m)-s_+^{det}+m),\quad s_+=\cos(\hat z,z_m) \)</div>
+      <div class="loss-desc"><b>约束对象:</b> 负类别文本对同一个 masked target 的解释能力。<b>输入:</b> 负文本 \(t_{neg}\in\mathbb{R}^{B\times512}\), target \(z_m\in\mathbb{R}^{B\times512}\), 正相似度 \(s_+\in\mathbb{R}^{B}\)。<b>意义:</b> 如果负文本也能解释目标 patch, 就施加 margin 惩罚, 提高类别语义区分度。</div>
+      <div class="loss-vars"><b>变量说明:</b> \(f_\theta\) 与正目标预测共用同一个 JEPA predictor。\(c^{det}\) 表示 mask 后视觉上下文 detach, 负文本损失不更新视觉 context; \(t_{neg}\) 是负类别文本经过 embed_text 后的特征; \(\hat z_n=f_\theta(c^{det},t_{neg})\) 是用负文本预测出的目标特征; \(s_+=\cos(\hat z,z_m)\) 是正文本预测 \(\hat z\) 与 masked target \(z_m\) 的余弦相似度, 在负文本 loss 中 detach 后作为 margin 参照。</div>
+    </div>
+  </section>
+
+  <h2 class="section-title">模块说明</h2>
+  <section class="modules-grid">
+    <div class="module frozen">
+      <div class="mod-title">CLIP ViT-L/14 @ 336px <span class="tag frozen">frozen</span></div>
+      <div class="mod-desc">视觉编码器和文本编码器均冻结, 保留 CLIP 原始零样本能力。视觉端输出 CLS 与 576 个 patch token, 文本端输出 200 类文本原型。</div>
+    </div>
+
+    <div class="module train">
+      <div class="mod-title">Text Adapter <span class="tag train">可训练</span></div>
+      <div class="mod-desc">文本侧 bottleneck MLP, <code>adapter_ratio=0.2</code>, 在 seen 训练监督下微调类别文本原型, 同时由拓扑 loss 约束不破坏类别几何。</div>
+    </div>
+
+    <div class="module star">
+      <div class="mod-title">频域局部补丁选择器 <span class="tag star">核心模块</span></div>
+      <div class="mod-desc">使用频域低通差异对 patch 打分, 当前 <code>lastvit_select_k=32</code>, 作为局部信息瓶颈。该模块只负责选择局部 token, 不替换 CLS, 也不进入梯度链路。</div>
+    </div>
+
+    <div class="module train">
+      <div class="mod-title">FAE 几何感知编码 <span class="tag train">use_fae=True</span></div>
+      <div class="mod-desc">对选中的局部 patch 进行几何感知自注意力, 缓解局部 token 位置纠缠, 再送入双向视觉-文本交互。</div>
+    </div>
+
+    <div class="module train">
+      <div class="mod-title">Cross-Modal Transformer <span class="tag train">双向</span></div>
+      <div class="mod-desc">包含 v2s 与 s2v 两条 cross-attention 分支, <code>tf_common_dim=512</code>, <code>tf_heads=4</code>, 两路分数按 <code>weight_s2v=0.5</code> 融合。</div>
+    </div>
+
+    <div class="module star">
+      <div class="mod-title">条件文本适配 <span class="tag star">核心模块</span></div>
+      <div class="mod-desc">用图像 CLS 生成小幅文本残差, <code>conditional_text_ratio=0.005</code>, 让每张图拥有轻量条件化的 200 类文本原型。</div>
+    </div>
+
+    <div class="module star">
+      <div class="mod-title">AG-JEPA <span class="tag star">训练辅助</span></div>
+      <div class="mod-desc">用真实类文本选择 top-8 semantic patch 作为 masked target, 以剩余 patch 与类别文本预测目标特征。推理时不走 JEPA predictor。</div>
+    </div>
+
+    <div class="module train">
+      <div class="mod-title">Add 融合输出 <span class="tag train">score_mode=add</span></div>
+      <div class="mod-desc">最终分类分数为 <code>logits = base_logits + 0.3 · local_score</code>。全局分支提供 CLIP 兜底, 局部分支补充细粒度判别。</div>
+    </div>
+  </section>
+
+  <div class="note">
+    口径说明: 本图按当前展示数据将 H 写为 73.20, 框架结构对应当前 baseline 主路径。
+  </div>
+
+  <footer>
+    DVSR / VGSR Current Baseline Framework Diagram · generated for project report · source: README.md, DVSR_标准项目汇报.md, config/VGSR_cub_gzsl.yaml
+  </footer>
+</div>
+</body>
+</html>
