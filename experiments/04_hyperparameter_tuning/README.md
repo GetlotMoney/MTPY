@@ -4,6 +4,7 @@
 
 ## 查看方式
 
+- 固定框架全量参数矩阵: `PARAMETER_TUNING_MATRIX.md`
 - 批次汇总: `TUNE-BATCH-20260609.md`
 - 单个实验记录: `TUNE-xxx_<slug>/README.md`
 - 单个实验配置: `TUNE-xxx_<slug>/config.yaml`
