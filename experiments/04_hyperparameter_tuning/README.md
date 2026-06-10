@@ -1,18 +1,8 @@
-# 调参实验
+﻿
+## 当前 baseline
 
-放“调参实验”。
+| baseline | 来源 | lambda_topo_pearson | conditional_text_ratio | lambda_jepa_neg | H | seed |
+|---|---:|---:|---:|---:|---:|---:|
+| TUNE-024 | topo=0.1 + cond_text=0.01 + jepa_neg=0.01 | 0.10 | 0.010 | 0.01 | 74.09 | 5 |
 
-例子：
-
-- 补丁数量 K
-- sigma
-- 损失权重 lambda
-- AG-JEPA top-k
-- 学习率流程
-- 局部分数权重
-
-规则：
-
-- 每次只扫一类参数。
-- 记录完整参数列表，不要只记录最优结果。
-- 如果只跑了单个随机种子，结论只能写“候选”，不能写最终结论。
+注: 2026-06-10 组合调参后发现 TUNE-024 首次突破 74, 提升为当前 main baseline。后续需多 seed 复核。

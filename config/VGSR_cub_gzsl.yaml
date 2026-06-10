@@ -372,7 +372,7 @@ aux_temp:
 use_conditional_text:
   value: True
 conditional_text_ratio:
-  value: 0.005
+  value: 0.010
 meta_net_hidden:
   value: 48
 
@@ -400,7 +400,7 @@ jepa_hidden:
 lambda_jepa:
   value: 0.05
 lambda_jepa_neg:
-  value: 0.02
+  value: 0.01
 jepa_neg_margin:
   value: 0.2
 # MOD-005: AG-JEPA v2 默认关闭。关闭时沿用原 AG-JEPA：
