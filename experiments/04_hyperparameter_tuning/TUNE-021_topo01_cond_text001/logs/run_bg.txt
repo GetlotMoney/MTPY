@@ -1,0 +1,91 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-06-10_12-11-55.txt
+  Config    : experiments\04_hyperparameter_tuning\TUNE-021_topo01_cond_text001\config.yaml
+  Device    : cuda:0
+  Epochs    : 30
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+©°©¤ Module Configuration ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©´
+©¦  model_mode    : vgsr
+©¦  text_source   : gpt55
+©¦  use_aug_cache : False
+©À©¤ Architecture ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  use_fae       : True
+©¦  adapter_ratio : 0.2
+©¦  tf_common_dim : 512
+©¦  tf_heads      : 4
+©¦  tf_dropout    : 0.1
+©À©¤ Pooling (s2v) ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  pool_method   : mean
+©À©¤ LaSt-ViT-CLS (CLIP CLS ÔöÇ¿) ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  use_lastvit_cls : False
+©À©¤ Scoring & Gating ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  score_mode    : add
+©¦  gating        : fixed
+©¦  local_weight  : 0.3
+©¦  weight_s2v    : 0.5
+©¦  text_residual : 0.5
+©¦  visual_residual: 0.5
+©À©¤ Loss Weights ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  lambda_cal    : 0.0
+©¦  lambda_consist: 0.05
+©¦  lambda_l2sp   : 0.0
+©¦  lambda_topo   : 0.1
+©¦  lambda_aux_s2v: 0.0
+©¦  lambda_aux_v2s: 0.0
+©¦  aux_temp      : 14.28
+©¦  use_geo_attr  : False
+©¦  lambda_geo_attr: 0.0
+©¦  use_text_reservoir: False
+©¦  text_reservoir_ratio: 0.0
+©¦  use_msdn_gate: False
+©¦  use_attr_patch_ot: False
+©¦  use_ag_jepa_v2: False
+©¦  use_cf_neg_text: False
+©¦  lambda_cf_neg_text: 0.0
+©À©¤ Resume ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  resume_from        : ''
+©¦  resume_lr_schedule : finetune
+©¦  extra_epochs       : 0
+©À©¤ Speed Optimizations ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©È
+©¦  use_amp       : False  (BF16 autocast)
+©¦  pin_memory    : enabled if patch cache loaded  non_blocking H2D : True
+©¸©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¼
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+Loading metadata from .\data\CUB...
+Successfully loaded 200 class names from att_splits.mat
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[¡ï] Loading train PATCH + CLS features from cache (single-view)...
+      ¡ï Patches pinned to locked CPU memory (non_blocking H2D enabled)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ¡ï class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using GPT-5.5 descriptions: .\data\gpt4_data\cub_gpt55.pt
+      ¡ï gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 11,298,967
+      Trainable params: 11,145,367
+
+[Multi-Stage] 3 stages enabled (overrides epochs/extra_epochs):
+  Stage 1: lr=0.001, epochs=20 (epoch 1..20)
+  Stage 2: lr=0.0001, epochs=30 (epoch 21..50)
+  Stage 3: lr=1e-05, epochs=10 (epoch 51..60)
+  Total epochs (sum of stages) = 60

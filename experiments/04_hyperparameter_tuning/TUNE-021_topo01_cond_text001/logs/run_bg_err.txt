@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Desktop\项目\DVSR\train_VGSR_CUB.py", line 567, in <module>
+    print_log(f"  \u2713 Stage 1 active: lr={float(first['lr']):g}, "
+  File "C:\Users\Administrator\Desktop\项目\DVSR\train_VGSR_CUB.py", line 43, in print_log
+    print(msg)
+UnicodeEncodeError: 'gbk' codec can't encode character '\u2713' in position 2: illegal multibyte sequence
