@@ -62,3 +62,6 @@ mcp/codex-gateway/
 
 # Local research idea tree / personal skill mirror
 创新指导清单/paper-idea-tree/
+
+# OpenClaw workspace
+.openclaw-workspace/
