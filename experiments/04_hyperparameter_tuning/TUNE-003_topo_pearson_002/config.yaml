@@ -1,0 +1,554 @@
+﻿dataset:
+  value: CUB
+num_class:
+  value: 200
+num_attribute:
+  value: 312
+img_size:
+  value: 448
+resnet_region:
+  value: 196
+dim_f_clip:
+  value: 768
+dim_v_clip:
+  value: 768
+device:
+  value: cuda:0
+batch_size:
+  value: 64
+epochs:
+  value: 30
+use_unzip:
+  value: True
+random_seed:
+  value: 5
+
+# === Loss 权重 ===
+#lambda_cal:
+#  value: 0.1
+#lambda_reg:
+#  value: 0.5
+#lambda_con:
+#  value: 0.7
+
+# === Loss 权重 (公共参数值设置测试) ===
+#lambda_cal:
+#  value: 0.05
+lambda_reg:
+  value: 0.3
+lambda_con:
+  value: 0.2
+
+# === 模型细节 (legacy 残留, 模型代码已不读这些, 保留仅供参考) ===
+# 真正生效的参数在 [TransZero++ 双向 Transformer 参数] 章节
+# normalize_V / tf_SAtt / tf_ec_layer / tf_dc_layer / tf_clip_common_dim
+# tf_aux_embed / tf_dim_feedforward 都已被新参数替代
+normalize_V:
+  value: False
+tf_SAtt:
+  value: True
+tf_ec_layer:
+  value: 1
+tf_dc_layer:
+  value: 1
+tf_clip_common_dim:
+  value: 300
+tf_aux_embed:
+  value: True
+tf_dim_feedforward:
+  value: 512
+
+# === [新增关键参数] ===
+# CUB 必须使用 'dot'，否则会强制归一化导致精度下降
+classifier_metric:
+  value: dot
+
+is_bias:
+  value: False
+
+# === [VDT-TransZero 模块参数] ===
+# Adapter 残差比例: adapted = ratio * Adapter(text) + (1-ratio) * text
+# 较小的值(0.1~0.3)表示以原始特征为主，Adapter 做微调
+adapter_ratio:
+  value: 0.2
+# 是否使用 GPT-4 描述 (需要 data/gpt4_data/cub.pt 文件)
+use_gpt:
+  value: True
+
+# === [文本数据来源] ===
+# 'gpt4'   → 用原 GPT-4 数据 data/gpt4_data/cub.pt (7 句/类)
+# 'claude' → 用 Claude 生成的细节描述 data/gpt4_data/cub_claude.pt (7 句/类, 第7句为 CLIP 风格 caption)
+# 'gpt55'  → 用 GPT-5.5 风格改写 data/gpt4_data/cub_gpt55.pt (7 句/类, 全部 CLIP photo prompt 风格)
+# 'merge'  → GPT-4 + Claude 拼接 data/gpt4_data/cub_merge.pt (14 句/类)
+text_source:
+  value: gpt55
+
+# === [加权融合 α 参数, 仅 text_source='weighted' 时生效] ===
+# fused = α × Claude_emb + (1-α) × GPT_emb
+# α=0.0 → 纯 GPT-4   (基线 71.00%)
+# α=1.0 → 纯 Claude  (基线 72.20%)
+# 实验结论：α-grid search 全部失败，纯 Claude (α=1.0) 是最优
+text_alpha:
+  value: 1.0
+
+# === [TransZero++ 双向 Transformer 参数] ===
+# 公共投影维度 (768 → dim_com 降维)
+tf_common_dim:
+  value: 512
+# 多头注意力头数
+tf_heads:
+  value: 4
+# Dropout 比例
+tf_dropout:
+  value: 0.1
+# s2v 和 v2s 两路 logits 融合权重: logits = w*s2v + (1-w)*v2s
+weight_s2v:
+  value: 0.5
+# v2s 路文本残差系数 (cosine_only 模式: 保护 unseen 文本)
+# 1.0 = 全用 CLIP 原始文本 (最保守); 0.0 = 全用增强文本
+text_residual:
+  value: 0.5
+# s2v 路视觉残差系数 (cosine_only 模式: 保护 CLIP 原始 CLS)
+# 1.0 = 全用 CLIP CLS (最保守); 0.0 = 全用增强视觉
+visual_residual:
+  value: 0.5
+# 局部注意力加分系数: logits = base_logits + β × local_score
+# 仅在 gating='fixed' 时生效, β=0.3 是基线 H=72.26% 的设定
+local_weight:
+  value: 0.3
+
+# === [s2v 池化方法开关] ===
+# 'mean'      → 576 个 patch 平均 (基线 H=72.24%)
+# 'attention' → 学一个 Linear 给每 patch 打分 (实测 H=71.83%, -0.37%, 死代码已恢复)
+# 'lastvit'   → LaSt-ViT 频域 Top-K 选择 (5 次实验全失败, 已废弃)
+# 'dmp'       → ★ H2: Dynamic Mean-LaSt Pooling, mean+LaSt 并联+λ 融合
+# ★ 当前实验: G3 cons 动态 / H2 dmp 池化级动态门控
+pool_method:
+  value: mean
+
+# === [H2 DMP 配置] ===
+# pool_dynamic:
+#   'fixed' (默认) → 用 pool_lambda_fixed 标量
+#   'mlp'         → λ_pool(x) = sigmoid(MLP_pool(cls)) 看图自适应
+pool_dynamic:
+  value: fixed
+pool_lambda_fixed:
+  value: 0.5         # mean 50% + LaSt 50% (H2-fixed)
+pool_lambda_init:
+  value: 0.5         # learnable mlp 模式起点 (H2-mlp)
+
+# LaSt-ViT 参数 (仅 pool_method='lastvit' 时生效)
+# k: 选 top-K 个 patch
+#   ★ 官方 per-channel topk 实现下, k=1 就够 (768 个 channel 各自独立选, 已隐式融合)
+#   候选: 1, 2, 4
+lastvit_k:
+  value: 1
+# sigma: 高斯低通核标准差, 官方默认 √D ≈ 22.6 (D=512)
+# 设为 0.0 时 forward 内部用 D**0.5 自动计算
+lastvit_sigma:
+  value: 0.0
+
+# === [LaSt-ViT-CLS 增强 (CVPR 2026 真正用法)] ===
+# 论文意图: ViT 的 CLS token 倾向 "lazy aggregation" (聚合背景 patch 作 shortcut)
+# LaSt-ViT 用频域 per-channel topk 选 part-aware patch 替代 CLS
+#
+# 应用位置 (★ 这次的正确位置 ★):
+#   CLIP 原始 patches [B, 576, 768] → lastvit_pool → cls_lastvit [B, 768]
+#   cls = (1-r)·CLIP_CLS + r·cls_lastvit
+#   base_logits = cos(cls, all_text) * scale
+#
+# 与 pool_method='lastvit' 区别:
+#   pool_method='lastvit': 在 s2v 分支末端池化 (位置错, 实测 -0.5%)
+#   use_lastvit_cls=True:  替代 CLIP CLS (论文真实用法, 影响 base_logits)
+use_lastvit_cls:
+  value: False
+# k=1 (官方默认, per-channel 在 768 channel 上已隐式集成)
+lastvit_cls_k:
+  value: 1
+# sigma=0.0 自动用 √D (D=768 → σ ≈ 27.7)
+lastvit_cls_sigma:
+  value: 0.0
+# 残差融合系数:
+#   0.0 = 完全用 CLIP CLS (基线, 退化无改动)
+#   0.3 = 30% LaSt + 70% CLIP (保守)
+#   0.5 = 各占一半 (推荐)
+#   0.7 = 70% LaSt + 30% CLIP (激进)
+#   1.0 = 完全用 LaSt CLS (无 CLIP 兜底, 风险高)
+lastvit_residual:
+  value: 0.3
+
+# === [LaSt-ViT v5 路径 C: patch 选择器] ===
+# 第一性原理: LaSt 在 frozen CLIP 下不能用反向梯度调整 ViT, 改成做 patch 选择器
+# 让 FAE 仅在 K 个 part-aware patch 上做 cross-modal, 而不是全 576
+# K=0 关闭 (默认 baseline); K=64/128 启用 v5
+# 注意: K!=576 时会自动关闭 box_emb 几何位置编码
+lastvit_select_k:
+  value: 32
+lastvit_select_sigma:
+  value: 0.0
+# ★ 2026-05-31 P3.6 反向对照 + 双向选择:
+#   True=选最平稳前景 token (默认)
+#   False=选最高频 part-aware token (反向对照)
+#   both=K/2 平稳 + K/2 高频 (双通道融合 P3.9)
+lastvit_select_largest:
+  value: True
+# ★ 2026-05-31 公式版本: v1_strict (报告原文) / v2_abs_mean (P3.x 默认) / v3_norm
+lastvit_select_formula:
+  value: v2_abs_mean
+
+# === [门控模式开关] ===
+# 'fixed' (基线 H=72.26%): logits = base + local_weight × local_score
+# 'cig'   (CIG 动态门控, 实测 H=71.80%): logits = base + α×(1-conf)^τ × local_score
+gating:
+  value: fixed
+
+# === [F4/F5 三层动态门控, 仅 score_mode='add' 生效] ===
+# gating_dynamic:
+#   'fixed' (默认) → 走老的 gating='fixed'/'cig' 分支
+#   'mlp'         → 启用外层 α(x)=sigmoid(MLP_α(cls_token)) 看图自适应决定 local 强度
+#                   优先级最高, 启用后 gating='fixed'/'cig' 都被覆盖
+gating_dynamic:
+  value: fixed
+gating_alpha_init:
+  value: 0.3       # init α=0.3 (跟 fixed local_weight 对齐, 兼容基线起步)
+
+# weight_s2v_mode:
+#   'fixed' (默认) → local = weight_s2v · s2v + (1-weight_s2v) · v2s
+#   'mlp'         → w(x)=sigmoid(MLP_w(cls_token)), local = w·s2v + (1-w)·v2s
+#                   看图自适应决定 s2v vs v2s 比例
+weight_s2v_mode:
+  value: fixed
+weight_s2v_init:
+  value: 0.5       # init w=0.5 (跟 fixed weight_s2v 对齐)
+
+# 共享: MLP 中间层维度
+gate_hidden:
+  value: 64
+
+# === [计分模式开关] ===
+# 'add'         → logits = base_logits + β × local_score  (当前默认, 向后兼容)
+# 'cosine_only' → logits = cos(v_enh, t_enh) × scale     (新方案: 双分支唯一决定)
+# 切到 cosine_only 后, visual_residual 和 text_residual 起作用
+score_mode:
+  value: add
+
+# === [FAE 消融开关] ===
+# True  → 启用 FAE (Feature Augmentation Encoder + 几何位置解耦)
+# False → 跳过 FAE，patches 直接进 cross-attention（双向结构保留）
+# 注意：双向并不依赖 FAE，去掉后梯度仍在 embed_cv / embed_text 处汇聚
+use_fae:
+  value: True
+# GZSL 评估偏置: 给 unseen 类 logits 加固定值，平衡 seen/unseen 竞争
+# 在验证集上选定后固定，不在测试集上搜索
+# 0 = 不加偏置；正值 = 给 unseen 加分
+gzsl_bias:
+  value: 0.0
+# Self-calibration loss 权重: 给 unseen 类保留概率, 防止 seen bias
+# λ=0 关闭 (实验证明 0.001 中性, 0.01 过强, 不适用本架构)
+prior_correction:
+  value: none
+prior_temp:
+  value: 1.0
+prior_max_bias:
+  value: 3.0
+
+lambda_cal:
+  value: 0.0
+
+# === [新增 Loss 项] ===
+# 一致性 Loss (KL between base_logits and local_score on seen, with temperature)
+# 防止 local_score 学出和 CLIP base 矛盾的反向信号
+# 推荐值: 0.05~0.2, 风险极低
+# ★ 注意：adapter_only 模式下必须设为 0.0（local_score 是占位全零，KL 会变成噪声梯度）
+# ★ G1 实验: 0.05 弱约束让 local 和 base 不打架
+lambda_consist:
+  value: 0.05
+consist_temp:
+  value: 2.0
+
+# === [Cons 动态权重防爆 loss] ===
+# G3 续训观察到 cons 末期涨到 8-9, 实际贡献 0.05·9=0.45 已盖过 CE
+# 倒数衰减: effective_lambda = lambda_consist / (1 + γ·cons)
+# cons=0 → λ; cons=9 → ~0.52λ; cons→∞ → 上限 (1/γ) 永不超
+# 推荐 γ=0.1, 保证 cons 实际贡献 ≤ 0.5 无论 cons 多大
+# default: False 兼容旧实验
+consist_dynamic:
+  value: True
+consist_dynamic_gamma:
+  value: 0.1
+
+# Adapter L2-SP: 让 adapter 输出 delta 别离 0 太远
+# adapter_ratio=0.2 已经做了部分残差混合, 这里加直接 L2 约束
+# 推荐值: 0.0001~0.001, 风险低
+lambda_l2sp:
+  value: 0.0
+
+# Topology-preserving Pearson loss (add 模式创新优化):
+# add 模式下约束 Adapter 后的 200 类文本原型拓扑, 保持 CLIP 原始类别角度关系
+# 目标: 在不破坏 base_logits 兜底的前提下, 缓解 seen-only Adapter 微调拉散 unseen 语义空间
+# 推荐先扫: 0.01, 0.05, 0.1；0 = 关闭
+lambda_topo_pearson:
+  value: 0.02
+
+# === [cosine_only 锚定三件套, 仅 score_mode='cosine_only' 生效] ===
+# L1 v_anchor: v_enh 不要离 CLIP CLS 太远 (修视觉端漂移)
+#   1 - cos(v_enh_raw, cls_token.detach())
+#   推荐 0.05~0.2; 0=关闭
+lambda_v_anchor:
+  value: 0.0
+
+# L2 t_unseen_anchor: t_enh[unseen] 不要离 CLIP 原始 unseen 文本太远
+#   (修 unseen 列共享 proj_text 权重导致的间接漂移)
+#   1 - cos(t_enh_raw[unseen].mean(B), all_text[unseen].detach())
+#   推荐 0.1~0.3 (这个该比 v_anchor 重, 因为 unseen 完全无 CE 监督); 0=关闭
+lambda_t_unseen_anchor:
+  value: 0.0
+
+# L3 distill: logits_200 全 200 类向 CLIP base_logits 蒸馏
+#   KL( softmax(logits_200/T) || softmax(base_logits.detach()/T) )
+#   推荐 0.1~0.5; 0=关闭
+lambda_distill:
+  value: 0.0
+distill_temp:
+  value: 4.0
+
+# === [E7 cosine_base_blend: 把 CLIP base_logits 硬接回主路径] ===
+# 仅 score_mode='cosine_only' 时生效. cosine_only forward 末尾做线性混合:
+#   logits_200 = (1-β) * cos(v_enh, t_enh)*scale  +  β * base_logits
+# β=0.0 → 纯 cosine_only (E0 行为, 已验证 H=37.41 失败)
+# β=0.3 → 30% CLIP 兜底 + 70% learned (E7 推荐起点)
+# β=0.5 → 各占一半 (E7' 备选)
+# β=1.0 → 完全 base_logits (退化, 写论文 ablation 极端值)
+cosine_base_blend:
+  value: 0.0
+
+# cosine_base_blend_mode:
+#   'fixed'      → 用上面 cosine_base_blend 标量
+#   'learnable'  → 加 nn.Parameter, sigmoid([0,1]) 模型自学最优混合比
+#                  初始化 cosine_base_blend_init=-1.0 (sigmoid≈0.27)
+cosine_base_blend_mode:
+  value: fixed
+cosine_base_blend_init:
+  value: -1.0
+
+# === [E8 动态 residual] ===
+# residual_mode:
+#   'fixed'             → 用上面 visual_residual / text_residual 标量
+#   'learnable_global'  → vr + tr 全局学 (2 个标量), sigmoid([0,1])
+#   'learnable_split'   → vr + tr_seen + tr_unseen 分类别学 (3 个标量, 推荐)
+#                          unseen 强偏置初始化 sigmoid(3)≈0.95 保护
+residual_mode:
+  value: fixed
+visual_residual_init:
+  value: 0.0      # sigmoid(0)=0.5, 跟 fixed 默认对齐
+text_residual_seen_init:
+  value: 0.0      # sigmoid(0)=0.5, seen 类自由适配
+text_residual_unseen_init:
+  value: 3.0      # sigmoid(3)≈0.953, unseen 类强保护回 CLIP 原始
+
+# === [双分支辅助 CE, 仅 cosine_only 生效] ===
+# 审稿人意见: cosine_only 中 CE 监督的是组合空间 cos(v_enh, t_enh),
+# s2v / v2s 自己不再是分类器, 失去了 add 模式里"双分类器互相补充"的设计
+# 修复: 给两路分数加辅助 CE, 让 s2v / v2s 各自也是合格的 seen 分类器
+# 这样上层 decoder_s2v / decoder_v2s 重新获得 "如何分类 seen" 的直接监督
+#
+# 训练时:  loss_aux = CE(score_s2v[:, seenclass] * T, seen_label)
+# 推荐值:  0.1~0.3, 0=关闭
+# T (aux_temp): 14.28 (= 1/0.07, 跟 logit_scale 同量级, 让 cos 量级匹配 CE)
+lambda_aux_s2v:
+  value: 0.0
+lambda_aux_v2s:
+  value: 0.0
+aux_temp:
+  value: 14.28
+
+# === [G3 CoCoOp Conditional Text Adapter] ===
+# 不用 CoCoOp 原 prompt token (本项目无 prompt), 改成"图像条件化文本残差":
+#   π(x) = MLP_meta(cls_token)              # [B, 768]
+#   t̃_c(x) = Norm(t_c + ρ · π(x))           # 每图自己的 200 类原型
+#   base_logits = γ · cos(cls, t̃_c(x))
+# zero init meta_net 末层, init π=0 训练前等价 baseline (无扰动)
+# ρ 控制扰动幅度, 推荐 0.05~0.1
+use_conditional_text:
+  value: True
+conditional_text_ratio:
+  value: 0.005
+meta_net_hidden:
+  value: 48
+
+# === [G2 MSDN++ Mutual Branch Distillation] ===
+# 让 score_s2v 和 score_v2s 在 seen 类上互相蒸馏 (.detach() 防梯度循环)
+#   L_msdn = (T²/2) [ KL(p_s2v.detach() || p_v2s) + KL(p_v2s.detach() || p_s2v) ]
+# 物理含义: s2v 教 v2s, v2s 也教 s2v, 防一个分支塌缩
+# 推荐 0.05~0.1, 跟 G1 的 lambda_topo / lambda_consist 同量级
+# add 模式 cosine_only 模式都可用 (forward 都透传了 score_s2v / score_v2s)
+lambda_msdn:
+  value: 0.05
+msdn_temp:
+  value: 2.0
+
+# === [多视角增强缓存开关] ===
+# True  → 加载 CUB_train_*_aug.pt (K 个增强视角, 训练时随机抽 1 个)
+# False → 加载单视角缓存 (默认, 无增强)
+# 启用前必须先跑: python tools/extract_features.py 4
+use_ag_jepa:
+  value: True
+jepa_topk:
+  value: 8
+jepa_hidden:
+  value: 512
+lambda_jepa:
+  value: 0.05
+lambda_jepa_neg:
+  value: 0.02
+jepa_neg_margin:
+  value: 0.2
+# MOD-005: AG-JEPA v2 默认关闭。关闭时沿用原 AG-JEPA：
+# 用类别文本选 top-K patch，循环 next seen 类作为负文本。
+# 打开时用近邻类别原型构造更判别的 patch 分数和 hard negative。
+use_ag_jepa_v2:
+  value: False
+jepa_v2_neighbor_topk:
+  value: 5
+jepa_v2_neighbor_weight:
+  value: 0.2
+# MOD-006: 反事实负文本挖掘默认关闭。
+# 打开时从当前 text_source 的类别文本原型里找 seen 近邻负类，
+# 对 logits_200 加轻量 margin loss，不改主干和评估。
+use_cf_neg_text:
+  value: False
+lambda_cf_neg_text:
+  value: 0.0
+cf_neg_topk:
+  value: 5
+cf_neg_margin:
+  value: 0.2
+
+use_aug_cache:
+  value: False
+
+# === [消融模式开关] ===
+# 'vgsr'         → 全功能 (Adapter + FAE + CrossModalTransformer + CIG)
+# 'clip_only'    → 纯 CLIP 余弦, 0 训练参数, 跳过训练直接评估 (~30 秒)
+# 'adapter_only' → 仅 Adapter 微调 seen 文本, 跳过 FAE 和 CrossModalTransformer
+model_mode:
+  value: vgsr
+
+# === [Resume / 续训] ===
+# resume_from:
+#   ''                    → 从头训练 (默认)
+#   'auto'                → 自动找 train_log/CUB/ 下最新 checkpoint
+#   '<path>'              → 指定路径加载
+#
+# resume_lr_schedule:
+#   'continue'            → 接着原 LR 进度 (需要完整 ckpt_full)
+#   'restart'             → LR 重启从 0.001 → cosine 到 epochs
+#   'finetune'            → LR 直接设 1e-4
+#
+# extra_epochs: 在 epochs 基础上额外加多少 epoch (默认 0)
+resume_from:
+  value: ''
+resume_lr_schedule:
+  value: finetune
+extra_epochs:
+  value: 0
+
+# ★ 2026-05-25: finetune_lr 可配置 (仅 resume_lr_schedule='finetune' 时生效)
+#   方案 B 多段训练:
+#     第一段 finetune (从 1e-3 头训降): finetune_lr=1e-4
+#     第二段 finetune (从 1e-4 续训降): finetune_lr=1e-5
+#   不写或留 1e-4 兼容旧实验 (H=72.95 ckpt 是 1e-4)
+finetune_lr:
+  value: 0.00001
+
+# ★ 2026-05-25: 一键多段训练 Multi-Stage Training (★ 推荐)
+# ──────────────────────────────────────────────────────────────
+# 原理: 一次启动跑完三段, 不需要手动续训. 每段开始时自动切 lr + 重置 cosine.
+# 启用: 取消下面 lr_stages 的注释, total_epochs 会自动等于三段 epochs 之和.
+# 关闭: 留空或注释掉, 走 epochs+extra_epochs 旧逻辑 (兼容 H=72.95 ckpt)
+#
+# 默认推荐三段 recipe (头训 + finetune-1e-4 + finetune-1e-5):
+#   Stage 1: lr=1e-3, 20ep cosine → 0   (探索)
+#   Stage 2: lr=1e-4, 30ep cosine → 0   (精修, H=72.95 在这段达到)
+#   Stage 3: lr=1e-5, 30ep cosine → 0   (微修, 看能否再升)
+#   总 80ep, ~30 分钟跑完, 自动保存 best ckpt
+#
+# 用法: 把 'lr_stages: null' 改成下面的列表, 启动训练即可:
+#   lr_stages:
+#     value:
+#       - {lr: 0.001,   epochs: 20}
+#       - {lr: 0.0001,  epochs: 30}
+#       - {lr: 0.00001, epochs: 30}
+lr_stages:
+  value:
+    - {lr: 0.001,   epochs: 20}
+    - {lr: 0.0001,  epochs: 30, restart_from_best: True}
+    - {lr: 0.00001, epochs: 10, restart_from_best: True}
+
+# === [CGC C5] Seen-Unseen Margin Loss (反事实校准最小可行版) ==========
+# ★ 2026-05-25 失败记录: lambda_bias=0.05 跑 50ep, ep1 H=40.47 直接崩盘
+#    根因: 训练 batch 全是 seen, CE 要求 max_seen > max_unseen, 而 L_bias=ReLU(max_seen - max_unseen)
+#    在惩罚 CE 想做的事, 两者打架, L_bias 赢, seen logit 被压成几乎=unseen
+#    现象: ZSL 81 不变 (unseen 内排序没坏), GZSL-S 暴跌 22, GZSL-U 拉到 81
+#    设计错误: 没考虑训练-测试对称性. 待将来用方案 2 (unseen anchor) 或方案 3 重新实施
+# 当前: lambda_bias=0 关闭, 不参与训练
+lambda_bias:
+  value: 0.0
+bias_delta:
+  value: 0.0
+
+# === [训练加速] ===
+# use_amp: 是否启用 Mixed Precision (autocast + GradScaler)
+#   True  (默认) → forward 走 fp16 张量核, FAE 加速 ~30%, GradScaler 防 underflow
+#   False        → 全程 fp32, 慢但绝对稳定
+# 配合 pin_memory + non_blocking (代码里恒开) 共同提速:
+#   单 epoch 预期 30s → 15-18s, 15 epoch 总训练 7-8 分 → 4-5 分
+use_amp:
+  value: False
+
+# === [MOD-001] 几何感知属性路由辅助 loss ===
+# 关闭时不改变主框架输出；打开后用 FAE 后的局部视觉 memory 匹配 312 个 CUB 属性原型。
+use_geo_attr_routing:
+  value: False
+lambda_geo_attr_routing:
+  value: 0.0
+geo_attr_route_topk:
+  value: 16
+geo_attr_route_temp:
+  value: 14.28
+
+# === [MOD-002] 拓扑感知的自适应文本属性库 ===
+# 关闭时不改变主框架文本原型；打开后用 CUB 属性文本原型生成低秩文本残差。
+use_text_attr_reservoir:
+  value: False
+text_attr_reservoir_ratio:
+  value: 0.0
+text_attr_reservoir_topk:
+  value: 32
+text_attr_reservoir_temp:
+  value: 10.0
+text_attr_reservoir_hidden:
+  value: 256
+
+# === [MOD-003] 不确定性门控的分支一致性蒸馏 ===
+# 关闭时完全沿用固定 lambda_msdn；打开后根据分支熵和 JS 分歧缩放 MSDN loss。
+use_uncertainty_msdn_gate:
+  value: False
+msdn_gate_min:
+  value: 0.2
+msdn_gate_js_alpha:
+  value: 4.0
+
+# === [MOD-004] 属性引导的局部补丁 OT 对齐 ===
+# 关闭时不传属性文本矩阵，不计算 patch-attribute OT loss。
+use_attr_patch_ot:
+  value: False
+lambda_attr_patch_ot:
+  value: 0.0
+attr_patch_ot_topk:
+  value: 16
+attr_patch_ot_temp:
+  value: 10.0
+attr_patch_ot_iter:
+  value: 3
+
