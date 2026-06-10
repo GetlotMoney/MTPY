@@ -1,4 +1,4 @@
-# GitHub 分支与提交规范
+﻿# GitHub 分支与提交规范
 
 ## 分支角色
 
@@ -101,3 +101,4 @@ Update idea tree feedback for <EXP-ID>
 ## 为什么 GitHub 要保存规范
 
 本机 skill 会变，聊天会被压缩，外部目录也可能不在另一台机器上。GitHub 仓库中的 `docs/experiment_workflow/` 是项目级真相来源，保证以后任何 agent 都能按同一套实验制度工作。
+
