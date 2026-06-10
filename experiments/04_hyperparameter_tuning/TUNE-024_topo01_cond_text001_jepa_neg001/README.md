@@ -41,9 +41,12 @@
 | CUB GZSL | 5 | 72.33 | 75.95 | 74.09 | 81.54 | 26 |
 | CUB GZSL | 42 | 70.35 | 77.60 | 73.80 | 81.62 | 37 |
 | CUB GZSL | 123 | 71.56 | 76.05 | 73.73 | 81.19 | 51 |
+| CUB GZSL | 2026 | 72.60 | 75.02 | 73.79 | 81.89 | 51 |
 
-**复核结论**: 三个 seed 全部在 73.70+ 区间，没有低于 72。seed=5 达到 74.09。baseline 成立。
+**复核结论**: 四个 seed 全部在 73.70+ 区间，没有低于 72。seed=5 达到 74.09。baseline 成立。
 
 **日志**:
 - seed=42: logs/seed-42/training_log.txt
 - seed=123: logs/seed-123/training_log.txt
+- seed=2026: logs/seed-2026/training_log.txt
+
