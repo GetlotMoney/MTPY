@@ -31,3 +31,19 @@
 ## 日志
 
 - 实验日志副本: logs/TUNE-024_CUB_seed5_training_log.txt
+
+## 多 seed 复核 (2026-06-10)
+
+按规范（seed=5/42/123/2026），seed=5 已有，补跑 seed=42、123。seed=2026 因中断暂缺。
+
+| 数据集 | seed | U | S | H | ZS | 最佳 epoch |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CUB GZSL | 5 | 72.33 | 75.95 | 74.09 | 81.54 | 26 |
+| CUB GZSL | 42 | 70.35 | 77.60 | 73.80 | 81.62 | 37 |
+| CUB GZSL | 123 | 71.56 | 76.05 | 73.73 | 81.19 | 51 |
+
+**复核结论**: 三个 seed 全部在 73.70+ 区间，没有低于 72。seed=5 达到 74.09。baseline 成立。
+
+**日志**:
+- seed=42: logs/seed-42/training_log.txt
+- seed=123: logs/seed-123/training_log.txt
