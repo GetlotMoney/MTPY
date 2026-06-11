@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import torch
 import torch.optim as optim
@@ -40,7 +41,10 @@ os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 
 def print_log(msg):
-    print(msg)
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        print(msg.encode('ascii', errors='replace').decode('ascii'))
     with open(LOG_FILE, "a", encoding='utf-8') as f:
         f.write(msg + "\n")
 
@@ -553,7 +557,8 @@ if lr_stages:
     for i, st in enumerate(lr_stages):
         cum += int(st['epochs'])
         stage_boundaries.append(cum)
-        print_log(f"  Stage {i+1}: lr={float(st['lr']):g}, epochs={int(st['epochs'])} "
+        _emin = float(st.get('eta_min', 0))
+        print_log(f"  Stage {i+1}: lr={float(st['lr']):g}, epochs={int(st['epochs'])}, eta_min={_emin:g} "
                   f"(epoch {cum - int(st['epochs']) + 1}..{cum})")
     total_epochs = stage_boundaries[-1]
     print_log(f"  Total epochs (sum of stages) = {total_epochs}")
@@ -562,10 +567,11 @@ if lr_stages:
     first = lr_stages[0]
     for g in optimizer.param_groups:
         g['lr'] = float(first['lr'])
+    _emin = float(first.get('eta_min', 0))
     scheduler = optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=int(first['epochs']))
-    print_log(f"  ✓ Stage 1 active: lr={float(first['lr']):g}, "
-              f"cosine T_max={int(first['epochs'])}")
+        optimizer, T_max=int(first['epochs']), eta_min=_emin)
+    print_log(f"  [OK] Stage 1 active: lr={float(first['lr']):g}, "
+              f"cosine T_max={int(first['epochs'])}, eta_min={_emin:g}")
 
 # ==========================================
 #   训练循环
@@ -773,10 +779,11 @@ for epoch in range(start_epoch, total_epochs + 1):
 
             for g in optimizer.param_groups:
                 g['lr'] = new_lr
+            _emin = float(next_stage.get('eta_min', 0))
             scheduler = optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=new_T)
+                optimizer, T_max=new_T, eta_min=_emin)
             print_log(f"\n  ★★★ Stage {next_idx + 1} starts at epoch {epoch + 1} "
-                      f"★★★\n     lr → {new_lr:g}, cosine T_max={new_T}")
+                      f"★★★\n     lr → {new_lr:g}, cosine T_max={new_T}, eta_min={_emin:g}")
 
     # ---------- 动态 residual / blend 系数 (仅 cosine_only + learnable 模式打印) ----------
     # 注: add 模式下这些 Parameter 虽然存在但不参与 forward, 打印没意义, 跳过

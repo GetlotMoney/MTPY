@@ -400,7 +400,7 @@ jepa_hidden:
 lambda_jepa:
   value: 0.05
 lambda_jepa_neg:
-  value: 0.01
+  value: 0.005
 jepa_neg_margin:
   value: 0.2
 # MOD-005: AG-JEPA v2 Ĭ�Ϲرա��ر�ʱ����ԭ AG-JEPA��
@@ -481,9 +481,9 @@ finetune_lr:
 #       - {lr: 0.00001, epochs: 30}
 lr_stages:
   value:
-    - {lr: 0.001,  epochs: 20, eta_min: 1e-5}
-    - {lr: 0.0001, epochs: 20, eta_min: 1e-6, restart_from_best: False}
-    - {lr: 0.00001, epochs: 10, eta_min: 1e-7, restart_from_best: False}
+    - {lr: 0.001,   epochs: 20}
+    - {lr: 0.0001,  epochs: 30, restart_from_best: False}
+    - {lr: 0.00001, epochs: 10, restart_from_best: False}
 
 # === [CGC C5] Seen-Unseen Margin Loss (����ʵУ׼��С���а�) ==========
 # �� 2026-05-25 ʧ�ܼ�¼: lambda_bias=0.05 �� 50ep, ep1 H=40.47 ֱ�ӱ���
