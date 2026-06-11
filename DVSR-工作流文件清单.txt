@@ -1,0 +1,52 @@
+﻿============================================================
+  DVSR 实验自动化工作流 — 完整文件清单
+============================================================
+
+【1. Codex Skill — 实验自动化主入口】
+  路径: C:\Users\Administrator\.codex\skills\experiment-agent-workflow\
+
+  - SKILL.md                                   (主入口, skill 定义与所有规则)
+  - references/claude-reviewer-template.md     (Claude Code 审查模板)
+  - references/experiment-files.md             (实验文件规范)
+  - agents/openai.yaml                         (OpenAI 子代理配置)
+
+【2. Claude Code Worker MCP — Agent 间通信】
+  路径: C:\Users\Administrator\Desktop\项目\DVSR\mcp\claude-code-worker-mcp\
+
+  - package.json                               (Node 包定义)
+  - tsconfig.json                              (TypeScript 配置)
+  - src/index.ts                               (MCP server 源码)
+  - dist/index.js                              (编译后的 MCP server)
+  - README.md                                  (MCP 说明)
+
+【3. Codex 全局配置 — MCP 注册】
+  路径: C:\Users\Administrator\.codex\
+
+  - config.toml.bak-claude-worker-lines-20260607-012034   (MCP 注册参考配置)
+  - config.toml                                           (当前配置, 已移除 MCP)
+
+【4. 项目规范文档】
+  路径: C:\Users\Administrator\Desktop\项目\DVSR\docs\experiment_workflow\
+
+  - README.md                                  (工作流总览)
+  - experiment_taxonomy.md                     (实验分类体系: MOD/COMBO/ABL/TUNE 等)
+  - github_branching.md                        (Git 分支规范)
+  - claude_review.md                           (Claude 三轮审查规范)
+  - skill_cv_experiment.md                     (Skill 使用说明)
+  - runbook.md                                 (操作手册)
+  - idea_tree_feedback.md                      (创意树反馈机制)
+
+【5. 项目实验管理文件】
+  路径: C:\Users\Administrator\Desktop\项目\DVSR\
+
+  - backlog.md                                 (实验待办队列)
+  - CLAUDE.md                                  (Claude Code 项目配置)
+  - experiments/EXPERIMENT_REGISTRY.md          (实验注册表/索引)
+  - experiments/00_experiment_templates/        (实验 README 模板)
+  - experiments/08_framework_flow_records/      (每个实验的流程图记录)
+  - experiments/.agent-queue/                  (Agent 间队列: inbox/outbox/state)
+
+【6. Git 分支规范 (运行时)】
+  - main                                       (主分支, baseline 代码)
+  - experiment/<type>-<id>-<date>               (每个实验一个分支)
+  - 分支从 main 创建, 实验完成后 push 不 merge

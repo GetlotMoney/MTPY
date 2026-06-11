@@ -39,7 +39,7 @@
 | 纯 CLIP 零样本 | 不训练 | 60.88 | 61.69 | 61.28 | 78.07 |
 
 注意：
-- **当前最佳 TUNE-024 来自 2026-06-10 调参批次，首次突破 H=74**
+- **当前最佳 TUNE-024 来自 2026-06-10 调参批次，首次突破 H=74，目标 H=76**
 - 项目正式比较口径不是多 seed 均值，而是在预先记录的 seed 候选池中取主指标 H 的最大值
 - `H=73.05` / `H=73.20` 属于热重启或离群刷分口径，不作为当前严格连续主基线
 
@@ -172,7 +172,7 @@ docs/experiment_workflow/
 ## 环境
 
 - 操作系统：Windows
-- Python 3.x，conda 环境（推荐 `dassl_clip`）
+- Python 3.x，conda 环境（`dvsr_gpu`）
 - CUDA: cuda:0 (CUB/SUN), cuda:1 (AWA2)
 - 主要依赖: `torch`, `clip` (OpenAI), `numpy`, `scipy`, `yaml`, `Pillow`
 
