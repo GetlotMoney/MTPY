@@ -1,0 +1,300 @@
+dataset:
+  value: CUB
+num_class:
+  value: 200
+num_attribute:
+  value: 312
+img_size:
+  value: 448
+resnet_region:
+  value: 196
+dim_f_clip:
+  value: 768
+dim_v_clip:
+  value: 768
+device:
+  value: cuda:0
+batch_size:
+  value: 64
+epochs:
+  value: 30
+use_unzip:
+  value: True
+random_seed:
+  value: 5
+
+lambda_reg:
+  value: 0.3
+lambda_con:
+  value: 0.2
+
+normalize_V:
+  value: False
+tf_SAtt:
+  value: True
+tf_ec_layer:
+  value: 1
+tf_dc_layer:
+  value: 1
+tf_clip_common_dim:
+  value: 300
+tf_aux_embed:
+  value: True
+tf_dim_feedforward:
+  value: 512
+
+classifier_metric:
+  value: dot
+
+is_bias:
+  value: False
+
+adapter_ratio:
+  value: 0.2
+use_gpt:
+  value: True
+
+text_source:
+  value: gpt55
+
+text_alpha:
+  value: 1.0
+
+tf_common_dim:
+  value: 512
+tf_heads:
+  value: 4
+tf_dropout:
+  value: 0.1
+weight_s2v:
+  value: 0.5
+text_residual:
+  value: 0.5
+visual_residual:
+  value: 0.5
+local_weight:
+  value: 0.3
+
+pool_method:
+  value: mean
+
+pool_dynamic:
+  value: fixed
+pool_lambda_fixed:
+  value: 0.5
+pool_lambda_init:
+  value: 0.5
+
+lastvit_k:
+  value: 1
+lastvit_sigma:
+  value: 0.0
+
+use_lastvit_cls:
+  value: False
+lastvit_cls_k:
+  value: 1
+lastvit_cls_sigma:
+  value: 0.0
+lastvit_residual:
+  value: 0.3
+
+lastvit_select_k:
+  value: 32
+lastvit_select_sigma:
+  value: 0.0
+lastvit_select_largest:
+  value: True
+lastvit_select_formula:
+  value: v2_abs_mean
+
+gating:
+  value: fixed
+
+gating_dynamic:
+  value: fixed
+gating_alpha_init:
+  value: 0.3
+
+weight_s2v_mode:
+  value: fixed
+weight_s2v_init:
+  value: 0.5
+
+gate_hidden:
+  value: 64
+
+score_mode:
+  value: add
+
+use_fae:
+  value: True
+gzsl_bias:
+  value: 0.0
+prior_correction:
+  value: none
+prior_temp:
+  value: 1.0
+prior_max_bias:
+  value: 3.0
+
+lambda_cal:
+  value: 0.0
+
+lambda_consist:
+  value: 0.05
+consist_temp:
+  value: 2.0
+
+consist_dynamic:
+  value: True
+consist_dynamic_gamma:
+  value: 0.1
+
+lambda_l2sp:
+  value: 0.0
+
+lambda_topo_pearson:
+  value: 0.15
+
+lambda_v_anchor:
+  value: 0.0
+lambda_t_unseen_anchor:
+  value: 0.0
+lambda_distill:
+  value: 0.0
+distill_temp:
+  value: 4.0
+
+cosine_base_blend:
+  value: 0.0
+
+cosine_base_blend_mode:
+  value: fixed
+cosine_base_blend_init:
+  value: -1.0
+
+residual_mode:
+  value: fixed
+visual_residual_init:
+  value: 0.0
+text_residual_seen_init:
+  value: 0.0
+text_residual_unseen_init:
+  value: 3.0
+
+lambda_aux_s2v:
+  value: 0.0
+lambda_aux_v2s:
+  value: 0.0
+aux_temp:
+  value: 14.28
+
+use_conditional_text:
+  value: True
+conditional_text_ratio:
+  value: 0.010
+meta_net_hidden:
+  value: 48
+
+lambda_msdn:
+  value: 0.05
+msdn_temp:
+  value: 2.0
+
+use_ag_jepa:
+  value: True
+jepa_topk:
+  value: 8
+jepa_hidden:
+  value: 512
+lambda_jepa:
+  value: 0.05
+lambda_jepa_neg:
+  value: 0.01
+jepa_neg_margin:
+  value: 0.2
+
+use_ag_jepa_v2:
+  value: False
+jepa_v2_neighbor_topk:
+  value: 5
+jepa_v2_neighbor_weight:
+  value: 0.2
+
+use_cf_neg_text:
+  value: False
+lambda_cf_neg_text:
+  value: 0.0
+cf_neg_topk:
+  value: 5
+cf_neg_margin:
+  value: 0.2
+
+use_aug_cache:
+  value: False
+
+model_mode:
+  value: vgsr
+
+resume_from:
+  value: ''
+resume_lr_schedule:
+  value: finetune
+extra_epochs:
+  value: 0
+
+finetune_lr:
+  value: 0.00001
+
+lr_stages:
+  value:
+    - {lr: 0.001,  epochs: 20, eta_min: 1e-5}
+    - {lr: 0.0001, epochs: 20, eta_min: 1e-6, restart_from_best: False}
+    - {lr: 0.00001, epochs: 10, eta_min: 1e-7, restart_from_best: False}
+
+lambda_bias:
+  value: 0.0
+bias_delta:
+  value: 0.0
+
+use_amp:
+  value: False
+
+use_geo_attr_routing:
+  value: False
+lambda_geo_attr_routing:
+  value: 0.0
+geo_attr_route_topk:
+  value: 16
+geo_attr_route_temp:
+  value: 14.28
+
+use_text_attr_reservoir:
+  value: False
+text_attr_reservoir_ratio:
+  value: 0.0
+text_attr_reservoir_topk:
+  value: 32
+text_attr_reservoir_temp:
+  value: 10.0
+text_attr_reservoir_hidden:
+  value: 256
+
+use_uncertainty_msdn_gate:
+  value: False
+msdn_gate_min:
+  value: 0.2
+msdn_gate_js_alpha:
+  value: 4.0
+
+use_attr_patch_ot:
+  value: False
+lambda_attr_patch_ot:
+  value: 0.0
+attr_patch_ot_topk:
+  value: 16
+attr_patch_ot_temp:
+  value: 10.0
+attr_patch_ot_iter:
+  value: 3

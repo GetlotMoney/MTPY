@@ -1,0 +1,1280 @@
+============================================================
+  CLIP + Adapter + GPT  |  CUB GZSL Training
+============================================================
+  Log file  : ./train_log/CUB/training_log_CUB_2026-06-13_11-29-39.txt
+  Config    : experiments\04_hyperparameter_tuning\TUNE-038_topo008\config.yaml
+  Device    : cuda:0
+  Epochs    : 30
+  Batch size: 64
+  Random seed: 5
+============================================================
+
+┌─ Module Configuration ───────────────────────────────────┐
+│  model_mode    : vgsr
+│  text_source   : gpt55
+│  use_aug_cache : False
+├─ Architecture ──────────────────────────────────────────┤
+│  use_fae       : True
+│  adapter_ratio : 0.2
+│  tf_common_dim : 512
+│  tf_heads      : 4
+│  tf_dropout    : 0.1
+├─ Pooling (s2v) ─────────────────────────────────────────┤
+│  pool_method   : mean
+├─ LaSt-ViT-CLS (CLIP CLS 增强) ──────────────────────────┤
+│  use_lastvit_cls : False
+├─ Scoring & Gating ──────────────────────────────────────┤
+│  score_mode    : add
+│  gating        : fixed
+│  local_weight  : 0.3
+│  weight_s2v    : 0.5
+│  text_residual : 0.5
+│  visual_residual: 0.5
+├─ Loss Weights ──────────────────────────────────────────┤
+│  lambda_cal    : 0.0
+│  lambda_consist: 0.05
+│  lambda_l2sp   : 0.0
+│  lambda_topo   : 0.08
+│  lambda_aux_s2v: 0.0
+│  lambda_aux_v2s: 0.0
+│  aux_temp      : 14.28
+│  use_geo_attr  : False
+│  lambda_geo_attr: 0.0
+│  use_text_reservoir: False
+│  text_reservoir_ratio: 0.0
+│  use_msdn_gate: False
+│  use_attr_patch_ot: False
+│  use_ag_jepa_v2: False
+│  use_cf_neg_text: False
+│  lambda_cf_neg_text: 0.0
+├─ Resume ────────────────────────────────────────────────┤
+│  resume_from        : ''
+│  resume_lr_schedule : finetune
+│  extra_epochs       : 0
+├─ Speed Optimizations ───────────────────────────────────┤
+│  use_amp       : False  (BF16 autocast)
+│  pin_memory    : enabled if patch cache loaded  non_blocking H2D : True
+└─────────────────────────────────────────────────────────┘
+
+[1/5] Loading CLIP (ViT-L/14@336px)...
+      CLIP loaded & frozen.
+
+[2/5] Loading CUB Dataset...
+      Train images : 7057
+      Seen classes : 150  (used for training)
+      Unseen classes: 50  (zero-shot target)
+      Test seen    : 1764 images
+      Test unseen  : 2967 images
+
+[★] Loading train PATCH + CLS features from cache (single-view)...
+      ★ Patches pinned to locked CPU memory (non_blocking H2D enabled)
+      train_cls:     torch.Size([7057, 768])  dtype=torch.float32  device=cpu
+      train_patches: torch.Size([7057, 576, 768])  dtype=torch.float16  device=cpu
+      train_labels:  torch.Size([7057])
+
+[3/5] Encoding class name text features...
+      ★ class_text_embeds loaded from cache: torch.Size([200, 768])
+
+[4/5] Using GPT-5.5 descriptions: .\data\gpt4_data\cub_gpt55.pt
+      ★ gpt_text_embeds loaded from cache: torch.Size([200, 768])
+
+[5/5] Initializing model...
+      Total params    : 11,298,967
+      Trainable params: 11,145,367
+
+[Multi-Stage] 3 stages enabled (overrides epochs/extra_epochs):
+  Stage 1: lr=0.001, epochs=20, eta_min=1e-05 (epoch 1..20)
+  Stage 2: lr=0.0001, epochs=20, eta_min=1e-06 (epoch 21..40)
+  Stage 3: lr=1e-05, epochs=10, eta_min=1e-07 (epoch 41..50)
+  Total epochs (sum of stages) = 50
+  [OK] Stage 1 active: lr=0.001, cosine T_max=20, eta_min=1e-05
+
+============================================================
+  Start Training: epoch [1/50], 110 iters/epoch
+============================================================
+  ⚠ AMP disabled (use_amp=False), running fp32
+
+  ★ Model mode: vgsr
+
+────────────────────────────────────────────────────────────
+  Epoch [1/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 2.3129 | Avg: 2.7591 | CE: 2.247  Cons: 0.775  L2SP: 0.0000  Topo: 0.3216  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0018  MGate: 1.000  Bias: 0.0000  JEPA: 0.0341  JNeg: 0.2000  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 2.2156 | Avg: 2.5025 | CE: 2.146  Cons: 0.859  L2SP: 0.0000  Topo: 0.3162  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0082  MGate: 1.000  Bias: 0.0000  JEPA: 0.0493  JNeg: 0.1998  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 2.0438 | Avg: 2.3543 | CE: 1.960  Cons: 1.053  L2SP: 0.0000  Topo: 0.3317  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0886  MGate: 1.000  Bias: 0.0000  JEPA: 0.0649  JNeg: 0.1946  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 1.7930 | Avg: 2.2539 | CE: 1.697  Cons: 1.235  L2SP: 0.0000  Topo: 0.3698  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.1281  MGate: 1.000  Bias: 0.0000  JEPA: 0.0673  JNeg: 0.1980  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 1.6966 | Avg: 2.1710 | CE: 1.599  Cons: 1.381  L2SP: 0.0000  Topo: 0.3694  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0184  MGate: 1.000  Bias: 0.0000  JEPA: 0.0971  JNeg: 0.1959  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 1.5313 | Avg: 2.1299 | CE: 1.434  Cons: 1.370  L2SP: 0.0000  Topo: 0.3621  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0498  MGate: 1.000  Bias: 0.0000  JEPA: 0.0791  JNeg: 0.1959  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [1/50] Train Summary
+     Avg Loss : 2.1299
+     LR       : 0.000994
+
+  >> Epoch [1/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H6327.pth
+
+  ┌─ Epoch [1/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 66.77%
+  │  GZSL-S (Seen Acc)   : 60.13%
+  │  GZSL-H (Harmonic)   : 63.27%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.09%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [2/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.8070 | Avg: 1.6921 | CE: 1.703  Cons: 1.481  L2SP: 0.0000  Topo: 0.3635  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0811  MGate: 1.000  Bias: 0.0000  JEPA: 0.0917  JNeg: 0.1964  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 1.6493 | Avg: 1.6862 | CE: 1.545  Cons: 1.597  L2SP: 0.0000  Topo: 0.3541  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0075  MGate: 1.000  Bias: 0.0000  JEPA: 0.1069  JNeg: 0.1903  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 1.5820 | Avg: 1.6401 | CE: 1.480  Cons: 1.527  L2SP: 0.0000  Topo: 0.3617  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0187  MGate: 1.000  Bias: 0.0000  JEPA: 0.0750  JNeg: 0.1865  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 1.5326 | Avg: 1.6116 | CE: 1.419  Cons: 1.900  L2SP: 0.0000  Topo: 0.3766  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0076  MGate: 1.000  Bias: 0.0000  JEPA: 0.0339  JNeg: 0.1938  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 1.4094 | Avg: 1.5784 | CE: 1.296  Cons: 1.851  L2SP: 0.0000  Topo: 0.3929  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0136  MGate: 1.000  Bias: 0.0000  JEPA: 0.0276  JNeg: 0.1966  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 1.3278 | Avg: 1.5591 | CE: 1.201  Cons: 2.111  L2SP: 0.0000  Topo: 0.3929  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0865  MGate: 1.000  Bias: 0.0000  JEPA: 0.0296  JNeg: 0.1945  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [2/50] Train Summary
+     Avg Loss : 1.5591
+     LR       : 0.000976
+
+  >> Epoch [2/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H6523.pth
+
+  ┌─ Epoch [2/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 64.76%
+  │  GZSL-S (Seen Acc)   : 65.72%
+  │  GZSL-H (Harmonic)   : 65.23%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 80.73%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [3/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.4655 | Avg: 1.3467 | CE: 1.348  Cons: 1.950  L2SP: 0.0000  Topo: 0.3892  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0167  MGate: 1.000  Bias: 0.0000  JEPA: 0.0469  JNeg: 0.1987  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 1.2992 | Avg: 1.3333 | CE: 1.175  Cons: 2.106  L2SP: 0.0000  Topo: 0.3936  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0249  MGate: 1.000  Bias: 0.0000  JEPA: 0.0482  JNeg: 0.1933  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 1.2872 | Avg: 1.3110 | CE: 1.168  Cons: 1.990  L2SP: 0.0000  Topo: 0.3963  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0121  MGate: 1.000  Bias: 0.0000  JEPA: 0.0372  JNeg: 0.1958  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 1.2192 | Avg: 1.3025 | CE: 1.088  Cons: 2.367  L2SP: 0.0000  Topo: 0.3904  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0098  MGate: 1.000  Bias: 0.0000  JEPA: 0.0263  JNeg: 0.1979  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 1.1539 | Avg: 1.2774 | CE: 1.023  Cons: 2.314  L2SP: 0.0000  Topo: 0.4152  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0078  MGate: 1.000  Bias: 0.0000  JEPA: 0.0337  JNeg: 0.1967  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 1.1891 | Avg: 1.2669 | CE: 1.060  Cons: 2.271  L2SP: 0.0000  Topo: 0.4051  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0137  MGate: 1.000  Bias: 0.0000  JEPA: 0.0252  JNeg: 0.1962  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [3/50] Train Summary
+     Avg Loss : 1.2669
+     LR       : 0.000946
+
+  >> Epoch [3/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H6654.pth
+
+  ┌─ Epoch [3/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 62.52%
+  │  GZSL-S (Seen Acc)   : 71.11%
+  │  GZSL-H (Harmonic)   : 66.54%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 80.97%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [4/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 1.1675 | Avg: 1.1518 | CE: 1.028  Cons: 2.545  L2SP: 0.0000  Topo: 0.4300  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0158  MGate: 1.000  Bias: 0.0000  JEPA: 0.0224  JNeg: 0.1964  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 1.1344 | Avg: 1.1361 | CE: 1.001  Cons: 2.370  L2SP: 0.0000  Topo: 0.4215  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0144  MGate: 1.000  Bias: 0.0000  JEPA: 0.0298  JNeg: 0.1964  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.9100 | Avg: 1.1038 | CE: 0.764  Cons: 2.735  L2SP: 0.0000  Topo: 0.4190  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0307  MGate: 1.000  Bias: 0.0000  JEPA: 0.0268  JNeg: 0.1917  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.9460 | Avg: 1.0900 | CE: 0.801  Cons: 2.760  L2SP: 0.0000  Topo: 0.4188  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0067  MGate: 1.000  Bias: 0.0000  JEPA: 0.0293  JNeg: 0.1982  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.9513 | Avg: 1.0763 | CE: 0.804  Cons: 2.805  L2SP: 0.0000  Topo: 0.4347  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0049  MGate: 1.000  Bias: 0.0000  JEPA: 0.0248  JNeg: 0.1972  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.9403 | Avg: 1.0704 | CE: 0.791  Cons: 2.856  L2SP: 0.0000  Topo: 0.4279  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0118  MGate: 1.000  Bias: 0.0000  JEPA: 0.0300  JNeg: 0.1966  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [4/50] Train Summary
+     Avg Loss : 1.0704
+     LR       : 0.000905
+
+  >> Epoch [4/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H6738.pth
+
+  ┌─ Epoch [4/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 61.21%
+  │  GZSL-S (Seen Acc)   : 74.94%
+  │  GZSL-H (Harmonic)   : 67.38%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.04%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [5/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9570 | Avg: 0.9559 | CE: 0.809  Cons: 2.780  L2SP: 0.0000  Topo: 0.4408  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0052  MGate: 1.000  Bias: 0.0000  JEPA: 0.0358  JNeg: 0.1933  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.9076 | Avg: 0.9647 | CE: 0.754  Cons: 2.977  L2SP: 0.0000  Topo: 0.4380  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0119  MGate: 1.000  Bias: 0.0000  JEPA: 0.0249  JNeg: 0.1938  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.8272 | Avg: 0.9538 | CE: 0.670  Cons: 3.098  L2SP: 0.0000  Topo: 0.4353  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0055  MGate: 1.000  Bias: 0.0000  JEPA: 0.0324  JNeg: 0.1868  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.8306 | Avg: 0.9356 | CE: 0.672  Cons: 3.162  L2SP: 0.0000  Topo: 0.4360  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0051  MGate: 1.000  Bias: 0.0000  JEPA: 0.0308  JNeg: 0.1928  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.7641 | Avg: 0.9275 | CE: 0.598  Cons: 3.421  L2SP: 0.0000  Topo: 0.4374  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0037  MGate: 1.000  Bias: 0.0000  JEPA: 0.0289  JNeg: 0.1935  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 1.0003 | Avg: 0.9269 | CE: 0.833  Cons: 3.441  L2SP: 0.0000  Topo: 0.4489  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0035  MGate: 1.000  Bias: 0.0000  JEPA: 0.0286  JNeg: 0.1862  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [5/50] Train Summary
+     Avg Loss : 0.9269
+     LR       : 0.000855
+
+  >> Epoch [5/50] Evaluating GZSL...
+
+  ┌─ Epoch [5/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 55.48%
+  │  GZSL-S (Seen Acc)   : 78.15%
+  │  GZSL-H (Harmonic)   : 64.89%  
+  │  ZSL    (ZS Acc)     : 81.07%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [6/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.9302 | Avg: 0.9160 | CE: 0.773  Cons: 3.071  L2SP: 0.0000  Topo: 0.4448  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0074  MGate: 1.000  Bias: 0.0000  JEPA: 0.0337  JNeg: 0.1799  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.8617 | Avg: 0.8851 | CE: 0.692  Cons: 3.506  L2SP: 0.0000  Topo: 0.4446  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0143  MGate: 1.000  Bias: 0.0000  JEPA: 0.0297  JNeg: 0.1753  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7889 | Avg: 0.8660 | CE: 0.623  Cons: 3.391  L2SP: 0.0000  Topo: 0.4446  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0027  MGate: 1.000  Bias: 0.0000  JEPA: 0.0368  JNeg: 0.1835  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.8323 | Avg: 0.8616 | CE: 0.662  Cons: 3.529  L2SP: 0.0000  Topo: 0.4554  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0078  MGate: 1.000  Bias: 0.0000  JEPA: 0.0317  JNeg: 0.1850  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.8942 | Avg: 0.8491 | CE: 0.720  Cons: 3.699  L2SP: 0.0000  Topo: 0.4430  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0026  MGate: 1.000  Bias: 0.0000  JEPA: 0.0395  JNeg: 0.1873  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.8672 | Avg: 0.8457 | CE: 0.699  Cons: 3.446  L2SP: 0.0000  Topo: 0.4579  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0049  MGate: 1.000  Bias: 0.0000  JEPA: 0.0328  JNeg: 0.1852  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [6/50] Train Summary
+     Avg Loss : 0.8457
+     LR       : 0.000796
+
+  >> Epoch [6/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7022.pth
+
+  ┌─ Epoch [6/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.09%
+  │  GZSL-S (Seen Acc)   : 69.38%
+  │  GZSL-H (Harmonic)   : 70.22%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.46%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [7/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7784 | Avg: 0.8139 | CE: 0.598  Cons: 3.918  L2SP: 0.0000  Topo: 0.4454  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0032  MGate: 1.000  Bias: 0.0000  JEPA: 0.0330  JNeg: 0.1949  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.8221 | Avg: 0.7977 | CE: 0.641  Cons: 3.924  L2SP: 0.0000  Topo: 0.4576  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0045  MGate: 1.000  Bias: 0.0000  JEPA: 0.0375  JNeg: 0.1803  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7060 | Avg: 0.7900 | CE: 0.518  Cons: 4.205  L2SP: 0.0000  Topo: 0.4514  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0030  MGate: 1.000  Bias: 0.0000  JEPA: 0.0379  JNeg: 0.1778  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6081 | Avg: 0.7766 | CE: 0.422  Cons: 4.098  L2SP: 0.0000  Topo: 0.4553  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0056  MGate: 1.000  Bias: 0.0000  JEPA: 0.0363  JNeg: 0.1843  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.7992 | Avg: 0.7682 | CE: 0.604  Cons: 4.449  L2SP: 0.0000  Topo: 0.4568  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0235  MGate: 1.000  Bias: 0.0000  JEPA: 0.0323  JNeg: 0.1845  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.8196 | Avg: 0.7655 | CE: 0.624  Cons: 4.444  L2SP: 0.0000  Topo: 0.4655  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0139  MGate: 1.000  Bias: 0.0000  JEPA: 0.0404  JNeg: 0.1758  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [7/50] Train Summary
+     Avg Loss : 0.7655
+     LR       : 0.000730
+
+  >> Epoch [7/50] Evaluating GZSL...
+
+  ┌─ Epoch [7/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 68.34%
+  │  GZSL-S (Seen Acc)   : 72.21%
+  │  GZSL-H (Harmonic)   : 70.22%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [8/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6931 | Avg: 0.7369 | CE: 0.500  Cons: 4.423  L2SP: 0.0000  Topo: 0.4434  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0112  MGate: 1.000  Bias: 0.0000  JEPA: 0.0390  JNeg: 0.1889  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.7442 | Avg: 0.7348 | CE: 0.555  Cons: 4.226  L2SP: 0.0000  Topo: 0.4615  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0045  MGate: 1.000  Bias: 0.0000  JEPA: 0.0393  JNeg: 0.1829  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.8841 | Avg: 0.7343 | CE: 0.696  Cons: 4.134  L2SP: 0.0000  Topo: 0.4567  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0116  MGate: 1.000  Bias: 0.0000  JEPA: 0.0496  JNeg: 0.1844  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6487 | Avg: 0.7277 | CE: 0.456  Cons: 4.406  L2SP: 0.0000  Topo: 0.4426  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0095  MGate: 1.000  Bias: 0.0000  JEPA: 0.0442  JNeg: 0.1951  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5914 | Avg: 0.7257 | CE: 0.386  Cons: 4.910  L2SP: 0.0000  Topo: 0.4648  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0108  MGate: 1.000  Bias: 0.0000  JEPA: 0.0326  JNeg: 0.1737  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6972 | Avg: 0.7217 | CE: 0.496  Cons: 4.693  L2SP: 0.0000  Topo: 0.4677  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0214  MGate: 1.000  Bias: 0.0000  JEPA: 0.0344  JNeg: 0.1789  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [8/50] Train Summary
+     Avg Loss : 0.7217
+     LR       : 0.000658
+
+  >> Epoch [8/50] Evaluating GZSL...
+
+  ┌─ Epoch [8/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.70%
+  │  GZSL-S (Seen Acc)   : 65.40%
+  │  GZSL-H (Harmonic)   : 69.74%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [9/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6372 | Avg: 0.6934 | CE: 0.436  Cons: 4.726  L2SP: 0.0000  Topo: 0.4547  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0249  MGate: 1.000  Bias: 0.0000  JEPA: 0.0344  JNeg: 0.1822  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.6319 | Avg: 0.6914 | CE: 0.428  Cons: 4.847  L2SP: 0.0000  Topo: 0.4608  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0055  MGate: 1.000  Bias: 0.0000  JEPA: 0.0312  JNeg: 0.1799  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7254 | Avg: 0.6910 | CE: 0.519  Cons: 4.901  L2SP: 0.0000  Topo: 0.4579  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0139  MGate: 1.000  Bias: 0.0000  JEPA: 0.0485  JNeg: 0.1818  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5912 | Avg: 0.6803 | CE: 0.381  Cons: 5.146  L2SP: 0.0000  Topo: 0.4478  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0099  MGate: 1.000  Bias: 0.0000  JEPA: 0.0393  JNeg: 0.1822  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.6451 | Avg: 0.6742 | CE: 0.435  Cons: 5.084  L2SP: 0.0000  Topo: 0.4653  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0115  MGate: 1.000  Bias: 0.0000  JEPA: 0.0320  JNeg: 0.1768  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.7350 | Avg: 0.6745 | CE: 0.516  Cons: 5.498  L2SP: 0.0000  Topo: 0.4596  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0206  MGate: 1.000  Bias: 0.0000  JEPA: 0.0347  JNeg: 0.1825  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [9/50] Train Summary
+     Avg Loss : 0.6745
+     LR       : 0.000582
+
+  >> Epoch [9/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7144.pth
+
+  ┌─ Epoch [9/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 70.04%
+  │  GZSL-S (Seen Acc)   : 72.91%
+  │  GZSL-H (Harmonic)   : 71.44%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.47%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [10/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7554 | Avg: 0.6532 | CE: 0.540  Cons: 5.343  L2SP: 0.0000  Topo: 0.4641  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0108  MGate: 1.000  Bias: 0.0000  JEPA: 0.0380  JNeg: 0.1759  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.6867 | Avg: 0.6439 | CE: 0.476  Cons: 5.105  L2SP: 0.0000  Topo: 0.4567  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0124  MGate: 1.000  Bias: 0.0000  JEPA: 0.0463  JNeg: 0.1872  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7570 | Avg: 0.6513 | CE: 0.540  Cons: 5.428  L2SP: 0.0000  Topo: 0.4583  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0154  MGate: 1.000  Bias: 0.0000  JEPA: 0.0408  JNeg: 0.1647  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5906 | Avg: 0.6489 | CE: 0.367  Cons: 5.764  L2SP: 0.0000  Topo: 0.4620  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0132  MGate: 1.000  Bias: 0.0000  JEPA: 0.0395  JNeg: 0.1490  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.6624 | Avg: 0.6416 | CE: 0.443  Cons: 5.541  L2SP: 0.0000  Topo: 0.4523  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0132  MGate: 1.000  Bias: 0.0000  JEPA: 0.0469  JNeg: 0.1866  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6031 | Avg: 0.6413 | CE: 0.390  Cons: 5.222  L2SP: 0.0000  Topo: 0.4556  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0125  MGate: 1.000  Bias: 0.0000  JEPA: 0.0472  JNeg: 0.1895  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [10/50] Train Summary
+     Avg Loss : 0.6413
+     LR       : 0.000505
+
+  >> Epoch [10/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7209.pth
+
+  ┌─ Epoch [10/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.27%
+  │  GZSL-S (Seen Acc)   : 70.95%
+  │  GZSL-H (Harmonic)   : 72.09%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.41%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [11/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7063 | Avg: 0.6403 | CE: 0.492  Cons: 5.313  L2SP: 0.0000  Topo: 0.4578  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0206  MGate: 1.000  Bias: 0.0000  JEPA: 0.0367  JNeg: 0.1702  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5591 | Avg: 0.6333 | CE: 0.340  Cons: 5.578  L2SP: 0.0000  Topo: 0.4528  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0086  MGate: 1.000  Bias: 0.0000  JEPA: 0.0373  JNeg: 0.1813  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5688 | Avg: 0.6312 | CE: 0.353  Cons: 5.374  L2SP: 0.0000  Topo: 0.4588  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0134  MGate: 1.000  Bias: 0.0000  JEPA: 0.0398  JNeg: 0.1804  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.7133 | Avg: 0.6297 | CE: 0.489  Cons: 5.723  L2SP: 0.0000  Topo: 0.4733  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0183  MGate: 1.000  Bias: 0.0000  JEPA: 0.0401  JNeg: 0.1755  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5560 | Avg: 0.6329 | CE: 0.335  Cons: 5.602  L2SP: 0.0000  Topo: 0.4511  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0245  MGate: 1.000  Bias: 0.0000  JEPA: 0.0387  JNeg: 0.1757  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6631 | Avg: 0.6314 | CE: 0.440  Cons: 5.687  L2SP: 0.0000  Topo: 0.4575  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0169  MGate: 1.000  Bias: 0.0000  JEPA: 0.0447  JNeg: 0.1731  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [11/50] Train Summary
+     Avg Loss : 0.6314
+     LR       : 0.000428
+
+  >> Epoch [11/50] Evaluating GZSL...
+
+  ┌─ Epoch [11/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.70%
+  │  GZSL-S (Seen Acc)   : 70.42%
+  │  GZSL-H (Harmonic)   : 72.02%  
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [12/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5353 | Avg: 0.6005 | CE: 0.306  Cons: 6.027  L2SP: 0.0000  Topo: 0.4606  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0138  MGate: 1.000  Bias: 0.0000  JEPA: 0.0430  JNeg: 0.1734  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5239 | Avg: 0.5967 | CE: 0.296  Cons: 5.927  L2SP: 0.0000  Topo: 0.4616  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0133  MGate: 1.000  Bias: 0.0000  JEPA: 0.0487  JNeg: 0.1735  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5565 | Avg: 0.5893 | CE: 0.329  Cons: 5.896  L2SP: 0.0000  Topo: 0.4612  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0239  MGate: 1.000  Bias: 0.0000  JEPA: 0.0452  JNeg: 0.1732  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5353 | Avg: 0.5879 | CE: 0.306  Cons: 6.046  L2SP: 0.0000  Topo: 0.4617  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0136  MGate: 1.000  Bias: 0.0000  JEPA: 0.0386  JNeg: 0.1802  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5887 | Avg: 0.5890 | CE: 0.363  Cons: 5.828  L2SP: 0.0000  Topo: 0.4561  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0208  MGate: 1.000  Bias: 0.0000  JEPA: 0.0501  JNeg: 0.1902  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6313 | Avg: 0.5871 | CE: 0.409  Cons: 5.702  L2SP: 0.0000  Topo: 0.4530  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0146  MGate: 1.000  Bias: 0.0000  JEPA: 0.0473  JNeg: 0.1835  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [12/50] Train Summary
+     Avg Loss : 0.5871
+     LR       : 0.000352
+
+  >> Epoch [12/50] Evaluating GZSL...
+
+  ┌─ Epoch [12/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.86%
+  │  GZSL-S (Seen Acc)   : 68.57%
+  │  GZSL-H (Harmonic)   : 71.12%  
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [13/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6234 | Avg: 0.5800 | CE: 0.394  Cons: 6.014  L2SP: 0.0000  Topo: 0.4612  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0150  MGate: 1.000  Bias: 0.0000  JEPA: 0.0453  JNeg: 0.1732  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5263 | Avg: 0.5832 | CE: 0.290  Cons: 6.402  L2SP: 0.0000  Topo: 0.4593  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0166  MGate: 1.000  Bias: 0.0000  JEPA: 0.0399  JNeg: 0.1720  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5863 | Avg: 0.5770 | CE: 0.359  Cons: 5.912  L2SP: 0.0000  Topo: 0.4630  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0148  MGate: 1.000  Bias: 0.0000  JEPA: 0.0459  JNeg: 0.1662  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5810 | Avg: 0.5808 | CE: 0.346  Cons: 6.299  L2SP: 0.0000  Topo: 0.4583  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0236  MGate: 1.000  Bias: 0.0000  JEPA: 0.0485  JNeg: 0.1776  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4946 | Avg: 0.5797 | CE: 0.253  Cons: 6.648  L2SP: 0.0000  Topo: 0.4671  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0154  MGate: 1.000  Bias: 0.0000  JEPA: 0.0520  JNeg: 0.1623  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5084 | Avg: 0.5755 | CE: 0.267  Cons: 6.649  L2SP: 0.0000  Topo: 0.4615  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0203  MGate: 1.000  Bias: 0.0000  JEPA: 0.0487  JNeg: 0.1560  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [13/50] Train Summary
+     Avg Loss : 0.5755
+     LR       : 0.000280
+
+  >> Epoch [13/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7247.pth
+
+  ┌─ Epoch [13/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.47%
+  │  GZSL-S (Seen Acc)   : 73.50%
+  │  GZSL-H (Harmonic)   : 72.47%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.54%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [14/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5773 | Avg: 0.5982 | CE: 0.338  Cons: 6.528  L2SP: 0.0000  Topo: 0.4585  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0190  MGate: 1.000  Bias: 0.0000  JEPA: 0.0426  JNeg: 0.1637  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5067 | Avg: 0.5866 | CE: 0.278  Cons: 6.009  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0167  MGate: 1.000  Bias: 0.0000  JEPA: 0.0415  JNeg: 0.1590  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7028 | Avg: 0.5773 | CE: 0.473  Cons: 6.051  L2SP: 0.0000  Topo: 0.4580  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0119  MGate: 1.000  Bias: 0.0000  JEPA: 0.0430  JNeg: 0.1726  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5512 | Avg: 0.5850 | CE: 0.313  Cons: 6.497  L2SP: 0.0000  Topo: 0.4557  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0130  MGate: 1.000  Bias: 0.0000  JEPA: 0.0454  JNeg: 0.1611  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5414 | Avg: 0.5825 | CE: 0.302  Cons: 6.557  L2SP: 0.0000  Topo: 0.4586  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0158  MGate: 1.000  Bias: 0.0000  JEPA: 0.0455  JNeg: 0.1506  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5200 | Avg: 0.5813 | CE: 0.284  Cons: 6.336  L2SP: 0.0000  Topo: 0.4542  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0207  MGate: 1.000  Bias: 0.0000  JEPA: 0.0506  JNeg: 0.1719  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [14/50] Train Summary
+     Avg Loss : 0.5813
+     LR       : 0.000214
+
+  >> Epoch [14/50] Evaluating GZSL...
+
+  ┌─ Epoch [14/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.60%
+  │  GZSL-S (Seen Acc)   : 69.36%
+  │  GZSL-H (Harmonic)   : 71.88%  
+  │  ZSL    (ZS Acc)     : 81.54%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [15/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6186 | Avg: 0.5857 | CE: 0.389  Cons: 6.005  L2SP: 0.0000  Topo: 0.4618  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0115  MGate: 1.000  Bias: 0.0000  JEPA: 0.0492  JNeg: 0.1662  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5579 | Avg: 0.5666 | CE: 0.317  Cons: 6.655  L2SP: 0.0000  Topo: 0.4612  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0116  MGate: 1.000  Bias: 0.0000  JEPA: 0.0372  JNeg: 0.1635  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5023 | Avg: 0.5575 | CE: 0.263  Cons: 6.527  L2SP: 0.0000  Topo: 0.4608  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0160  MGate: 1.000  Bias: 0.0000  JEPA: 0.0479  JNeg: 0.1558  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6036 | Avg: 0.5618 | CE: 0.363  Cons: 6.644  L2SP: 0.0000  Topo: 0.4590  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0196  MGate: 1.000  Bias: 0.0000  JEPA: 0.0381  JNeg: 0.1625  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5430 | Avg: 0.5564 | CE: 0.296  Cons: 6.939  L2SP: 0.0000  Topo: 0.4600  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0286  MGate: 1.000  Bias: 0.0000  JEPA: 0.0518  JNeg: 0.1758  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5245 | Avg: 0.5571 | CE: 0.279  Cons: 6.855  L2SP: 0.0000  Topo: 0.4619  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0316  MGate: 1.000  Bias: 0.0000  JEPA: 0.0446  JNeg: 0.1506  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [15/50] Train Summary
+     Avg Loss : 0.5571
+     LR       : 0.000155
+
+  >> Epoch [15/50] Evaluating GZSL...
+
+  ┌─ Epoch [15/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.57%
+  │  GZSL-S (Seen Acc)   : 72.16%
+  │  GZSL-H (Harmonic)   : 72.36%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [16/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4847 | Avg: 0.5706 | CE: 0.242  Cons: 6.669  L2SP: 0.0000  Topo: 0.4604  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0298  MGate: 1.000  Bias: 0.0000  JEPA: 0.0534  JNeg: 0.1520  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5054 | Avg: 0.5594 | CE: 0.271  Cons: 6.306  L2SP: 0.0000  Topo: 0.4609  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0201  MGate: 1.000  Bias: 0.0000  JEPA: 0.0385  JNeg: 0.1618  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5758 | Avg: 0.5584 | CE: 0.332  Cons: 6.786  L2SP: 0.0000  Topo: 0.4599  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0236  MGate: 1.000  Bias: 0.0000  JEPA: 0.0496  JNeg: 0.1527  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6127 | Avg: 0.5593 | CE: 0.369  Cons: 6.780  L2SP: 0.0000  Topo: 0.4623  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0206  MGate: 1.000  Bias: 0.0000  JEPA: 0.0382  JNeg: 0.1337  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4924 | Avg: 0.5539 | CE: 0.245  Cons: 6.975  L2SP: 0.0000  Topo: 0.4609  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0208  MGate: 1.000  Bias: 0.0000  JEPA: 0.0412  JNeg: 0.1630  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5635 | Avg: 0.5544 | CE: 0.320  Cons: 6.758  L2SP: 0.0000  Topo: 0.4594  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0133  MGate: 1.000  Bias: 0.0000  JEPA: 0.0462  JNeg: 0.1680  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [16/50] Train Summary
+     Avg Loss : 0.5544
+     LR       : 0.000105
+
+  >> Epoch [16/50] Evaluating GZSL...
+
+  ┌─ Epoch [16/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 74.81%
+  │  GZSL-S (Seen Acc)   : 69.03%
+  │  GZSL-H (Harmonic)   : 71.80%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [17/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5694 | Avg: 0.5792 | CE: 0.332  Cons: 6.444  L2SP: 0.0000  Topo: 0.4591  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0195  MGate: 1.000  Bias: 0.0000  JEPA: 0.0427  JNeg: 0.1596  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.7307 | Avg: 0.5740 | CE: 0.489  Cons: 6.650  L2SP: 0.0000  Topo: 0.4573  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0161  MGate: 1.000  Bias: 0.0000  JEPA: 0.0521  JNeg: 0.1645  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4895 | Avg: 0.5636 | CE: 0.243  Cons: 7.008  L2SP: 0.0000  Topo: 0.4583  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0107  MGate: 1.000  Bias: 0.0000  JEPA: 0.0395  JNeg: 0.1569  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4997 | Avg: 0.5575 | CE: 0.255  Cons: 6.840  L2SP: 0.0000  Topo: 0.4583  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0180  MGate: 1.000  Bias: 0.0000  JEPA: 0.0377  JNeg: 0.1756  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5092 | Avg: 0.5557 | CE: 0.262  Cons: 6.945  L2SP: 0.0000  Topo: 0.4620  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0278  MGate: 1.000  Bias: 0.0000  JEPA: 0.0499  JNeg: 0.1558  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6144 | Avg: 0.5540 | CE: 0.375  Cons: 6.513  L2SP: 0.0000  Topo: 0.4627  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0190  MGate: 1.000  Bias: 0.0000  JEPA: 0.0439  JNeg: 0.1657  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [17/50] Train Summary
+     Avg Loss : 0.5540
+     LR       : 0.000064
+
+  >> Epoch [17/50] Evaluating GZSL...
+
+  ┌─ Epoch [17/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.83%
+  │  GZSL-S (Seen Acc)   : 70.15%
+  │  GZSL-H (Harmonic)   : 71.94%  
+  │  ZSL    (ZS Acc)     : 81.55%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [18/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5144 | Avg: 0.5339 | CE: 0.267  Cons: 6.996  L2SP: 0.0000  Topo: 0.4638  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0192  MGate: 1.000  Bias: 0.0000  JEPA: 0.0388  JNeg: 0.1536  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5022 | Avg: 0.5186 | CE: 0.261  Cons: 6.644  L2SP: 0.0000  Topo: 0.4630  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0214  MGate: 1.000  Bias: 0.0000  JEPA: 0.0406  JNeg: 0.1696  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4661 | Avg: 0.5207 | CE: 0.213  Cons: 7.305  L2SP: 0.0000  Topo: 0.4604  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0248  MGate: 1.000  Bias: 0.0000  JEPA: 0.0397  JNeg: 0.1480  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5491 | Avg: 0.5210 | CE: 0.304  Cons: 6.875  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0129  MGate: 1.000  Bias: 0.0000  JEPA: 0.0399  JNeg: 0.1545  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5002 | Avg: 0.5230 | CE: 0.252  Cons: 7.096  L2SP: 0.0000  Topo: 0.4587  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0161  MGate: 1.000  Bias: 0.0000  JEPA: 0.0349  JNeg: 0.1683  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5030 | Avg: 0.5279 | CE: 0.261  Cons: 6.707  L2SP: 0.0000  Topo: 0.4579  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0268  MGate: 1.000  Bias: 0.0000  JEPA: 0.0354  JNeg: 0.1604  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [18/50] Train Summary
+     Avg Loss : 0.5279
+     LR       : 0.000034
+
+  >> Epoch [18/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7280.pth
+
+  ┌─ Epoch [18/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.25%
+  │  GZSL-S (Seen Acc)   : 73.36%
+  │  GZSL-H (Harmonic)   : 72.80%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [19/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4847 | Avg: 0.5638 | CE: 0.244  Cons: 6.636  L2SP: 0.0000  Topo: 0.4590  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0264  MGate: 1.000  Bias: 0.0000  JEPA: 0.0334  JNeg: 0.1455  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4982 | Avg: 0.5444 | CE: 0.248  Cons: 7.145  L2SP: 0.0000  Topo: 0.4592  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0182  MGate: 1.000  Bias: 0.0000  JEPA: 0.0420  JNeg: 0.1587  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5806 | Avg: 0.5403 | CE: 0.343  Cons: 6.459  L2SP: 0.0000  Topo: 0.4596  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0181  MGate: 1.000  Bias: 0.0000  JEPA: 0.0424  JNeg: 0.1341  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4832 | Avg: 0.5451 | CE: 0.236  Cons: 7.029  L2SP: 0.0000  Topo: 0.4606  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0219  MGate: 1.000  Bias: 0.0000  JEPA: 0.0379  JNeg: 0.1401  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.6636 | Avg: 0.5504 | CE: 0.420  Cons: 6.760  L2SP: 0.0000  Topo: 0.4598  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0236  MGate: 1.000  Bias: 0.0000  JEPA: 0.0406  JNeg: 0.1611  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5760 | Avg: 0.5458 | CE: 0.335  Cons: 6.619  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0267  MGate: 1.000  Bias: 0.0000  JEPA: 0.0467  JNeg: 0.1409  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [19/50] Train Summary
+     Avg Loss : 0.5458
+     LR       : 0.000016
+
+  >> Epoch [19/50] Evaluating GZSL...
+
+  ┌─ Epoch [19/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.02%
+  │  GZSL-S (Seen Acc)   : 72.54%
+  │  GZSL-H (Harmonic)   : 72.78%  
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [20/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5289 | Avg: 0.5466 | CE: 0.281  Cons: 7.060  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0128  MGate: 1.000  Bias: 0.0000  JEPA: 0.0400  JNeg: 0.1538  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4945 | Avg: 0.5487 | CE: 0.252  Cons: 6.709  L2SP: 0.0000  Topo: 0.4591  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0231  MGate: 1.000  Bias: 0.0000  JEPA: 0.0386  JNeg: 0.1432  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5094 | Avg: 0.5392 | CE: 0.264  Cons: 6.891  L2SP: 0.0000  Topo: 0.4591  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0220  MGate: 1.000  Bias: 0.0000  JEPA: 0.0384  JNeg: 0.1613  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6309 | Avg: 0.5376 | CE: 0.390  Cons: 6.607  L2SP: 0.0000  Topo: 0.4589  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0261  MGate: 1.000  Bias: 0.0000  JEPA: 0.0433  JNeg: 0.1545  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4869 | Avg: 0.5362 | CE: 0.238  Cons: 7.115  L2SP: 0.0000  Topo: 0.4596  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0205  MGate: 1.000  Bias: 0.0000  JEPA: 0.0332  JNeg: 0.1523  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5293 | Avg: 0.5366 | CE: 0.278  Cons: 7.203  L2SP: 0.0000  Topo: 0.4599  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0226  MGate: 1.000  Bias: 0.0000  JEPA: 0.0482  JNeg: 0.1570  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [20/50] Train Summary
+     Avg Loss : 0.5366
+     LR       : 0.000010
+
+  ★★★ Stage 2 starts at epoch 21 ★★★
+     lr → 0.0001, cosine T_max=20, eta_min=1e-06
+
+  >> Epoch [20/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7285.pth
+
+  ┌─ Epoch [20/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.72%
+  │  GZSL-S (Seen Acc)   : 72.99%
+  │  GZSL-H (Harmonic)   : 72.85%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.61%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [21/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4615 | Avg: 0.5604 | CE: 0.215  Cons: 6.911  L2SP: 0.0000  Topo: 0.4596  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0326  MGate: 1.000  Bias: 0.0000  JEPA: 0.0354  JNeg: 0.1610  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5203 | Avg: 0.5513 | CE: 0.273  Cons: 6.988  L2SP: 0.0000  Topo: 0.4620  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0199  MGate: 1.000  Bias: 0.0000  JEPA: 0.0366  JNeg: 0.1727  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4903 | Avg: 0.5414 | CE: 0.239  Cons: 7.258  L2SP: 0.0000  Topo: 0.4597  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0142  MGate: 1.000  Bias: 0.0000  JEPA: 0.0379  JNeg: 0.1427  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5858 | Avg: 0.5388 | CE: 0.340  Cons: 6.929  L2SP: 0.0000  Topo: 0.4629  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0106  MGate: 1.000  Bias: 0.0000  JEPA: 0.0375  JNeg: 0.1596  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5599 | Avg: 0.5360 | CE: 0.314  Cons: 6.940  L2SP: 0.0000  Topo: 0.4617  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0188  MGate: 1.000  Bias: 0.0000  JEPA: 0.0351  JNeg: 0.1602  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4889 | Avg: 0.5348 | CE: 0.235  Cons: 7.374  L2SP: 0.0000  Topo: 0.4603  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0174  MGate: 1.000  Bias: 0.0000  JEPA: 0.0375  JNeg: 0.1606  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [21/50] Train Summary
+     Avg Loss : 0.5348
+     LR       : 0.000099
+
+  >> Epoch [21/50] Evaluating GZSL...
+
+  ┌─ Epoch [21/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.94%
+  │  GZSL-S (Seen Acc)   : 69.97%
+  │  GZSL-H (Harmonic)   : 71.90%  
+  │  ZSL    (ZS Acc)     : 81.55%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [22/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4921 | Avg: 0.5377 | CE: 0.241  Cons: 7.199  L2SP: 0.0000  Topo: 0.4590  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  MGate: 1.000  Bias: 0.0000  JEPA: 0.0353  JNeg: 0.1572  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5300 | Avg: 0.5399 | CE: 0.283  Cons: 6.993  L2SP: 0.0000  Topo: 0.4561  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0230  MGate: 1.000  Bias: 0.0000  JEPA: 0.0363  JNeg: 0.1586  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4826 | Avg: 0.5464 | CE: 0.230  Cons: 7.324  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0193  MGate: 1.000  Bias: 0.0000  JEPA: 0.0342  JNeg: 0.1432  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5871 | Avg: 0.5434 | CE: 0.333  Cons: 7.384  L2SP: 0.0000  Topo: 0.4601  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  MGate: 1.000  Bias: 0.0000  JEPA: 0.0386  JNeg: 0.1523  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5446 | Avg: 0.5414 | CE: 0.290  Cons: 7.446  L2SP: 0.0000  Topo: 0.4578  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0294  MGate: 1.000  Bias: 0.0000  JEPA: 0.0374  JNeg: 0.1468  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5176 | Avg: 0.5391 | CE: 0.265  Cons: 7.340  L2SP: 0.0000  Topo: 0.4584  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0225  MGate: 1.000  Bias: 0.0000  JEPA: 0.0333  JNeg: 0.1536  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [22/50] Train Summary
+     Avg Loss : 0.5391
+     LR       : 0.000098
+
+  >> Epoch [22/50] Evaluating GZSL...
+
+  ┌─ Epoch [22/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.23%
+  │  GZSL-S (Seen Acc)   : 73.02%
+  │  GZSL-H (Harmonic)   : 72.63%  
+  │  ZSL    (ZS Acc)     : 81.66%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [23/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4705 | Avg: 0.5288 | CE: 0.224  Cons: 6.971  L2SP: 0.0000  Topo: 0.4595  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0220  MGate: 1.000  Bias: 0.0000  JEPA: 0.0375  JNeg: 0.1657  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5815 | Avg: 0.5245 | CE: 0.334  Cons: 7.054  L2SP: 0.0000  Topo: 0.4574  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0205  MGate: 1.000  Bias: 0.0000  JEPA: 0.0361  JNeg: 0.1555  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5087 | Avg: 0.5362 | CE: 0.256  Cons: 7.324  L2SP: 0.0000  Topo: 0.4575  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0353  MGate: 1.000  Bias: 0.0000  JEPA: 0.0368  JNeg: 0.1648  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5785 | Avg: 0.5372 | CE: 0.322  Cons: 7.538  L2SP: 0.0000  Topo: 0.4593  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0260  MGate: 1.000  Bias: 0.0000  JEPA: 0.0365  JNeg: 0.1608  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5207 | Avg: 0.5353 | CE: 0.269  Cons: 7.270  L2SP: 0.0000  Topo: 0.4602  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0159  MGate: 1.000  Bias: 0.0000  JEPA: 0.0383  JNeg: 0.1448  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4881 | Avg: 0.5334 | CE: 0.230  Cons: 7.676  L2SP: 0.0000  Topo: 0.4585  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0235  MGate: 1.000  Bias: 0.0000  JEPA: 0.0365  JNeg: 0.1418  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [23/50] Train Summary
+     Avg Loss : 0.5334
+     LR       : 0.000095
+
+  >> Epoch [23/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7304.pth
+
+  ┌─ Epoch [23/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.52%
+  │  GZSL-S (Seen Acc)   : 74.62%
+  │  GZSL-H (Harmonic)   : 73.04%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.55%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [24/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5440 | Avg: 0.5417 | CE: 0.298  Cons: 6.974  L2SP: 0.0000  Topo: 0.4581  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0130  MGate: 1.000  Bias: 0.0000  JEPA: 0.0339  JNeg: 0.1634  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5713 | Avg: 0.5346 | CE: 0.324  Cons: 7.048  L2SP: 0.0000  Topo: 0.4577  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0204  MGate: 1.000  Bias: 0.0000  JEPA: 0.0324  JNeg: 0.1607  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4603 | Avg: 0.5286 | CE: 0.208  Cons: 7.332  L2SP: 0.0000  Topo: 0.4560  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0285  MGate: 1.000  Bias: 0.0000  JEPA: 0.0302  JNeg: 0.1732  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4990 | Avg: 0.5317 | CE: 0.239  Cons: 7.816  L2SP: 0.0000  Topo: 0.4543  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0277  MGate: 1.000  Bias: 0.0000  JEPA: 0.0357  JNeg: 0.1393  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4709 | Avg: 0.5275 | CE: 0.220  Cons: 7.207  L2SP: 0.0000  Topo: 0.4554  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0306  MGate: 1.000  Bias: 0.0000  JEPA: 0.0277  JNeg: 0.1682  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4602 | Avg: 0.5267 | CE: 0.201  Cons: 7.708  L2SP: 0.0000  Topo: 0.4569  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0352  MGate: 1.000  Bias: 0.0000  JEPA: 0.0310  JNeg: 0.1551  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [24/50] Train Summary
+     Avg Loss : 0.5267
+     LR       : 0.000091
+
+  >> Epoch [24/50] Evaluating GZSL...
+
+  ┌─ Epoch [24/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.94%
+  │  GZSL-S (Seen Acc)   : 70.77%
+  │  GZSL-H (Harmonic)   : 72.32%  
+  │  ZSL    (ZS Acc)     : 81.52%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [25/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5830 | Avg: 0.5455 | CE: 0.330  Cons: 7.407  L2SP: 0.0000  Topo: 0.4573  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0202  MGate: 1.000  Bias: 0.0000  JEPA: 0.0327  JNeg: 0.1408  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5503 | Avg: 0.5368 | CE: 0.300  Cons: 7.275  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0210  MGate: 1.000  Bias: 0.0000  JEPA: 0.0287  JNeg: 0.1300  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5213 | Avg: 0.5383 | CE: 0.268  Cons: 7.408  L2SP: 0.0000  Topo: 0.4505  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0244  MGate: 1.000  Bias: 0.0000  JEPA: 0.0323  JNeg: 0.1548  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.6191 | Avg: 0.5355 | CE: 0.367  Cons: 7.304  L2SP: 0.0000  Topo: 0.4549  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0270  MGate: 1.000  Bias: 0.0000  JEPA: 0.0334  JNeg: 0.1645  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5075 | Avg: 0.5353 | CE: 0.254  Cons: 7.425  L2SP: 0.0000  Topo: 0.4538  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0258  MGate: 1.000  Bias: 0.0000  JEPA: 0.0321  JNeg: 0.1390  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6189 | Avg: 0.5371 | CE: 0.369  Cons: 7.177  L2SP: 0.0000  Topo: 0.4537  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0273  MGate: 1.000  Bias: 0.0000  JEPA: 0.0315  JNeg: 0.1685  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [25/50] Train Summary
+     Avg Loss : 0.5371
+     LR       : 0.000086
+
+  >> Epoch [25/50] Evaluating GZSL...
+
+  ┌─ Epoch [25/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.86%
+  │  GZSL-S (Seen Acc)   : 73.19%
+  │  GZSL-H (Harmonic)   : 73.03%  
+  │  ZSL    (ZS Acc)     : 81.65%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [26/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6117 | Avg: 0.5456 | CE: 0.364  Cons: 7.028  L2SP: 0.0000  Topo: 0.4548  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0261  MGate: 1.000  Bias: 0.0000  JEPA: 0.0382  JNeg: 0.1594  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5221 | Avg: 0.5382 | CE: 0.268  Cons: 7.426  L2SP: 0.0000  Topo: 0.4562  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0213  MGate: 1.000  Bias: 0.0000  JEPA: 0.0428  JNeg: 0.1501  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.6493 | Avg: 0.5402 | CE: 0.401  Cons: 7.071  L2SP: 0.0000  Topo: 0.4548  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0225  MGate: 1.000  Bias: 0.0000  JEPA: 0.0336  JNeg: 0.1513  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4821 | Avg: 0.5382 | CE: 0.228  Cons: 7.422  L2SP: 0.0000  Topo: 0.4548  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0306  MGate: 1.000  Bias: 0.0000  JEPA: 0.0303  JNeg: 0.1521  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4495 | Avg: 0.5346 | CE: 0.192  Cons: 7.686  L2SP: 0.0000  Topo: 0.4552  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0249  MGate: 1.000  Bias: 0.0000  JEPA: 0.0279  JNeg: 0.1440  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4685 | Avg: 0.5327 | CE: 0.216  Cons: 7.353  L2SP: 0.0000  Topo: 0.4547  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0191  MGate: 1.000  Bias: 0.0000  JEPA: 0.0308  JNeg: 0.1550  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [26/50] Train Summary
+     Avg Loss : 0.5327
+     LR       : 0.000080
+
+  >> Epoch [26/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7335.pth
+
+  ┌─ Epoch [26/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.12%
+  │  GZSL-S (Seen Acc)   : 74.61%
+  │  GZSL-H (Harmonic)   : 73.35%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [27/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4636 | Avg: 0.5320 | CE: 0.203  Cons: 7.828  L2SP: 0.0000  Topo: 0.4551  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0243  MGate: 1.000  Bias: 0.0000  JEPA: 0.0338  JNeg: 0.1463  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4559 | Avg: 0.5347 | CE: 0.203  Cons: 7.413  L2SP: 0.0000  Topo: 0.4538  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0203  MGate: 1.000  Bias: 0.0000  JEPA: 0.0278  JNeg: 0.1505  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5971 | Avg: 0.5362 | CE: 0.340  Cons: 7.665  L2SP: 0.0000  Topo: 0.4527  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0241  MGate: 1.000  Bias: 0.0000  JEPA: 0.0291  JNeg: 0.1496  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4764 | Avg: 0.5375 | CE: 0.221  Cons: 7.547  L2SP: 0.0000  Topo: 0.4548  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0254  MGate: 1.000  Bias: 0.0000  JEPA: 0.0321  JNeg: 0.1425  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4434 | Avg: 0.5351 | CE: 0.192  Cons: 7.313  L2SP: 0.0000  Topo: 0.4568  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0201  MGate: 1.000  Bias: 0.0000  JEPA: 0.0253  JNeg: 0.1393  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4721 | Avg: 0.5323 | CE: 0.220  Cons: 7.330  L2SP: 0.0000  Topo: 0.4583  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0240  MGate: 1.000  Bias: 0.0000  JEPA: 0.0289  JNeg: 0.1632  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [27/50] Train Summary
+     Avg Loss : 0.5323
+     LR       : 0.000073
+
+  >> Epoch [27/50] Evaluating GZSL...
+
+  ┌─ Epoch [27/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.60%
+  │  GZSL-S (Seen Acc)   : 72.47%
+  │  GZSL-H (Harmonic)   : 72.53%  
+  │  ZSL    (ZS Acc)     : 81.52%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [28/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5091 | Avg: 0.5311 | CE: 0.252  Cons: 7.618  L2SP: 0.0000  Topo: 0.4574  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0283  MGate: 1.000  Bias: 0.0000  JEPA: 0.0315  JNeg: 0.1591  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5512 | Avg: 0.5258 | CE: 0.295  Cons: 7.624  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0207  MGate: 1.000  Bias: 0.0000  JEPA: 0.0281  JNeg: 0.1466  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4205 | Avg: 0.5259 | CE: 0.162  Cons: 7.763  L2SP: 0.0000  Topo: 0.4528  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0205  MGate: 1.000  Bias: 0.0000  JEPA: 0.0266  JNeg: 0.1504  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5867 | Avg: 0.5278 | CE: 0.333  Cons: 7.404  L2SP: 0.0000  Topo: 0.4537  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0228  MGate: 1.000  Bias: 0.0000  JEPA: 0.0316  JNeg: 0.1545  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4913 | Avg: 0.5298 | CE: 0.237  Cons: 7.521  L2SP: 0.0000  Topo: 0.4536  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0214  MGate: 1.000  Bias: 0.0000  JEPA: 0.0250  JNeg: 0.1458  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6521 | Avg: 0.5291 | CE: 0.402  Cons: 7.256  L2SP: 0.0000  Topo: 0.4531  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0191  MGate: 1.000  Bias: 0.0000  JEPA: 0.0273  JNeg: 0.1492  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [28/50] Train Summary
+     Avg Loss : 0.5291
+     LR       : 0.000066
+
+  >> Epoch [28/50] Evaluating GZSL...
+
+  ┌─ Epoch [28/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.22%
+  │  GZSL-S (Seen Acc)   : 74.41%
+  │  GZSL-H (Harmonic)   : 73.30%  
+  │  ZSL    (ZS Acc)     : 81.51%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [29/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4941 | Avg: 0.4972 | CE: 0.233  Cons: 7.906  L2SP: 0.0000  Topo: 0.4529  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0281  MGate: 1.000  Bias: 0.0000  JEPA: 0.0250  JNeg: 0.1575  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5013 | Avg: 0.5059 | CE: 0.245  Cons: 7.639  L2SP: 0.0000  Topo: 0.4536  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0185  MGate: 1.000  Bias: 0.0000  JEPA: 0.0254  JNeg: 0.1477  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5219 | Avg: 0.5151 | CE: 0.264  Cons: 7.706  L2SP: 0.0000  Topo: 0.4532  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0210  MGate: 1.000  Bias: 0.0000  JEPA: 0.0297  JNeg: 0.1587  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5092 | Avg: 0.5155 | CE: 0.247  Cons: 7.980  L2SP: 0.0000  Topo: 0.4506  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0267  MGate: 1.000  Bias: 0.0000  JEPA: 0.0327  JNeg: 0.1535  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4109 | Avg: 0.5168 | CE: 0.151  Cons: 7.858  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0261  MGate: 1.000  Bias: 0.0000  JEPA: 0.0258  JNeg: 0.1394  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5139 | Avg: 0.5160 | CE: 0.256  Cons: 7.708  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0199  MGate: 1.000  Bias: 0.0000  JEPA: 0.0327  JNeg: 0.1403  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [29/50] Train Summary
+     Avg Loss : 0.5160
+     LR       : 0.000058
+
+  >> Epoch [29/50] Evaluating GZSL...
+
+  ┌─ Epoch [29/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 73.37%
+  │  GZSL-S (Seen Acc)   : 73.21%
+  │  GZSL-H (Harmonic)   : 73.29%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [30/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5924 | Avg: 0.5067 | CE: 0.338  Cons: 7.519  L2SP: 0.0000  Topo: 0.4534  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0234  MGate: 1.000  Bias: 0.0000  JEPA: 0.0252  JNeg: 0.1567  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4188 | Avg: 0.5097 | CE: 0.160  Cons: 7.809  L2SP: 0.0000  Topo: 0.4532  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0236  MGate: 1.000  Bias: 0.0000  JEPA: 0.0245  JNeg: 0.1389  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4778 | Avg: 0.5155 | CE: 0.221  Cons: 7.643  L2SP: 0.0000  Topo: 0.4513  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0282  MGate: 1.000  Bias: 0.0000  JEPA: 0.0281  JNeg: 0.1626  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5072 | Avg: 0.5122 | CE: 0.252  Cons: 7.539  L2SP: 0.0000  Topo: 0.4505  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0252  MGate: 1.000  Bias: 0.0000  JEPA: 0.0262  JNeg: 0.1510  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4896 | Avg: 0.5112 | CE: 0.235  Cons: 7.520  L2SP: 0.0000  Topo: 0.4496  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0259  MGate: 1.000  Bias: 0.0000  JEPA: 0.0269  JNeg: 0.1363  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4643 | Avg: 0.5116 | CE: 0.199  Cons: 8.263  L2SP: 0.0000  Topo: 0.4486  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0171  MGate: 1.000  Bias: 0.0000  JEPA: 0.0257  JNeg: 0.1374  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [30/50] Train Summary
+     Avg Loss : 0.5116
+     LR       : 0.000051
+
+  >> Epoch [30/50] Evaluating GZSL...
+
+  ┌─ Epoch [30/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.44%
+  │  GZSL-S (Seen Acc)   : 75.29%
+  │  GZSL-H (Harmonic)   : 73.32%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [31/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4484 | Avg: 0.5184 | CE: 0.186  Cons: 7.999  L2SP: 0.0000  Topo: 0.4493  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0317  MGate: 1.000  Bias: 0.0000  JEPA: 0.0255  JNeg: 0.1543  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.6061 | Avg: 0.5081 | CE: 0.347  Cons: 7.786  L2SP: 0.0000  Topo: 0.4501  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0232  MGate: 1.000  Bias: 0.0000  JEPA: 0.0257  JNeg: 0.1569  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.6000 | Avg: 0.5097 | CE: 0.347  Cons: 7.425  L2SP: 0.0000  Topo: 0.4501  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0221  MGate: 1.000  Bias: 0.0000  JEPA: 0.0231  JNeg: 0.1439  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5379 | Avg: 0.5149 | CE: 0.287  Cons: 7.296  L2SP: 0.0000  Topo: 0.4499  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0212  MGate: 1.000  Bias: 0.0000  JEPA: 0.0208  JNeg: 0.1509  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4232 | Avg: 0.5086 | CE: 0.162  Cons: 7.934  L2SP: 0.0000  Topo: 0.4502  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0181  MGate: 1.000  Bias: 0.0000  JEPA: 0.0294  JNeg: 0.1385  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4787 | Avg: 0.5059 | CE: 0.228  Cons: 7.268  L2SP: 0.0000  Topo: 0.4508  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0218  MGate: 1.000  Bias: 0.0000  JEPA: 0.0259  JNeg: 0.1638  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [31/50] Train Summary
+     Avg Loss : 0.5059
+     LR       : 0.000043
+
+  >> Epoch [31/50] Evaluating GZSL...
+
+  ┌─ Epoch [31/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.80%
+  │  GZSL-S (Seen Acc)   : 73.38%
+  │  GZSL-H (Harmonic)   : 73.09%  
+  │  ZSL    (ZS Acc)     : 81.65%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [32/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4743 | Avg: 0.5147 | CE: 0.212  Cons: 7.990  L2SP: 0.0000  Topo: 0.4512  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0330  MGate: 1.000  Bias: 0.0000  JEPA: 0.0225  JNeg: 0.1396  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5276 | Avg: 0.5141 | CE: 0.268  Cons: 7.819  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0156  MGate: 1.000  Bias: 0.0000  JEPA: 0.0270  JNeg: 0.1391  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5208 | Avg: 0.5207 | CE: 0.261  Cons: 7.794  L2SP: 0.0000  Topo: 0.4536  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0260  MGate: 1.000  Bias: 0.0000  JEPA: 0.0270  JNeg: 0.1487  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4672 | Avg: 0.5169 | CE: 0.203  Cons: 8.084  L2SP: 0.0000  Topo: 0.4533  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0327  MGate: 1.000  Bias: 0.0000  JEPA: 0.0250  JNeg: 0.1357  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4499 | Avg: 0.5212 | CE: 0.193  Cons: 7.619  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0320  MGate: 1.000  Bias: 0.0000  JEPA: 0.0291  JNeg: 0.1575  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5626 | Avg: 0.5199 | CE: 0.297  Cons: 8.173  L2SP: 0.0000  Topo: 0.4513  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0288  MGate: 1.000  Bias: 0.0000  JEPA: 0.0292  JNeg: 0.1729  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [32/50] Train Summary
+     Avg Loss : 0.5199
+     LR       : 0.000035
+
+  >> Epoch [32/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7342.pth
+
+  ┌─ Epoch [32/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.95%
+  │  GZSL-S (Seen Acc)   : 74.96%
+  │  GZSL-H (Harmonic)   : 73.42%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.54%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [33/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5199 | Avg: 0.5165 | CE: 0.261  Cons: 7.798  L2SP: 0.0000  Topo: 0.4512  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0211  MGate: 1.000  Bias: 0.0000  JEPA: 0.0241  JNeg: 0.1518  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5179 | Avg: 0.5299 | CE: 0.260  Cons: 7.725  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0217  MGate: 1.000  Bias: 0.0000  JEPA: 0.0217  JNeg: 0.1637  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4367 | Avg: 0.5177 | CE: 0.175  Cons: 7.965  L2SP: 0.0000  Topo: 0.4530  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0177  MGate: 1.000  Bias: 0.0000  JEPA: 0.0269  JNeg: 0.1253  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4592 | Avg: 0.5151 | CE: 0.198  Cons: 7.974  L2SP: 0.0000  Topo: 0.4517  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0173  MGate: 1.000  Bias: 0.0000  JEPA: 0.0207  JNeg: 0.1505  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4116 | Avg: 0.5139 | CE: 0.149  Cons: 8.021  L2SP: 0.0000  Topo: 0.4526  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0253  MGate: 1.000  Bias: 0.0000  JEPA: 0.0191  JNeg: 0.1640  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4843 | Avg: 0.5132 | CE: 0.227  Cons: 7.670  L2SP: 0.0000  Topo: 0.4529  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0266  MGate: 1.000  Bias: 0.0000  JEPA: 0.0244  JNeg: 0.1571  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [33/50] Train Summary
+     Avg Loss : 0.5132
+     LR       : 0.000028
+
+  >> Epoch [33/50] Evaluating GZSL...
+
+  ┌─ Epoch [33/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.19%
+  │  GZSL-S (Seen Acc)   : 73.81%
+  │  GZSL-H (Harmonic)   : 72.99%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [34/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5003 | Avg: 0.5081 | CE: 0.241  Cons: 7.779  L2SP: 0.0000  Topo: 0.4528  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0216  MGate: 1.000  Bias: 0.0000  JEPA: 0.0269  JNeg: 0.1606  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4851 | Avg: 0.5087 | CE: 0.219  Cons: 8.172  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0397  MGate: 1.000  Bias: 0.0000  JEPA: 0.0257  JNeg: 0.1462  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4977 | Avg: 0.5078 | CE: 0.238  Cons: 7.888  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0176  MGate: 1.000  Bias: 0.0000  JEPA: 0.0214  JNeg: 0.1547  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4492 | Avg: 0.5071 | CE: 0.200  Cons: 7.228  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0195  MGate: 1.000  Bias: 0.0000  JEPA: 0.0225  JNeg: 0.1569  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4362 | Avg: 0.5099 | CE: 0.175  Cons: 8.004  L2SP: 0.0000  Topo: 0.4512  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0167  MGate: 1.000  Bias: 0.0000  JEPA: 0.0221  JNeg: 0.1324  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4694 | Avg: 0.5094 | CE: 0.209  Cons: 7.882  L2SP: 0.0000  Topo: 0.4512  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0170  MGate: 1.000  Bias: 0.0000  JEPA: 0.0252  JNeg: 0.1312  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [34/50] Train Summary
+     Avg Loss : 0.5094
+     LR       : 0.000021
+
+  >> Epoch [34/50] Evaluating GZSL...
+
+  ┌─ Epoch [34/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.12%
+  │  GZSL-S (Seen Acc)   : 74.67%
+  │  GZSL-H (Harmonic)   : 73.37%  
+  │  ZSL    (ZS Acc)     : 81.54%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [35/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5744 | Avg: 0.5215 | CE: 0.314  Cons: 7.870  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0230  MGate: 1.000  Bias: 0.0000  JEPA: 0.0236  JNeg: 0.1497  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5851 | Avg: 0.5249 | CE: 0.326  Cons: 7.852  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0170  MGate: 1.000  Bias: 0.0000  JEPA: 0.0224  JNeg: 0.1366  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5124 | Avg: 0.5161 | CE: 0.254  Cons: 7.752  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0299  MGate: 1.000  Bias: 0.0000  JEPA: 0.0224  JNeg: 0.1654  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5111 | Avg: 0.5133 | CE: 0.249  Cons: 8.007  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0149  MGate: 1.000  Bias: 0.0000  JEPA: 0.0285  JNeg: 0.1596  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.6286 | Avg: 0.5124 | CE: 0.375  Cons: 7.471  L2SP: 0.0000  Topo: 0.4528  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0203  MGate: 1.000  Bias: 0.0000  JEPA: 0.0223  JNeg: 0.1524  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5526 | Avg: 0.5127 | CE: 0.302  Cons: 7.245  L2SP: 0.0000  Topo: 0.4533  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0277  MGate: 1.000  Bias: 0.0000  JEPA: 0.0198  JNeg: 0.1624  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [35/50] Train Summary
+     Avg Loss : 0.5127
+     LR       : 0.000015
+
+  >> Epoch [35/50] Evaluating GZSL...
+
+  ┌─ Epoch [35/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.09%
+  │  GZSL-S (Seen Acc)   : 74.50%
+  │  GZSL-H (Harmonic)   : 73.27%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [36/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5332 | Avg: 0.5216 | CE: 0.272  Cons: 7.928  L2SP: 0.0000  Topo: 0.4534  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0253  MGate: 1.000  Bias: 0.0000  JEPA: 0.0232  JNeg: 0.1425  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4573 | Avg: 0.5105 | CE: 0.200  Cons: 7.676  L2SP: 0.0000  Topo: 0.4533  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0177  MGate: 1.000  Bias: 0.0000  JEPA: 0.0196  JNeg: 0.1564  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5097 | Avg: 0.5079 | CE: 0.249  Cons: 7.856  L2SP: 0.0000  Topo: 0.4532  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0254  MGate: 1.000  Bias: 0.0000  JEPA: 0.0243  JNeg: 0.1539  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4965 | Avg: 0.5075 | CE: 0.235  Cons: 7.969  L2SP: 0.0000  Topo: 0.4529  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0205  MGate: 1.000  Bias: 0.0000  JEPA: 0.0252  JNeg: 0.1390  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5105 | Avg: 0.5097 | CE: 0.250  Cons: 7.869  L2SP: 0.0000  Topo: 0.4527  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0217  MGate: 1.000  Bias: 0.0000  JEPA: 0.0262  JNeg: 0.1530  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5549 | Avg: 0.5144 | CE: 0.294  Cons: 7.887  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0280  MGate: 1.000  Bias: 0.0000  JEPA: 0.0233  JNeg: 0.1504  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [36/50] Train Summary
+     Avg Loss : 0.5144
+     LR       : 0.000010
+
+  >> Epoch [36/50] Evaluating GZSL...
+
+  ┌─ Epoch [36/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.39%
+  │  GZSL-S (Seen Acc)   : 73.74%
+  │  GZSL-H (Harmonic)   : 73.06%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [37/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4429 | Avg: 0.5028 | CE: 0.190  Cons: 7.414  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0262  MGate: 1.000  Bias: 0.0000  JEPA: 0.0221  JNeg: 0.1578  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4811 | Avg: 0.4949 | CE: 0.226  Cons: 7.509  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0320  MGate: 1.000  Bias: 0.0000  JEPA: 0.0216  JNeg: 0.1413  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4693 | Avg: 0.5021 | CE: 0.216  Cons: 7.462  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0213  MGate: 1.000  Bias: 0.0000  JEPA: 0.0212  JNeg: 0.1594  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5358 | Avg: 0.5082 | CE: 0.274  Cons: 8.009  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0193  MGate: 1.000  Bias: 0.0000  JEPA: 0.0232  JNeg: 0.1518  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4251 | Avg: 0.5056 | CE: 0.162  Cons: 8.098  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0158  MGate: 1.000  Bias: 0.0000  JEPA: 0.0238  JNeg: 0.1403  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4587 | Avg: 0.5067 | CE: 0.197  Cons: 7.945  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0251  MGate: 1.000  Bias: 0.0000  JEPA: 0.0212  JNeg: 0.1549  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [37/50] Train Summary
+     Avg Loss : 0.5067
+     LR       : 0.000006
+
+  >> Epoch [37/50] Evaluating GZSL...
+
+  ┌─ Epoch [37/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.19%
+  │  GZSL-S (Seen Acc)   : 74.49%
+  │  GZSL-H (Harmonic)   : 73.32%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [38/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4908 | Avg: 0.5182 | CE: 0.234  Cons: 7.686  L2SP: 0.0000  Topo: 0.4517  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0226  MGate: 1.000  Bias: 0.0000  JEPA: 0.0224  JNeg: 0.1567  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5847 | Avg: 0.5195 | CE: 0.326  Cons: 7.758  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0289  MGate: 1.000  Bias: 0.0000  JEPA: 0.0273  JNeg: 0.1481  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5225 | Avg: 0.5218 | CE: 0.261  Cons: 7.943  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0321  MGate: 1.000  Bias: 0.0000  JEPA: 0.0225  JNeg: 0.1354  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4265 | Avg: 0.5181 | CE: 0.159  Cons: 8.368  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0251  MGate: 1.000  Bias: 0.0000  JEPA: 0.0194  JNeg: 0.1423  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5357 | Avg: 0.5213 | CE: 0.279  Cons: 7.680  L2SP: 0.0000  Topo: 0.4523  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0211  MGate: 1.000  Bias: 0.0000  JEPA: 0.0227  JNeg: 0.1600  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.6248 | Avg: 0.5213 | CE: 0.354  Cons: 8.490  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0390  MGate: 1.000  Bias: 0.0000  JEPA: 0.0317  JNeg: 0.1467  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [38/50] Train Summary
+     Avg Loss : 0.5213
+     LR       : 0.000003
+
+  >> Epoch [38/50] Evaluating GZSL...
+
+  ┌─ Epoch [38/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.92%
+  │  GZSL-S (Seen Acc)   : 74.66%
+  │  GZSL-H (Harmonic)   : 73.26%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [39/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4744 | Avg: 0.5153 | CE: 0.216  Cons: 7.753  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0324  MGate: 1.000  Bias: 0.0000  JEPA: 0.0226  JNeg: 0.1561  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5051 | Avg: 0.5073 | CE: 0.241  Cons: 8.106  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0311  MGate: 1.000  Bias: 0.0000  JEPA: 0.0210  JNeg: 0.1440  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4521 | Avg: 0.5047 | CE: 0.185  Cons: 8.329  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0240  MGate: 1.000  Bias: 0.0000  JEPA: 0.0253  JNeg: 0.1237  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4634 | Avg: 0.5019 | CE: 0.199  Cons: 8.088  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0293  MGate: 1.000  Bias: 0.0000  JEPA: 0.0267  JNeg: 0.1383  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5223 | Avg: 0.4990 | CE: 0.260  Cons: 7.983  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0241  MGate: 1.000  Bias: 0.0000  JEPA: 0.0218  JNeg: 0.1501  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5158 | Avg: 0.4998 | CE: 0.252  Cons: 8.060  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0273  MGate: 1.000  Bias: 0.0000  JEPA: 0.0265  JNeg: 0.1486  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [39/50] Train Summary
+     Avg Loss : 0.4998
+     LR       : 0.000002
+
+  >> Epoch [39/50] Evaluating GZSL...
+
+  ┌─ Epoch [39/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.02%
+  │  GZSL-S (Seen Acc)   : 74.71%
+  │  GZSL-H (Harmonic)   : 73.34%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [40/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5157 | Avg: 0.4877 | CE: 0.258  Cons: 7.707  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0281  MGate: 1.000  Bias: 0.0000  JEPA: 0.0230  JNeg: 0.1575  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4664 | Avg: 0.4957 | CE: 0.201  Cons: 8.210  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0206  MGate: 1.000  Bias: 0.0000  JEPA: 0.0226  JNeg: 0.1323  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4181 | Avg: 0.5002 | CE: 0.156  Cons: 7.935  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0414  MGate: 1.000  Bias: 0.0000  JEPA: 0.0207  JNeg: 0.1286  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4613 | Avg: 0.5012 | CE: 0.199  Cons: 7.960  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0286  MGate: 1.000  Bias: 0.0000  JEPA: 0.0213  JNeg: 0.1549  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5413 | Avg: 0.5035 | CE: 0.284  Cons: 7.710  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0172  MGate: 1.000  Bias: 0.0000  JEPA: 0.0213  JNeg: 0.1492  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5739 | Avg: 0.5061 | CE: 0.306  Cons: 8.416  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0251  MGate: 1.000  Bias: 0.0000  JEPA: 0.0205  JNeg: 0.1417  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [40/50] Train Summary
+     Avg Loss : 0.5061
+     LR       : 0.000001
+
+  ★★★ Stage 3 starts at epoch 41 ★★★
+     lr → 1e-05, cosine T_max=10, eta_min=1e-07
+
+  >> Epoch [40/50] Evaluating GZSL...
+
+  ┌─ Epoch [40/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.06%
+  │  GZSL-S (Seen Acc)   : 74.55%
+  │  GZSL-H (Harmonic)   : 73.28%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [41/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4815 | Avg: 0.5052 | CE: 0.219  Cons: 8.015  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  MGate: 1.000  Bias: 0.0000  JEPA: 0.0222  JNeg: 0.1677  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4042 | Avg: 0.5074 | CE: 0.138  Cons: 8.227  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0223  MGate: 1.000  Bias: 0.0000  JEPA: 0.0280  JNeg: 0.1507  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5419 | Avg: 0.5084 | CE: 0.275  Cons: 8.314  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0367  MGate: 1.000  Bias: 0.0000  JEPA: 0.0216  JNeg: 0.1305  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4874 | Avg: 0.5032 | CE: 0.231  Cons: 7.625  L2SP: 0.0000  Topo: 0.4517  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  MGate: 1.000  Bias: 0.0000  JEPA: 0.0234  JNeg: 0.1437  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4911 | Avg: 0.5004 | CE: 0.224  Cons: 8.250  L2SP: 0.0000  Topo: 0.4514  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0318  MGate: 1.000  Bias: 0.0000  JEPA: 0.0256  JNeg: 0.1559  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4693 | Avg: 0.5041 | CE: 0.208  Cons: 7.971  L2SP: 0.0000  Topo: 0.4512  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0256  MGate: 1.000  Bias: 0.0000  JEPA: 0.0227  JNeg: 0.1488  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [41/50] Train Summary
+     Avg Loss : 0.5041
+     LR       : 0.000010
+
+  >> Epoch [41/50] Evaluating GZSL...
+
+  ┌─ Epoch [41/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.96%
+  │  GZSL-S (Seen Acc)   : 74.82%
+  │  GZSL-H (Harmonic)   : 73.36%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [42/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5313 | Avg: 0.5110 | CE: 0.261  Cons: 8.553  L2SP: 0.0000  Topo: 0.4511  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0252  MGate: 1.000  Bias: 0.0000  JEPA: 0.0220  JNeg: 0.1386  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.3994 | Avg: 0.5020 | CE: 0.132  Cons: 8.351  L2SP: 0.0000  Topo: 0.4511  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0280  MGate: 1.000  Bias: 0.0000  JEPA: 0.0254  JNeg: 0.1449  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5669 | Avg: 0.5074 | CE: 0.314  Cons: 7.388  L2SP: 0.0000  Topo: 0.4513  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0260  MGate: 1.000  Bias: 0.0000  JEPA: 0.0262  JNeg: 0.1560  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4933 | Avg: 0.5027 | CE: 0.232  Cons: 7.939  L2SP: 0.0000  Topo: 0.4517  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0263  MGate: 1.000  Bias: 0.0000  JEPA: 0.0263  JNeg: 0.1403  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5130 | Avg: 0.5004 | CE: 0.248  Cons: 8.176  L2SP: 0.0000  Topo: 0.4515  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0243  MGate: 1.000  Bias: 0.0000  JEPA: 0.0225  JNeg: 0.1516  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4885 | Avg: 0.4995 | CE: 0.222  Cons: 8.259  L2SP: 0.0000  Topo: 0.4513  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0277  MGate: 1.000  Bias: 0.0000  JEPA: 0.0237  JNeg: 0.1493  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [42/50] Train Summary
+     Avg Loss : 0.4995
+     LR       : 0.000009
+
+  >> Epoch [42/50] Evaluating GZSL...
+
+  ┌─ Epoch [42/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.92%
+  │  GZSL-S (Seen Acc)   : 74.76%
+  │  GZSL-H (Harmonic)   : 73.31%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [43/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4700 | Avg: 0.5086 | CE: 0.201  Cons: 8.441  L2SP: 0.0000  Topo: 0.4514  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0185  MGate: 1.000  Bias: 0.0000  JEPA: 0.0210  JNeg: 0.1587  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5179 | Avg: 0.5072 | CE: 0.258  Cons: 7.870  L2SP: 0.0000  Topo: 0.4516  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0265  MGate: 1.000  Bias: 0.0000  JEPA: 0.0245  JNeg: 0.1434  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5502 | Avg: 0.5063 | CE: 0.283  Cons: 8.326  L2SP: 0.0000  Topo: 0.4516  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0194  MGate: 1.000  Bias: 0.0000  JEPA: 0.0198  JNeg: 0.1462  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4804 | Avg: 0.5076 | CE: 0.216  Cons: 8.181  L2SP: 0.0000  Topo: 0.4515  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0246  MGate: 1.000  Bias: 0.0000  JEPA: 0.0230  JNeg: 0.1414  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4695 | Avg: 0.5039 | CE: 0.211  Cons: 7.751  L2SP: 0.0000  Topo: 0.4516  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0283  MGate: 1.000  Bias: 0.0000  JEPA: 0.0230  JNeg: 0.1461  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5190 | Avg: 0.5031 | CE: 0.258  Cons: 7.937  L2SP: 0.0000  Topo: 0.4516  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0216  MGate: 1.000  Bias: 0.0000  JEPA: 0.0221  JNeg: 0.1408  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [43/50] Train Summary
+     Avg Loss : 0.5031
+     LR       : 0.000008
+
+  >> Epoch [43/50] Evaluating GZSL...
+  [★] Best model saved → ./train_log/CUB\best_model_CUB_2026-06-13_11-29-39_H7348.pth
+
+  ┌─ Epoch [43/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.12%
+  │  GZSL-S (Seen Acc)   : 74.90%
+  │  GZSL-H (Harmonic)   : 73.48%  ★ NEW BEST
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [44/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5246 | Avg: 0.4872 | CE: 0.268  Cons: 7.637  L2SP: 0.0000  Topo: 0.4516  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0215  MGate: 1.000  Bias: 0.0000  JEPA: 0.0215  JNeg: 0.1509  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4213 | Avg: 0.5059 | CE: 0.153  Cons: 8.433  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0233  MGate: 1.000  Bias: 0.0000  JEPA: 0.0194  JNeg: 0.1548  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4824 | Avg: 0.5016 | CE: 0.226  Cons: 7.646  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0245  MGate: 1.000  Bias: 0.0000  JEPA: 0.0212  JNeg: 0.1530  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4769 | Avg: 0.5014 | CE: 0.210  Cons: 8.300  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0211  MGate: 1.000  Bias: 0.0000  JEPA: 0.0237  JNeg: 0.1292  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4210 | Avg: 0.5011 | CE: 0.157  Cons: 8.148  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0219  MGate: 1.000  Bias: 0.0000  JEPA: 0.0211  JNeg: 0.1471  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4674 | Avg: 0.5011 | CE: 0.201  Cons: 8.272  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0185  MGate: 1.000  Bias: 0.0000  JEPA: 0.0228  JNeg: 0.1510  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [44/50] Train Summary
+     Avg Loss : 0.5011
+     LR       : 0.000007
+
+  >> Epoch [44/50] Evaluating GZSL...
+
+  ┌─ Epoch [44/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.19%
+  │  GZSL-S (Seen Acc)   : 74.64%
+  │  GZSL-H (Harmonic)   : 73.39%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [45/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4482 | Avg: 0.4862 | CE: 0.181  Cons: 8.361  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0280  MGate: 1.000  Bias: 0.0000  JEPA: 0.0193  JNeg: 0.1440  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5189 | Avg: 0.4950 | CE: 0.256  Cons: 8.060  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0209  MGate: 1.000  Bias: 0.0000  JEPA: 0.0202  JNeg: 0.1620  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5506 | Avg: 0.4970 | CE: 0.289  Cons: 7.910  L2SP: 0.0000  Topo: 0.4521  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0307  MGate: 1.000  Bias: 0.0000  JEPA: 0.0234  JNeg: 0.1457  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4588 | Avg: 0.4951 | CE: 0.201  Cons: 7.715  L2SP: 0.0000  Topo: 0.4519  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0371  MGate: 1.000  Bias: 0.0000  JEPA: 0.0218  JNeg: 0.1396  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4991 | Avg: 0.4963 | CE: 0.234  Cons: 8.158  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0320  MGate: 1.000  Bias: 0.0000  JEPA: 0.0212  JNeg: 0.1382  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4810 | Avg: 0.4986 | CE: 0.221  Cons: 7.847  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0274  MGate: 1.000  Bias: 0.0000  JEPA: 0.0230  JNeg: 0.1692  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [45/50] Train Summary
+     Avg Loss : 0.4986
+     LR       : 0.000005
+
+  >> Epoch [45/50] Evaluating GZSL...
+
+  ┌─ Epoch [45/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.86%
+  │  GZSL-S (Seen Acc)   : 75.08%
+  │  GZSL-H (Harmonic)   : 73.43%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [46/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.6929 | Avg: 0.5146 | CE: 0.434  Cons: 7.762  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0331  MGate: 1.000  Bias: 0.0000  JEPA: 0.0202  JNeg: 0.1420  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4811 | Avg: 0.5070 | CE: 0.217  Cons: 8.141  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0186  MGate: 1.000  Bias: 0.0000  JEPA: 0.0226  JNeg: 0.1384  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4875 | Avg: 0.5071 | CE: 0.230  Cons: 7.737  L2SP: 0.0000  Topo: 0.4518  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0230  MGate: 1.000  Bias: 0.0000  JEPA: 0.0214  JNeg: 0.1394  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5567 | Avg: 0.5064 | CE: 0.293  Cons: 8.081  L2SP: 0.0000  Topo: 0.4520  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0295  MGate: 1.000  Bias: 0.0000  JEPA: 0.0237  JNeg: 0.1444  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4247 | Avg: 0.5036 | CE: 0.156  Cons: 8.418  L2SP: 0.0000  Topo: 0.4522  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0287  MGate: 1.000  Bias: 0.0000  JEPA: 0.0219  JNeg: 0.1388  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4921 | Avg: 0.5045 | CE: 0.226  Cons: 8.224  L2SP: 0.0000  Topo: 0.4523  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0306  MGate: 1.000  Bias: 0.0000  JEPA: 0.0237  JNeg: 0.1486  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [46/50] Train Summary
+     Avg Loss : 0.5045
+     LR       : 0.000004
+
+  >> Epoch [46/50] Evaluating GZSL...
+
+  ┌─ Epoch [46/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.86%
+  │  GZSL-S (Seen Acc)   : 75.04%
+  │  GZSL-H (Harmonic)   : 73.41%  
+  │  ZSL    (ZS Acc)     : 81.58%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [47/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5005 | Avg: 0.4854 | CE: 0.241  Cons: 7.807  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0231  MGate: 1.000  Bias: 0.0000  JEPA: 0.0235  JNeg: 0.1433  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.5669 | Avg: 0.4930 | CE: 0.303  Cons: 8.072  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0266  MGate: 1.000  Bias: 0.0000  JEPA: 0.0219  JNeg: 0.1559  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4355 | Avg: 0.4921 | CE: 0.171  Cons: 8.118  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0293  MGate: 1.000  Bias: 0.0000  JEPA: 0.0205  JNeg: 0.1347  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4759 | Avg: 0.4995 | CE: 0.204  Cons: 8.650  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0283  MGate: 1.000  Bias: 0.0000  JEPA: 0.0221  JNeg: 0.1323  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4674 | Avg: 0.5021 | CE: 0.201  Cons: 8.294  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0202  MGate: 1.000  Bias: 0.0000  JEPA: 0.0211  JNeg: 0.1384  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.4249 | Avg: 0.4997 | CE: 0.156  Cons: 8.440  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0274  MGate: 1.000  Bias: 0.0000  JEPA: 0.0200  JNeg: 0.1447  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [47/50] Train Summary
+     Avg Loss : 0.4997
+     LR       : 0.000002
+
+  >> Epoch [47/50] Evaluating GZSL...
+
+  ┌─ Epoch [47/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.92%
+  │  GZSL-S (Seen Acc)   : 74.77%
+  │  GZSL-H (Harmonic)   : 73.32%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [48/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.7189 | Avg: 0.5217 | CE: 0.465  Cons: 7.464  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0237  MGate: 1.000  Bias: 0.0000  JEPA: 0.0247  JNeg: 0.1629  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4453 | Avg: 0.5011 | CE: 0.175  Cons: 8.563  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0258  MGate: 1.000  Bias: 0.0000  JEPA: 0.0235  JNeg: 0.1308  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.4778 | Avg: 0.4998 | CE: 0.218  Cons: 7.825  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0210  MGate: 1.000  Bias: 0.0000  JEPA: 0.0247  JNeg: 0.1461  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.5359 | Avg: 0.5011 | CE: 0.271  Cons: 8.150  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0353  MGate: 1.000  Bias: 0.0000  JEPA: 0.0211  JNeg: 0.1530  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.4791 | Avg: 0.5040 | CE: 0.217  Cons: 7.970  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0213  MGate: 1.000  Bias: 0.0000  JEPA: 0.0265  JNeg: 0.1367  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5849 | Avg: 0.5051 | CE: 0.323  Cons: 7.974  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0209  MGate: 1.000  Bias: 0.0000  JEPA: 0.0206  JNeg: 0.1527  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [48/50] Train Summary
+     Avg Loss : 0.5051
+     LR       : 0.000001
+
+  >> Epoch [48/50] Evaluating GZSL...
+
+  ┌─ Epoch [48/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 71.96%
+  │  GZSL-S (Seen Acc)   : 74.83%
+  │  GZSL-H (Harmonic)   : 73.36%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [49/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.5280 | Avg: 0.5093 | CE: 0.259  Cons: 8.419  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0361  MGate: 1.000  Bias: 0.0000  JEPA: 0.0243  JNeg: 0.1481  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4812 | Avg: 0.5075 | CE: 0.226  Cons: 7.532  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0261  MGate: 1.000  Bias: 0.0000  JEPA: 0.0208  JNeg: 0.1475  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.5362 | Avg: 0.5122 | CE: 0.274  Cons: 7.975  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0288  MGate: 1.000  Bias: 0.0000  JEPA: 0.0298  JNeg: 0.1441  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4747 | Avg: 0.5120 | CE: 0.207  Cons: 8.339  L2SP: 0.0000  Topo: 0.4524  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0329  MGate: 1.000  Bias: 0.0000  JEPA: 0.0248  JNeg: 0.1520  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5844 | Avg: 0.5107 | CE: 0.314  Cons: 8.512  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0258  MGate: 1.000  Bias: 0.0000  JEPA: 0.0243  JNeg: 0.1544  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5641 | Avg: 0.5104 | CE: 0.305  Cons: 7.805  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0234  MGate: 1.000  Bias: 0.0000  JEPA: 0.0237  JNeg: 0.1547  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [49/50] Train Summary
+     Avg Loss : 0.5104
+     LR       : 0.000000
+
+  >> Epoch [49/50] Evaluating GZSL...
+
+  ┌─ Epoch [49/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.12%
+  │  GZSL-S (Seen Acc)   : 74.45%
+  │  GZSL-H (Harmonic)   : 73.27%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────
+  Epoch [50/50]  Training...
+────────────────────────────────────────────────────────────
+  Step [ 20/110] | Loss: 0.4623 | Avg: 0.4991 | CE: 0.198  Cons: 8.157  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0233  MGate: 1.000  Bias: 0.0000  JEPA: 0.0216  JNeg: 0.1563  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 40/110] | Loss: 0.4568 | Avg: 0.4995 | CE: 0.201  Cons: 7.577  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0262  MGate: 1.000  Bias: 0.0000  JEPA: 0.0212  JNeg: 0.1587  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 60/110] | Loss: 0.7102 | Avg: 0.5070 | CE: 0.448  Cons: 8.029  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0220  MGate: 1.000  Bias: 0.0000  JEPA: 0.0207  JNeg: 0.1539  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [ 80/110] | Loss: 0.4909 | Avg: 0.5048 | CE: 0.225  Cons: 8.187  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0281  MGate: 1.000  Bias: 0.0000  JEPA: 0.0224  JNeg: 0.1603  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [100/110] | Loss: 0.5843 | Avg: 0.5069 | CE: 0.319  Cons: 8.232  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0244  MGate: 1.000  Bias: 0.0000  JEPA: 0.0225  JNeg: 0.1348  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+  Step [110/110] | Loss: 0.5187 | Avg: 0.5095 | CE: 0.256  Cons: 8.027  L2SP: 0.0000  Topo: 0.4525  VA: 0.0000  TA: 0.0000  Dist: 0.0000  AuxS2V: 0.000  AuxV2S: 0.000  MSDN: 0.0300  MGate: 1.000  Bias: 0.0000  JEPA: 0.0196  JNeg: 0.1442  CFNeg: 0.0000  GeoAttr: 0.0000  AttrOT: 0.0000
+
+  >> Epoch [50/50] Train Summary
+     Avg Loss : 0.5095
+     LR       : 0.000000
+
+  >> Epoch [50/50] Evaluating GZSL...
+
+  ┌─ Epoch [50/50] Results ─────────────────────
+  │  GZSL-U (Unseen Acc) : 72.12%
+  │  GZSL-S (Seen Acc)   : 74.54%
+  │  GZSL-H (Harmonic)   : 73.31%  
+  │  ZSL    (ZS Acc)     : 81.62%
+  └──────────────────────────────────────────────────────
+
+============================================================
+  Training Finished!
+============================================================
+  Best Results @ Epoch 43
+  ┌─────────────────────────────────────
+  │  GZSL-U : 72.12%
+  │  GZSL-S : 74.90%
+  │  GZSL-H : 73.48%
+  │  ZSL    : 81.58%
+  └─────────────────────────────────────
+
+  Log saved to: ./train_log/CUB/training_log_CUB_2026-06-13_11-29-39.txt
