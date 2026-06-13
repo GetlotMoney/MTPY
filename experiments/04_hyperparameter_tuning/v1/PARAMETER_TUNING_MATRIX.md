@@ -65,3 +65,65 @@
 | TUNE-030 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.02 | 0.010 | 0.3 | 16 | 73.40 |
 
 发现: TUNE-024 (topo=0.1 + cond_text=0.01 + jepa_neg=0.01) 最高 H=74.09, 建议提升为新 baseline。
+
+
+## 2026-06-13 批次 (Phase 2 轴向搜索 + Phase 3 2D网格)
+
+当前主框架 baseline: TUNE-024 (lambda_topo_pearson=0.1, H=74.09, seed=5)。
+Phase 2 单参数轴向搜索，Phase 3 2D网格组合验证。
+
+### Phase 2 topo 轴向搜索
+| ID | 框架口径 | lambda_topo_pearson | lambda_msdn | lambda_jepa | lambda_jepa_neg | conditional_text_ratio | local_weight | lastvit_select_k | H |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TUNE-038 | topo=0.1 框架 | 0.08 | 0.05 | 0.05 | 0.01 | 0.010 | 0.3 | 32 | 73.48 |
+| TUNE-039 | topo=0.1 框架 | 0.12 | 0.05 | 0.05 | 0.01 | 0.010 | 0.3 | 32 | 73.71 |
+| TUNE-040 | topo=0.1 框架 | 0.15 | 0.05 | 0.05 | 0.01 | 0.010 | 0.3 | 32 | 73.82 |
+| TUNE-041 | topo=0.1 框架 | 0.20 | 0.05 | 0.05 | 0.01 | 0.010 | 0.3 | 32 | 73.77 |
+
+发现: topo 最优区间 0.10~0.15，0.10 baseline 最佳 (H=74.09)。
+
+### Phase 2 cond_text 轴向搜索
+| ID | 框架口径 | lambda_topo_pearson | lambda_msdn | lambda_jepa | lambda_jepa_neg | conditional_text_ratio | local_weight | lastvit_select_k | H |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TUNE-042 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.01 | 0.005 | 0.3 | 32 | 73.50 |
+| TUNE-043 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.01 | 0.008 | 0.3 | 32 | 73.93 |
+| TUNE-044 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.01 | 0.012 | 0.3 | 32 | 73.61 |
+| TUNE-045 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.01 | 0.015 | 0.3 | 32 | 73.69 |
+| TUNE-046 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.01 | 0.020 | 0.3 | 32 | 73.51 |
+
+发现: cond_text 最优值 0.008 (TUNE-043, H=73.93)。
+
+### Phase 2 jepa_neg 轴向搜索
+| ID | 框架口径 | lambda_topo_pearson | lambda_msdn | lambda_jepa | lambda_jepa_neg | conditional_text_ratio | local_weight | lastvit_select_k | H |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TUNE-047 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.005 | 0.010 | 0.3 | 32 | 73.91 |
+| TUNE-048 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.008 | 0.010 | 0.3 | 32 | 73.55 |
+| TUNE-049 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.015 | 0.010 | 0.3 | 32 | 73.59 |
+| TUNE-050 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.020 | 0.010 | 0.3 | 32 | 73.83 |
+
+发现: jepa_neg 最优值 0.005 (TUNE-047, H=73.91)。
+
+### Phase 3 2D 网格
+| ID | 框架口径 | lambda_topo_pearson | lambda_msdn | lambda_jepa | lambda_jepa_neg | conditional_text_ratio | local_weight | lastvit_select_k | H |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| TUNE-043 | topo=0.1 框架 | 0.10 | 0.05 | 0.05 | 0.005 | 0.008 | 0.3 | 32 | 73.93 |
+| TUNE-051 | topo=0.1 框架 | 0.08 | 0.05 | 0.05 | 0.005 | 0.008 | 0.3 | 32 | 73.70 |
+| TUNE-052 | topo=0.1 框架 | 0.08 | 0.05 | 0.05 | 0.005 | 0.012 | 0.3 | 32 | running |
+
+### 当前最优参数组合
+| 参数 | 最优值 | 来源 |
+|------|--------|------|
+| lambda_topo_pearson | 0.10 | TUNE-043 |
+| lambda_msdn | 0.05 | baseline |
+| lambda_jepa | 0.05 | baseline |
+| lambda_jepa_neg | 0.005 | TUNE-047 |
+| conditional_text_ratio | 0.008 | TUNE-043 |
+| local_weight | 0.3 | baseline |
+| lastvit_select_k | 32 | baseline |
+
+### 当前最优 H
+| 实验 | H | 参数组合 |
+|------|---|---------|
+| TUNE-024 | 74.09 | topo=0.10, cond=0.010, jepa_neg=0.01 |
+| TUNE-043 | 73.93 | topo=0.10, cond=0.008, jepa_neg=0.005 |
+
