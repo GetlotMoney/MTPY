@@ -1,0 +1,554 @@
+dataset:
+  value: CUB
+num_class:
+  value: 200
+num_attribute:
+  value: 312
+img_size:
+  value: 448
+resnet_region:
+  value: 196
+dim_f_clip:
+  value: 768
+dim_v_clip:
+  value: 768
+device:
+  value: cuda:0
+batch_size:
+  value: 64
+epochs:
+  value: 30
+use_unzip:
+  value: True
+random_seed:
+  value: 5
+
+# === Loss Ȩ�� ===
+#lambda_cal:
+#  value: 0.1
+#lambda_reg:
+#  value: 0.5
+#lambda_con:
+#  value: 0.7
+
+# === Loss Ȩ�� (��������ֵ���ò���) ===
+#lambda_cal:
+#  value: 0.05
+lambda_reg:
+  value: 0.3
+lambda_con:
+  value: 0.2
+
+# === ģ��ϸ�� (legacy ����, ģ�ʹ����Ѳ�����Щ, ��������ο�) ===
+# ������Ч�Ĳ����� [TransZero++ ˫�� Transformer ����] �½�
+# normalize_V / tf_SAtt / tf_ec_layer / tf_dc_layer / tf_clip_common_dim
+# tf_aux_embed / tf_dim_feedforward ���ѱ��²������
+normalize_V:
+  value: False
+tf_SAtt:
+  value: True
+tf_ec_layer:
+  value: 1
+tf_dc_layer:
+  value: 1
+tf_clip_common_dim:
+  value: 300
+tf_aux_embed:
+  value: True
+tf_dim_feedforward:
+  value: 512
+
+# === [�����ؼ�����] ===
+# CUB ����ʹ�� 'dot'�������ǿ�ƹ�һ�����¾����½�
+classifier_metric:
+  value: dot
+
+is_bias:
+  value: False
+
+# === [VDT-TransZero ģ�����] ===
+# Adapter �в����: adapted = ratio * Adapter(text) + (1-ratio) * text
+# ��С��ֵ(0.1~0.3)��ʾ��ԭʼ����Ϊ����Adapter ��΢��
+adapter_ratio:
+  value: 0.2
+# �Ƿ�ʹ�� GPT-4 ���� (��Ҫ data/gpt4_data/cub.pt �ļ�)
+use_gpt:
+  value: True
+
+# === [�ı�������Դ] ===
+# 'gpt4'   �� ��ԭ GPT-4 ���� data/gpt4_data/cub.pt (7 ��/��)
+# 'claude' �� �� Claude ���ɵ�ϸ������ data/gpt4_data/cub_claude.pt (7 ��/��, ��7��Ϊ CLIP ��� caption)
+# 'gpt55'  �� �� GPT-5.5 ����д data/gpt4_data/cub_gpt55.pt (7 ��/��, ȫ�� CLIP photo prompt ���)
+# 'merge'  �� GPT-4 + Claude ƴ�� data/gpt4_data/cub_merge.pt (14 ��/��)
+text_source:
+  value: gpt55
+
+# === [��Ȩ�ں� �� ����, �� text_source='weighted' ʱ��Ч] ===
+# fused = �� �� Claude_emb + (1-��) �� GPT_emb
+# ��=0.0 �� �� GPT-4   (���� 71.00%)
+# ��=1.0 �� �� Claude  (���� 72.20%)
+# ʵ����ۣ���-grid search ȫ��ʧ�ܣ��� Claude (��=1.0) ������
+text_alpha:
+  value: 1.0
+
+# === [TransZero++ ˫�� Transformer ����] ===
+# ����ͶӰά�� (768 �� dim_com ��ά)
+tf_common_dim:
+  value: 512
+# ��ͷע����ͷ��
+tf_heads:
+  value: 4
+# Dropout ����
+tf_dropout:
+  value: 0.1
+# s2v �� v2s ��· logits �ں�Ȩ��: logits = w*s2v + (1-w)*v2s
+weight_s2v:
+  value: 0.5
+# v2s ·�ı��в�ϵ�� (cosine_only ģʽ: ���� unseen �ı�)
+# 1.0 = ȫ�� CLIP ԭʼ�ı� (���); 0.0 = ȫ����ǿ�ı�
+text_residual:
+  value: 0.5
+# s2v ·�Ӿ��в�ϵ�� (cosine_only ģʽ: ���� CLIP ԭʼ CLS)
+# 1.0 = ȫ�� CLIP CLS (���); 0.0 = ȫ����ǿ�Ӿ�
+visual_residual:
+  value: 0.5
+# �ֲ�ע�����ӷ�ϵ��: logits = base_logits + �� �� local_score
+# ���� gating='fixed' ʱ��Ч, ��=0.3 �ǻ��� H=72.26% ���趨
+local_weight:
+  value: 0.3
+
+# === [s2v �ػ���������] ===
+# 'mean'      �� 576 �� patch ƽ�� (���� H=72.24%)
+# 'attention' �� ѧһ�� Linear ��ÿ patch ��� (ʵ�� H=71.83%, -0.37%, �������ѻָ�)
+# 'lastvit'   �� LaSt-ViT Ƶ�� Top-K ѡ�� (5 ��ʵ��ȫʧ��, �ѷ���)
+# 'dmp'       �� �� H2: Dynamic Mean-LaSt Pooling, mean+LaSt ����+�� �ں�
+# �� ��ǰʵ��: G3 cons ��̬ / H2 dmp �ػ�����̬�ſ�
+pool_method:
+  value: mean
+
+# === [H2 DMP ����] ===
+# pool_dynamic:
+#   'fixed' (Ĭ��) �� �� pool_lambda_fixed ����
+#   'mlp'         �� ��_pool(x) = sigmoid(MLP_pool(cls)) ��ͼ����Ӧ
+pool_dynamic:
+  value: fixed
+pool_lambda_fixed:
+  value: 0.5         # mean 50% + LaSt 50% (H2-fixed)
+pool_lambda_init:
+  value: 0.5         # learnable mlp ģʽ��� (H2-mlp)
+
+# LaSt-ViT ���� (�� pool_method='lastvit' ʱ��Ч)
+# k: ѡ top-K �� patch
+#   �� �ٷ� per-channel topk ʵ����, k=1 �͹� (768 �� channel ���Զ���ѡ, ����ʽ�ں�)
+#   ��ѡ: 1, 2, 4
+lastvit_k:
+  value: 1
+# sigma: ��˹��ͨ�˱�׼��, �ٷ�Ĭ�� ��D �� 22.6 (D=512)
+# ��Ϊ 0.0 ʱ forward �ڲ��� D**0.5 �Զ�����
+lastvit_sigma:
+  value: 0.0
+
+# === [LaSt-ViT-CLS ��ǿ (CVPR 2026 �����÷�)] ===
+# ������ͼ: ViT �� CLS token ���� "lazy aggregation" (�ۺϱ��� patch �� shortcut)
+# LaSt-ViT ��Ƶ�� per-channel topk ѡ part-aware patch ��� CLS
+#
+# Ӧ��λ�� (�� ��ε���ȷλ�� ��):
+#   CLIP ԭʼ patches [B, 576, 768] �� lastvit_pool �� cls_lastvit [B, 768]
+#   cls = (1-r)��CLIP_CLS + r��cls_lastvit
+#   base_logits = cos(cls, all_text) * scale
+#
+# �� pool_method='lastvit' ����:
+#   pool_method='lastvit': �� s2v ��֧ĩ�˳ػ� (λ�ô�, ʵ�� -0.5%)
+#   use_lastvit_cls=True:  ��� CLIP CLS (������ʵ�÷�, Ӱ�� base_logits)
+use_lastvit_cls:
+  value: False
+# k=1 (�ٷ�Ĭ��, per-channel �� 768 channel ������ʽ����)
+lastvit_cls_k:
+  value: 1
+# sigma=0.0 �Զ��� ��D (D=768 �� �� �� 27.7)
+lastvit_cls_sigma:
+  value: 0.0
+# �в��ں�ϵ��:
+#   0.0 = ��ȫ�� CLIP CLS (����, �˻��޸Ķ�)
+#   0.3 = 30% LaSt + 70% CLIP (����)
+#   0.5 = ��ռһ�� (�Ƽ�)
+#   0.7 = 70% LaSt + 30% CLIP (����)
+#   1.0 = ��ȫ�� LaSt CLS (�� CLIP ����, ���ո�)
+lastvit_residual:
+  value: 0.3
+
+# === [LaSt-ViT v5 ·�� C: patch ѡ����] ===
+# ��һ��ԭ��: LaSt �� frozen CLIP �²����÷����ݶȵ��� ViT, �ĳ��� patch ѡ����
+# �� FAE ���� K �� part-aware patch ���� cross-modal, ������ȫ 576
+# K=0 �ر� (Ĭ�� baseline); K=64/128 ���� v5
+# ע��: K!=576 ʱ���Զ��ر� box_emb ����λ�ñ���
+lastvit_select_k:
+  value: 32
+lastvit_select_sigma:
+  value: 0.0
+# �� 2026-05-31 P3.6 ������� + ˫��ѡ��:
+#   True=ѡ��ƽ��ǰ�� token (Ĭ��)
+#   False=ѡ���Ƶ part-aware token (�������)
+#   both=K/2 ƽ�� + K/2 ��Ƶ (˫ͨ���ں� P3.9)
+lastvit_select_largest:
+  value: True
+# �� 2026-05-31 ��ʽ�汾: v1_strict (����ԭ��) / v2_abs_mean (P3.x Ĭ��) / v3_norm
+lastvit_select_formula:
+  value: v2_abs_mean
+
+# === [�ſ�ģʽ����] ===
+# 'fixed' (���� H=72.26%): logits = base + local_weight �� local_score
+# 'cig'   (CIG ��̬�ſ�, ʵ�� H=71.80%): logits = base + ����(1-conf)^�� �� local_score
+gating:
+  value: fixed
+
+# === [F4/F5 ���㶯̬�ſ�, �� score_mode='add' ��Ч] ===
+# gating_dynamic:
+#   'fixed' (Ĭ��) �� ���ϵ� gating='fixed'/'cig' ��֧
+#   'mlp'         �� ������� ��(x)=sigmoid(MLP_��(cls_token)) ��ͼ����Ӧ���� local ǿ��
+#                   ���ȼ����, ���ú� gating='fixed'/'cig' ��������
+gating_dynamic:
+  value: fixed
+gating_alpha_init:
+  value: 0.3       # init ��=0.3 (�� fixed local_weight ����, ���ݻ�����)
+
+# weight_s2v_mode:
+#   'fixed' (Ĭ��) �� local = weight_s2v �� s2v + (1-weight_s2v) �� v2s
+#   'mlp'         �� w(x)=sigmoid(MLP_w(cls_token)), local = w��s2v + (1-w)��v2s
+#                   ��ͼ����Ӧ���� s2v vs v2s ����
+weight_s2v_mode:
+  value: fixed
+weight_s2v_init:
+  value: 0.5       # init w=0.5 (�� fixed weight_s2v ����)
+
+# ����: MLP �м��ά��
+gate_hidden:
+  value: 64
+
+# === [�Ʒ�ģʽ����] ===
+# 'add'         �� logits = base_logits + �� �� local_score  (��ǰĬ��, ������)
+# 'cosine_only' �� logits = cos(v_enh, t_enh) �� scale     (�·���: ˫��֧Ψһ����)
+# �е� cosine_only ��, visual_residual �� text_residual ������
+score_mode:
+  value: add
+
+# === [FAE ���ڿ���] ===
+# True  �� ���� FAE (Feature Augmentation Encoder + ����λ�ý���)
+# False �� ���� FAE��patches ֱ�ӽ� cross-attention��˫��ṹ�����
+# ע�⣺˫�򲢲����� FAE��ȥ����ݶ����� embed_cv / embed_text �����
+use_fae:
+  value: True
+# GZSL ����ƫ��: �� unseen �� logits �ӹ̶�ֵ��ƽ�� seen/unseen ����
+# ����֤����ѡ����̶������ڲ��Լ�������
+# 0 = ����ƫ�ã���ֵ = �� unseen �ӷ�
+gzsl_bias:
+  value: 0.0
+# Self-calibration loss Ȩ��: �� unseen �ౣ�����, ��ֹ seen bias
+# ��=0 �ر� (ʵ��֤�� 0.001 ����, 0.01 ��ǿ, �����ñ��ܹ�)
+prior_correction:
+  value: none
+prior_temp:
+  value: 1.0
+prior_max_bias:
+  value: 3.0
+
+lambda_cal:
+  value: 0.0
+
+# === [���� Loss ��] ===
+# һ���� Loss (KL between base_logits and local_score on seen, with temperature)
+# ��ֹ local_score ѧ���� CLIP base ì�ܵķ����ź�
+# �Ƽ�ֵ: 0.05~0.2, ���ռ���
+# �� ע�⣺adapter_only ģʽ�±�����Ϊ 0.0��local_score ��ռλȫ�㣬KL ���������ݶȣ�
+# �� G1 ʵ��: 0.05 ��Լ���� local �� base �����
+lambda_consist:
+  value: 0.05
+consist_temp:
+  value: 2.0
+
+# === [Cons ��̬Ȩ�ط��� loss] ===
+# G3 ��ѵ�۲쵽 cons ĩ���ǵ� 8-9, ʵ�ʹ��� 0.05��9=0.45 �Ѹǹ� CE
+# ����˥��: effective_lambda = lambda_consist / (1 + �á�cons)
+# cons=0 �� ��; cons=9 �� ~0.52��; cons���� �� ���� (1/��) ������
+# �Ƽ� ��=0.1, ��֤ cons ʵ�ʹ��� �� 0.5 ���� cons ���
+# default: False ���ݾ�ʵ��
+consist_dynamic:
+  value: True
+consist_dynamic_gamma:
+  value: 0.1
+
+# Adapter L2-SP: �� adapter ��� delta ���� 0 ̫Զ
+# adapter_ratio=0.2 �Ѿ����˲��ֲв���, �����ֱ�� L2 Լ��
+# �Ƽ�ֵ: 0.0001~0.001, ���յ�
+lambda_l2sp:
+  value: 0.0
+
+# Topology-preserving Pearson loss (add ģʽ�����Ż�):
+# add ģʽ��Լ�� Adapter ��� 200 ���ı�ԭ������, ���� CLIP ԭʼ���Ƕȹ�ϵ
+# Ŀ��: �ڲ��ƻ� base_logits ���׵�ǰ����, ���� seen-only Adapter ΢����ɢ unseen ����ռ�
+# �Ƽ���ɨ: 0.01, 0.05, 0.1��0 = �ر�
+lambda_topo_pearson:
+  value: 0.10
+
+# === [cosine_only ê��������, �� score_mode='cosine_only' ��Ч] ===
+# L1 v_anchor: v_enh ��Ҫ�� CLIP CLS ̫Զ (���Ӿ���Ư��)
+#   1 - cos(v_enh_raw, cls_token.detach())
+#   �Ƽ� 0.05~0.2; 0=�ر�
+lambda_v_anchor:
+  value: 0.0
+
+# L2 t_unseen_anchor: t_enh[unseen] ��Ҫ�� CLIP ԭʼ unseen �ı�̫Զ
+#   (�� unseen �й��� proj_text Ȩ�ص��µļ��Ư��)
+#   1 - cos(t_enh_raw[unseen].mean(B), all_text[unseen].detach())
+#   �Ƽ� 0.1~0.3 (����ñ� v_anchor ��, ��Ϊ unseen ��ȫ�� CE �ල); 0=�ر�
+lambda_t_unseen_anchor:
+  value: 0.0
+
+# L3 distill: logits_200 ȫ 200 ���� CLIP base_logits ����
+#   KL( softmax(logits_200/T) || softmax(base_logits.detach()/T) )
+#   �Ƽ� 0.1~0.5; 0=�ر�
+lambda_distill:
+  value: 0.0
+distill_temp:
+  value: 4.0
+
+# === [E7 cosine_base_blend: �� CLIP base_logits Ӳ�ӻ���·��] ===
+# �� score_mode='cosine_only' ʱ��Ч. cosine_only forward ĩβ�����Ի��:
+#   logits_200 = (1-��) * cos(v_enh, t_enh)*scale  +  �� * base_logits
+# ��=0.0 �� �� cosine_only (E0 ��Ϊ, ����֤ H=37.41 ʧ��)
+# ��=0.3 �� 30% CLIP ���� + 70% learned (E7 �Ƽ����)
+# ��=0.5 �� ��ռһ�� (E7' ��ѡ)
+# ��=1.0 �� ��ȫ base_logits (�˻�, д���� ablation ����ֵ)
+cosine_base_blend:
+  value: 0.0
+
+# cosine_base_blend_mode:
+#   'fixed'      �� ������ cosine_base_blend ����
+#   'learnable'  �� �� nn.Parameter, sigmoid([0,1]) ģ����ѧ���Ż�ϱ�
+#                  ��ʼ�� cosine_base_blend_init=-1.0 (sigmoid��0.27)
+cosine_base_blend_mode:
+  value: fixed
+cosine_base_blend_init:
+  value: -1.0
+
+# === [E8 ��̬ residual] ===
+# residual_mode:
+#   'fixed'             �� ������ visual_residual / text_residual ����
+#   'learnable_global'  �� vr + tr ȫ��ѧ (2 ������), sigmoid([0,1])
+#   'learnable_split'   �� vr + tr_seen + tr_unseen �����ѧ (3 ������, �Ƽ�)
+#                          unseen ǿƫ�ó�ʼ�� sigmoid(3)��0.95 ����
+residual_mode:
+  value: fixed
+visual_residual_init:
+  value: 0.0      # sigmoid(0)=0.5, �� fixed Ĭ�϶���
+text_residual_seen_init:
+  value: 0.0      # sigmoid(0)=0.5, seen ����������
+text_residual_unseen_init:
+  value: 3.0      # sigmoid(3)��0.953, unseen ��ǿ������ CLIP ԭʼ
+
+# === [˫��֧���� CE, �� cosine_only ��Ч] ===
+# ��������: cosine_only �� CE �ල������Ͽռ� cos(v_enh, t_enh),
+# s2v / v2s �Լ������Ƿ�����, ʧȥ�� add ģʽ��"˫���������ಹ��"�����
+# �޸�: ����·�����Ӹ��� CE, �� s2v / v2s ����Ҳ�Ǻϸ�� seen ������
+# �����ϲ� decoder_s2v / decoder_v2s ���»�� "��η��� seen" ��ֱ�Ӽල
+#
+# ѵ��ʱ:  loss_aux = CE(score_s2v[:, seenclass] * T, seen_label)
+# �Ƽ�ֵ:  0.1~0.3, 0=�ر�
+# T (aux_temp): 14.28 (= 1/0.07, �� logit_scale ͬ����, �� cos ����ƥ�� CE)
+lambda_aux_s2v:
+  value: 0.0
+lambda_aux_v2s:
+  value: 0.0
+aux_temp:
+  value: 14.28
+
+# === [G3 CoCoOp Conditional Text Adapter] ===
+# ���� CoCoOp ԭ prompt token (����Ŀ�� prompt), �ĳ�"ͼ���������ı��в�":
+#   ��(x) = MLP_meta(cls_token)              # [B, 768]
+#   t?_c(x) = Norm(t_c + �� �� ��(x))           # ÿͼ�Լ��� 200 ��ԭ��
+#   base_logits = �� �� cos(cls, t?_c(x))
+# zero init meta_net ĩ��, init ��=0 ѵ��ǰ�ȼ� baseline (���Ŷ�)
+# �� �����Ŷ�����, �Ƽ� 0.05~0.1
+use_conditional_text:
+  value: True
+conditional_text_ratio:
+  value: 0.008
+meta_net_hidden:
+  value: 48
+
+# === [G2 MSDN++ Mutual Branch Distillation] ===
+# �� score_s2v �� score_v2s �� seen ���ϻ������� (.detach() ���ݶ�ѭ��)
+#   L_msdn = (T2/2) [ KL(p_s2v.detach() || p_v2s) + KL(p_v2s.detach() || p_s2v) ]
+# �������: s2v �� v2s, v2s Ҳ�� s2v, ��һ����֧����
+# �Ƽ� 0.05~0.1, �� G1 �� lambda_topo / lambda_consist ͬ����
+# add ģʽ cosine_only ģʽ������ (forward ��͸���� score_s2v / score_v2s)
+lambda_msdn:
+  value: 0.05
+msdn_temp:
+  value: 2.0
+
+# === [���ӽ���ǿ���濪��] ===
+# True  �� ���� CUB_train_*_aug.pt (K ����ǿ�ӽ�, ѵ��ʱ����� 1 ��)
+# False �� ���ص��ӽǻ��� (Ĭ��, ����ǿ)
+# ����ǰ��������: python tools/extract_features.py 4
+use_ag_jepa:
+  value: True
+jepa_topk:
+  value: 8
+jepa_hidden:
+  value: 512
+lambda_jepa:
+  value: 0.05
+lambda_jepa_neg:
+  value: 0.01
+jepa_neg_margin:
+  value: 0.2
+# MOD-005: AG-JEPA v2 Ĭ�Ϲرա��ر�ʱ����ԭ AG-JEPA��
+# ������ı�ѡ top-K patch��ѭ�� next seen ����Ϊ���ı���
+# ��ʱ�ý������ԭ�͹�����б�� patch ������ hard negative��
+use_ag_jepa_v2:
+  value: False
+jepa_v2_neighbor_topk:
+  value: 5
+jepa_v2_neighbor_weight:
+  value: 0.2
+# MOD-006: ����ʵ���ı��ھ�Ĭ�Ϲرա�
+# ��ʱ�ӵ�ǰ text_source ������ı�ԭ������ seen ���ڸ��࣬
+# �� logits_200 ������ margin loss���������ɺ�������
+use_cf_neg_text:
+  value: False
+lambda_cf_neg_text:
+  value: 0.0
+cf_neg_topk:
+  value: 5
+cf_neg_margin:
+  value: 0.2
+
+use_aug_cache:
+  value: False
+
+# === [����ģʽ����] ===
+# 'vgsr'         �� ȫ���� (Adapter + FAE + CrossModalTransformer + CIG)
+# 'clip_only'    �� �� CLIP ����, 0 ѵ������, ����ѵ��ֱ������ (~30 ��)
+# 'adapter_only' �� �� Adapter ΢�� seen �ı�, ���� FAE �� CrossModalTransformer
+model_mode:
+  value: vgsr
+
+# === [Resume / ��ѵ] ===
+# resume_from:
+#   ''                    �� ��ͷѵ�� (Ĭ��)
+#   'auto'                �� �Զ��� train_log/CUB/ ������ checkpoint
+#   '<path>'              �� ָ��·������
+#
+# resume_lr_schedule:
+#   'continue'            �� ����ԭ LR ���� (��Ҫ���� ckpt_full)
+#   'restart'             �� LR ����� 0.001 �� cosine �� epochs
+#   'finetune'            �� LR ֱ���� 1e-4
+#
+# extra_epochs: �� epochs �����϶���Ӷ��� epoch (Ĭ�� 0)
+resume_from:
+  value: ''
+resume_lr_schedule:
+  value: finetune
+extra_epochs:
+  value: 0
+
+# �� 2026-05-25: finetune_lr ������ (�� resume_lr_schedule='finetune' ʱ��Ч)
+#   ���� B ���ѵ��:
+#     ��һ�� finetune (�� 1e-3 ͷѵ��): finetune_lr=1e-4
+#     �ڶ��� finetune (�� 1e-4 ��ѵ��): finetune_lr=1e-5
+#   ��д���� 1e-4 ���ݾ�ʵ�� (H=72.95 ckpt �� 1e-4)
+finetune_lr:
+  value: 0.00001
+
+# �� 2026-05-25: һ�����ѵ�� Multi-Stage Training (�� �Ƽ�)
+# ����������������������������������������������������������������������������������������������������������������������������
+# ԭ��: һ�������������, ����Ҫ�ֶ���ѵ. ÿ�ο�ʼʱ�Զ��� lr + ���� cosine.
+# ����: ȡ������ lr_stages ��ע��, total_epochs ���Զ��������� epochs ֮��.
+# �ر�: ��ջ�ע�͵�, �� epochs+extra_epochs ���߼� (���� H=72.95 ckpt)
+#
+# Ĭ���Ƽ����� recipe (ͷѵ + finetune-1e-4 + finetune-1e-5):
+#   Stage 1: lr=1e-3, 20ep cosine �� 0   (̽��)
+#   Stage 2: lr=1e-4, 30ep cosine �� 0   (����, H=72.95 ����δﵽ)
+#   Stage 3: lr=1e-5, 30ep cosine �� 0   (΢��, ���ܷ�����)
+#   �� 80ep, ~30 ��������, �Զ����� best ckpt
+#
+# �÷�: �� 'lr_stages: null' �ĳ�������б�, ���ѵ������:
+#   lr_stages:
+#     value:
+#       - {lr: 0.001,   epochs: 20}
+#       - {lr: 0.0001,  epochs: 30}
+#       - {lr: 0.00001, epochs: 30}
+lr_stages:
+  value:
+    - {lr: 0.001,  epochs: 20, eta_min: 1e-5}
+    - {lr: 0.0001, epochs: 20, eta_min: 1e-6, restart_from_best: False}
+    - {lr: 0.00001, epochs: 10, eta_min: 1e-7, restart_from_best: False}
+
+# === [CGC C5] Seen-Unseen Margin Loss (����ʵУ׼��С���а�) ==========
+# �� 2026-05-25 ʧ�ܼ�¼: lambda_bias=0.05 �� 50ep, ep1 H=40.47 ֱ�ӱ���
+#    ����: ѵ�� batch ȫ�� seen, CE Ҫ�� max_seen > max_unseen, �� L_bias=ReLU(max_seen - max_unseen)
+#    �ڳͷ� CE ��������, ���ߴ��, L_bias Ӯ, seen logit ��ѹ�ɼ���=unseen
+#    ����: ZSL 81 ���� (unseen ������û��), GZSL-S ���� 22, GZSL-U ���� 81
+#    ��ƴ���: û����ѵ��-���ԶԳ���. �������÷��� 2 (unseen anchor) �򷽰� 3 ����ʵʩ
+# ��ǰ: lambda_bias=0 �ر�, ������ѵ��
+lambda_bias:
+  value: 0.0
+bias_delta:
+  value: 0.0
+
+# === [ѵ������] ===
+# use_amp: �Ƿ����� Mixed Precision (autocast + GradScaler)
+#   True  (Ĭ��) �� forward �� fp16 ������, FAE ���� ~30%, GradScaler �� underflow
+#   False        �� ȫ�� fp32, ���������ȶ�
+# ��� pin_memory + non_blocking (������㿪) ��ͬ����:
+#   �� epoch Ԥ�� 30s �� 15-18s, 15 epoch ��ѵ�� 7-8 �� �� 4-5 ��
+use_amp:
+  value: False
+
+# === [MOD-001] ���θ�֪����·�ɸ��� loss ===
+# �ر�ʱ���ı������������򿪺��� FAE ��ľֲ��Ӿ� memory ƥ�� 312 �� CUB ����ԭ�͡�
+use_geo_attr_routing:
+  value: False
+lambda_geo_attr_routing:
+  value: 0.0
+geo_attr_route_topk:
+  value: 16
+geo_attr_route_temp:
+  value: 14.28
+
+# === [MOD-002] ���˸�֪������Ӧ�ı����Կ� ===
+# �ر�ʱ���ı�������ı�ԭ�ͣ��򿪺��� CUB �����ı�ԭ�����ɵ����ı��в
+use_text_attr_reservoir:
+  value: False
+text_attr_reservoir_ratio:
+  value: 0.0
+text_attr_reservoir_topk:
+  value: 32
+text_attr_reservoir_temp:
+  value: 10.0
+text_attr_reservoir_hidden:
+  value: 256
+
+# === [MOD-003] ��ȷ�����ſصķ�֧һ�������� ===
+# �ر�ʱ��ȫ���ù̶� lambda_msdn���򿪺���ݷ�֧�غ� JS �������� MSDN loss��
+use_uncertainty_msdn_gate:
+  value: False
+msdn_gate_min:
+  value: 0.2
+msdn_gate_js_alpha:
+  value: 4.0
+
+# === [MOD-004] ���������ľֲ����� OT ���� ===
+# �ر�ʱ���������ı����󣬲����� patch-attribute OT loss��
+use_attr_patch_ot:
+  value: False
+lambda_attr_patch_ot:
+  value: 0.0
+attr_patch_ot_topk:
+  value: 16
+attr_patch_ot_temp:
+  value: 10.0
+attr_patch_ot_iter:
+  value: 3
+
